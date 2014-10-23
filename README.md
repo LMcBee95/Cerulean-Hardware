@@ -2,6 +2,13 @@ X7-hardware
 ===========
 
 
+How to setup envirns
+
+Linux: http://eliaselectronics.com/stm32f4-tutorials/setting-up-the-stm32f4-arm-development-toolchain/
+
+and OSX : http://spin.atomicobject.com/2013/08/10/arm-cortex-m-toolchain/
+
+
 Things to do
 
 ## Main board
