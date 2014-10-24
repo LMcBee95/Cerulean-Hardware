@@ -35,12 +35,20 @@ analog to digital converters
 
 
 
-# #Motor driver board
+##Motor driver board
 
 generate pwm  
 temperature sensor?  
 current sensor?  
 voltage sensor?  
 i2c interface  
+  
+  
+STM Boards  
+- Eric Colter  
+- Martin Tuskevicius  
+- Luke McBee  
+- Jack Cottom  
+- Erik with K?  
 
 
