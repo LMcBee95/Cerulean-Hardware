@@ -1,6 +1,11 @@
 X7-hardware
 ===========
 
+## Latest update 
+In this new setup I have included all the necessary files to program the IOToggle program to teh stm32F4 Discovery board. 
+
+
+
 
 How to setup envirns
 
