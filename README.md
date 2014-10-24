@@ -5,7 +5,30 @@ X7-hardware
 In this new setup I have included all the necessary files to program the IOToggle program to teh stm32F4 Discovery board. 
 
 
+How to get setup on Linux or Mac:
+1. Download GCC-ARM for your system from here https://launchpad.net/gcc-arm-embedded/+download
+2. Setup the path on your computer to the location of the downloaded GCC-ARM
+3. Clone this directory to your computer
+4. cd into IOToggle and run make
+5. Plug in your discovery board via the mini-usb connector and run make burn
+6. Viola! Your Discovery board will now be running the simple IOToggle program.
 
+## Tasks for the hardware programming team 
+
+- [] write your own programs for the discovery board 
+- [] enable serial communication from the discovery board
+- [] talk to ATTinys 
+
+
+## Who has our STM32F4 Boards 
+- Eric Colter  
+- Martin Tuskevicius  
+- Luke McBee  
+- Jack Cottom  
+- Erik with K?  
+
+
+### Still useful but outdatd links
 
 How to setup envirns
 
