@@ -1,17 +1,22 @@
 X7-hardware
 ===========
 
-## Latest update 
+# Latest update 
 In this new setup I have included all the necessary files to program the IOToggle program to teh stm32F4 Discovery board. 
 
+## What are we using
+This setup is based on the STM32F4xx_StdPeriph_Driver as well as the excellent Linux port of STLink by [Texane](https://github.com/texane/stlink) 
 
-How to get setup on Linux or Mac:
+## How to get setup on Linux or Mac: (Windows instructions coming soon!)
 1. Download GCC-ARM for your system from here https://launchpad.net/gcc-arm-embedded/+download
 2. Setup the path on your computer to the location of the downloaded GCC-ARM
 3. Clone this directory to your computer
-4. cd into IOToggle and run make
-5. Plug in your discovery board via the mini-usb connector and run make burn
+4. cd into IOToggle and run "make"
+5. Plug in your discovery board via the mini-usb connector and run "make burn"
 6. Viola! Your Discovery board will now be running the simple IOToggle program.
+
+
+
 
 ## Tasks for the hardware programming team 
 
@@ -20,7 +25,7 @@ How to get setup on Linux or Mac:
 - [] talk to ATTinys 
 
 
-## Who has our STM32F4 Boards 
+### Who has our STM32F4 Boards 
 - Eric Colter  
 - Martin Tuskevicius  
 - Luke McBee  
@@ -41,7 +46,7 @@ and OSX : http://spin.atomicobject.com/2013/08/10/arm-cortex-m-toolchain/
 
 Things to do
 
-## Main board
+### Main board
 
 serial (uart)  
 motor control i2c  
@@ -63,7 +68,7 @@ analog to digital converters
 
 
 
-##Motor driver board
+### Motor driver board
 
 generate pwm  
 temperature sensor?  
@@ -71,12 +76,5 @@ current sensor?
 voltage sensor?  
 i2c interface  
   
-  
-STM Boards  
-- Eric Colter  
-- Martin Tuskevicius  
-- Luke McBee  
-- Jack Cottom  
-- Erik with K?  
 
 
