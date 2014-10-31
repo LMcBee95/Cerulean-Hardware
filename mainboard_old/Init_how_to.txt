@@ -1,0 +1,104 @@
+1. Port RCC
+
+RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOX, ENABLE);
+
+2. Periph RCC
+
+ - Tim
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIMX, ENABLE );
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM9, ENABLE ); //TIM9 and TIM8 are on APB2
+
+ - USART
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+
+
+3. GPIO Enable
+
+ - PWM
+	GPIO_InitTypeDef GPIO_InitStructure;
+	
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_X;// | GPIO_Pin_X //more for channels
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	
+	GPIO_Init(GPIOX, &GPIO_InitStructure);
+
+
+	GPIO_PinAFConfig(GPIOX, GPIO_PinSourceX, GPIO_AF_TIMX);// put in order of what channel it is
+	GPIO_PinAFConfig(GPIOX, GPIO_PinSourceX, GPIO_AF_TIMX);
+
+ - OUTPUT
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_X;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+        GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+        GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(GPIOX, &GPIO_InitStructure);
+
+ - INPUT
+	//not figured out yet...
+
+ - USART
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_X | GPIO_Pin_X;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(GPIOX, &GPIO_InitStructure);
+
+	GPIO_PinAFConfig(GPIOX, GPIO_PinSourceX, GPIO_AF_USART3); //note pretty much same as PWM
+	GPIO_PinAFConfig(GPIOX, GPIO_PinSourceX, GPIO_AF_USART3); //Except for here
+
+4. Timer enable
+
+	PrescalerValue = //set something
+
+	
+	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
+	
+	TIM_OCInitTypeDef TIM_OCInitStruct;
+
+	TIM_TimeBaseStructInit( &TIM_TimeBaseInitStruct );
+	TIM_TimeBaseInitStruct.TIM_ClockDivision = TIM_CKD_DIV4;
+	TIM_TimeBaseInitStruct.TIM_Period =1000 - 1;   // 0..999
+	TIM_TimeBaseInitStruct.TIM_Prescaler = PrescalerValue; // Div 240
+        TIM_TimeBaseInit( TIMX, &TIM_TimeBaseInitStruct );
+
+        TIM_OCStructInit( &TIM_OCInitStruct );
+	TIM_OCInitStruct.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStruct.TIM_OCMode = TIM_OCMode_PWM1;
+	TIM_OCInitStruct.TIM_Pulse = 500;
+
+	TIM_OC1Init( TIMX, &TIM_OCInitStruct ); //will use 2 channels on all timers but tim 8, 
+	TIM_OC2Init( TIMX, &TIM_OCInitStruct ); //in that case will use 3 (LED)
+	TIM_OC3Init( TIMX, &TIM_OCInitStruct );
+
+	TIM_Cmd( TIMX, ENABLE );
+	
+5. Periph Init
+	USART_InitTypeDef USART_InitStructure;
+	
+	USART_InitStructure.USART_BaudRate = 9600;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity = USART_Parity_No;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	
+	USART_Init(USART3, &USART_InitStructure);
+
+	USART_Cmd(USART3, ENABLE);
+
+
+
+Shift register notes - 
+
+
