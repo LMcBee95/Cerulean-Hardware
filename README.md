@@ -19,6 +19,9 @@ This setup is based on the STM32F4xx_StdPeriph_Driver as well as the excellent L
 There are some GPIO and USART examples [here.](https://github.com/devthrash/STM32F4-workarea) 
 Note the makefile for these will not work yet, I'm going to be modifying it. 
 
+## Git How To
+Please see the GitCommands.markdown file for basics on how to use git for this project.
+
 ### Directory Structure
 - *Examples*: Contains examples from ST for the Discovery board.
 - *IOToggle*: One specific example with a working makefile.
