@@ -43,11 +43,9 @@
  //Special Identification for each board
  const byte motorNumber = 0x01;
  
- //This is the packet of info the main board will send to the attiny 84
- int receivePacket[6] = {};
- 
- //This is the packet of info the attiny 84 will send to the main board
- int sendPacket[4] = {};
+ //Start and End byte
+ const byte startByte = 0x12;
+ const byte endByte = 0x13;
  
  void setup()
  {
@@ -69,10 +67,28 @@
  }
  
  void loop()
- {
-   
+ {  
+   if(mySerial.available())
+   {
+     //check if I can do this
+     if(mySerial.read() == startByte)
+     {
+       if(mySerial.read() == motorNumber)
+       {
+         
+       }
+       else
+         clearBuffer(endByte);
+     }
+     else
+       clearBuffer(endByte);
+   }
  }
  
- boolean sendPacket(byte identification, byte fault1, byte fault2) {
-   
+ void clearBuffer (byte endByte)
+ {
+  while(mySerial.read() != endByte )
+  {
+   //Squirels! 
+  }
  }
