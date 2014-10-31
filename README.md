@@ -1,8 +1,5 @@
-X7-hardware
-===========
-
 # Latest update 
-In this new setup I have included all the necessary files to program the IOToggle program to teh stm32F4 Discovery board. 
+In this new setup I have included all the necessary files to program the IOToggle program to the stm32F4 Discovery board. Also added links to other examples and updated instructions to get things working 
 
 ## What are we using
 This setup is based on the STM32F4xx_StdPeriph_Driver as well as the excellent Linux port of STLink by [Texane](https://github.com/texane/stlink) 
@@ -22,12 +19,19 @@ This setup is based on the STM32F4xx_StdPeriph_Driver as well as the excellent L
 There are some GPIO and USART examples [here.](https://github.com/devthrash/STM32F4-workarea) 
 Note the makefile for these will not work yet, I'm going to be modifying it. 
 
+### Directory Structure
+- *Examples*: Contains examples from ST for the Discovery board.
+- *IOToggle*: One specific example with a working makefile.
+- *Libraries*: Contains the STM Standard Periphial libraries we are using.
+- *MotorController*: Code for the Motor Controller boards, to be compiled with the Arduino IDE currently.
+- *Demo*: The demo code initinally on the Discovery board. Makefile needs to be modified to work.
+- *mainboard_old*: Old code from previous years being made to work with a makefile. Still lots of work to do on this.
 
-## Tasks for the hardware programming team 
+### Tasks for the hardware programming team 
 
-- [] write your own programs for the discovery board 
-- [] enable serial communication from the discovery board
-- [] talk to ATTinys 
+- write your own programs for the discovery board 
+- enable serial communication from the discovery board
+- talk to ATTinys 
 
 
 ### Who has our STM32F4 Boards 
@@ -38,7 +42,7 @@ Note the makefile for these will not work yet, I'm going to be modifying it.
 - Erik with K?  
 
 
-### Still useful but outdatd links
+#### Still useful but outdatd links
 
 How to setup envirns
 
@@ -51,7 +55,7 @@ and OSX : http://spin.atomicobject.com/2013/08/10/arm-cortex-m-toolchain/
 
 Things to do
 
-### Main board
+#### Main board
 
 serial (uart)  
 motor control i2c  
@@ -73,7 +77,7 @@ analog to digital converters
 
 
 
-### Motor driver board
+#### Motor driver board
 
 generate pwm  
 temperature sensor?  
