@@ -11,11 +11,15 @@ This setup is based on the STM32F4xx_StdPeriph_Driver as well as the excellent L
 1. Download GCC-ARM for your system from here https://launchpad.net/gcc-arm-embedded/+download
 2. Setup the path on your computer to the location of the downloaded GCC-ARM
 3. Clone this directory to your computer
-4. cd into IOToggle and run "make"
-5. Plug in your discovery board via the mini-usb connector and run "make burn"
-6. Viola! Your Discovery board will now be running the simple IOToggle program.
+4. Clone the STLink program from the link above into a directory of your choosing. 
+5. Edit the Makefile variable "STLINK" to point to the STLink directory 
+6. cd into IOToggle and run "make"
+7. Plug in your discovery board via the mini-usb connector and run "make burn"
+8. Viola! Your Discovery board will now be running the simple IOToggle program.
 
-
+## Other examples
+There are some GPIO and USART examples [here.](https://github.com/devthrash/STM32F4-workarea) 
+Note the makefile for these will not work yet, I'm going to be modifying it. 
 
 
 ## Tasks for the hardware programming team 
