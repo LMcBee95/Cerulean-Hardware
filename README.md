@@ -23,12 +23,12 @@ Note the makefile for these will not work yet, I'm going to be modifying it.
 Please see the GitCommands.markdown file for basics on how to use git for this project.
 
 ### Directory Structure
-- *Examples*: Contains examples from ST for the Discovery board.
-- *IOToggle*: One specific example with a working makefile.
-- *Libraries*: Contains the STM Standard Periphial libraries we are using.
-- *MotorController*: Code for the Motor Controller boards, to be compiled with the Arduino IDE currently.
-- *Demo*: The demo code initinally on the Discovery board. Makefile needs to be modified to work.
-- *mainboard_old*: Old code from previous years being made to work with a makefile. Still lots of work to do on this.
+- **Examples**: Contains examples from ST for the Discovery board.
+- **IOToggle**: One specific example with a working makefile.
+- **Libraries**: Contains the STM Standard Periphial libraries we are using.
+- **MotorController**: Code for the Motor Controller boards, to be compiled with the Arduino IDE currently.
+- **Demo**: The demo code initinally on the Discovery board. Makefile needs to be modified to work.
+- **mainboard_old**: Old code from previous years being made to work with a makefile. Still lots of work to do on this.
 
 ### Tasks for the hardware programming team 
 
