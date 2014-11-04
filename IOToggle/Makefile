@@ -41,6 +41,12 @@ else
   BURNER = $(STLINK)/
 endif
 
+ifeq(, $(shell which st-flash))
+	BURNER=""
+endif
+
+
+
 ###################################################
 
 .PHONY: lib proj
