@@ -10,8 +10,8 @@ This setup is based on the STM32F4xx_StdPeriph_Driver as well as the excellent L
 3. Clone this directory to your computer
 4. Clone the STLink program from the link above into a directory of your choosing. 
 5. Follow the instructions on the STLink github to compile the program 
-6. cd into IOToggle
-7. Edit the Makefile variable "STLINK" to point to the STLink directory 
+6. Add the STLink directory to your path
+7. cd into IOToggle
 8. run "make"
 9. Plug in your discovery board via the mini-usb connector and run "make burn"
 10. Viola! Your Discovery board will now be running the simple IOToggle program.
