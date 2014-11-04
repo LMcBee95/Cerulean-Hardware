@@ -55,6 +55,6 @@ $(PROJ_NAME).elf: $(SRCS)
 
 clean:
 	$(MAKE) -C lib clean
-	rm -f $(BUILDIR)/$(PROJ_NAME).elf
+	rm -f $(BUILDDIR)/$(PROJ_NAME).elf
 	rm -f $(BUILDDIR)/$(PROJ_NAME).hex
 	rm -f $(BUILDDIR)/$(PROJ_NAME).bin
