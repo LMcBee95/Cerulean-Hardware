@@ -2,8 +2,6 @@
 
 SRCS = main.c stm32f4xx_it.c system_stm32f4xx.c
 
-STLINK = ../../stlink
-
 # all the files will be generated with this name (main.elf, main.bin, main.hex, etc)
 
 PROJ_NAME=main
@@ -35,20 +33,6 @@ OBJS = $(SRCS:.c=.o)
 
 ###################################################
 
-ifeq ($(OS),Windows_NT)
-	BURNER=""
-else
-  BURNER = $(STLINK)/
-endif
-
-ifeq(, $(shell which st-flash))
-	BURNER=""
-endif
-
-
-
-###################################################
-
 .PHONY: lib proj
 
 all: lib proj
@@ -59,7 +43,7 @@ lib:
 proj: 	$(PROJ_NAME).elf
 
 burn:
-	$(BURNER)st-flash write $(BUILDDIR)/$(PROJ_NAME).bin 0x8000000
+	st-flash write $(BUILDDIR)/$(PROJ_NAME).bin 0x8000000
 
 
 $(PROJ_NAME).elf: $(SRCS)
