@@ -35,6 +35,14 @@ OBJS = $(SRCS:.c=.o)
 
 ###################################################
 
+ifeq ($(OS),Windows_NT)
+   STLINK=""
+else
+    STLINK += /
+endif
+
+###################################################
+
 .PHONY: lib proj
 
 all: lib proj
@@ -45,7 +53,7 @@ lib:
 proj: 	$(PROJ_NAME).elf
 
 burn:
-	$(STLINK)/st-flash write $(BUILDDIR)/$(PROJ_NAME).bin 0x8000000
+	$(BURNER)st-flash write $(BUILDDIR)/$(PROJ_NAME).bin 0x8000000
 
 
 $(PROJ_NAME).elf: $(SRCS)
@@ -55,6 +63,6 @@ $(PROJ_NAME).elf: $(SRCS)
 
 clean:
 	$(MAKE) -C lib clean
-	rm -f $(BUILDIR)/$(PROJ_NAME).elf
+	rm -f $(BUILDDIR)/$(PROJ_NAME).elf
 	rm -f $(BUILDDIR)/$(PROJ_NAME).hex
 	rm -f $(BUILDDIR)/$(PROJ_NAME).bin

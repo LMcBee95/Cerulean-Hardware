@@ -3,6 +3,10 @@ ass
 *.exe
 *.o
 *.so
+*.bin
+*.elf
+*.hex
+*.a
  
 # Packages #
 ############
