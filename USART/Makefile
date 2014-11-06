@@ -1,12 +1,14 @@
 #########################################################################
 PROJ_NAME=main
 
+BUILDDIR=build
+
 LIBPATH=../Libraries
 
 SRC = main.c stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c
 
 ##Startup File
-STARTUP = startup_stm32f4xx.s
+STARTUP = lib/startup_stm32f4xx.s
 
 #########################################################################
 
@@ -19,6 +21,8 @@ AS=arm-none-eabi-as
 CP=arm-none-eabi-objcopy
 OD=arm-none-eabi-objdump
 
+vpath %.c src
+vpath %.c lib
 
 ##Dependancies and include paths
 
@@ -31,13 +35,14 @@ STM32_INCLUDES = -I$(LIBPATH)/CMSIS/ST/STM32F4xx/Include/ \
 	-I$(LIBPATH)/STM32F4xx_StdPeriph_Driver/inc/ \
 	-I$(LIBPATH)/STM32_USB_Device_Library/Class/hid/inc \
 	-I$(LIBPATH)/STM32_USB_Device_Library/Core/inc/ \
-	-I$(LIBPATH)/STM32_USB_OTG_Driver/inc/
+	-I$(LIBPATH)/STM32_USB_OTG_Driver/inc/ \
+	-Iinc/
 
 ##Optimizations - keep this at -0s
 OPTIMIZE       = -Os
 
 ##CFLAGS
-CFLAGS	= $(MCFLAGS)  $(OPTIMIZE)  $(DEFS) -I./ -I./ $(STM32_INCLUDES)  -Wl,-T,stm32_flash.ld
+CFLAGS	= $(MCFLAGS)  $(OPTIMIZE)  $(DEFS) -I./ -I./ $(STM32_INCLUDES)  -Wl,-T,lib/stm32_flash.ld
 AFLAGS	= $(MCFLAGS) 
 #-mapcs-float use float regs. small increase in code size
 
@@ -88,7 +93,7 @@ SRC += \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_wwdg.c	
 
 
-OBJDIR = .
+OBJDIR = ./$(BUILDDIR)
 OBJ = $(SRC:%.c=$(OBJDIR)/%.o) 
 OBJ += Startup.o
 
@@ -99,14 +104,14 @@ OBJ += Startup.o
 all: proj
 
 burn:
-	st-flash write $(PROJ_NAME).bin 0x8000000
+	st-flash write $(BUILDDIR)/$(PROJ_NAME).bin 0x8000000
 
 proj: $(PROJ_NAME).elf
 
 $(PROJ_NAME).elf: $(SRC) $(STARTUP)
-	$(CC) $(CFLAGS) $^ -lm -lc -lnosys -o $@
-	$(CP) -O binary $(PROJ_NAME).elf $(PROJ_NAME).bin
+	$(CC) $(CFLAGS) $^ -lm -lc -lnosys -o $(BUILDDIR)/$@
+	$(CP) -O binary $(BUILDDIR)/$(PROJ_NAME).elf $(BUILDDIR)/$(PROJ_NAME).bin
 
 clean:
-	rm -f Startup.lst  $(PROJ_NAME)  $(PROJ_NAME).lst $(OBJ) $(AUTOGEN)  $(PROJ_NAME).out $(PROJ_NAME).map \
-	 $(PROJ_NAME).dmp  $(PROJ_NAME).elf $(PROJ_NAME).bin
+	rm -f Startup.lst  $(BUILDDIR)/$(PROJ_NAME)  $(BUILDDIR)/$(PROJ_NAME).lst $(BUILDDIR)/$(OBJ) $(AUTOGEN)  $(BUILDDIR)/$(PROJ_NAME).out $(BUILDDIR)/$(PROJ_NAME).map \
+	 $(BUILDDIR)/$(PROJ_NAME).dmp  $(BUILDDIR)/$(PROJ_NAME).elf $(BUILDDIR)/$(PROJ_NAME).bin
