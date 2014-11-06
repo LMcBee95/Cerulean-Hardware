@@ -6,7 +6,7 @@ LIBPATH=../Libraries
 SRC = main.c stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c
 
 ##Startup File
-STARTUP = startup_stm32f4xx.S
+STARTUP = startup_stm32f4xx.s
 
 #########################################################################
 
