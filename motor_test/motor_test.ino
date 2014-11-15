@@ -8,6 +8,8 @@ int index= 0;
 boolean stringComplete = false;  // whether the string is complete
 boolean terminalConnect = false; // indicates if the terminal has connected to the board yet
 
+byte packet[6];
+
 struct payload{ // Payload structure
   byte starts;
   byte addr;
@@ -21,7 +23,7 @@ struct payload{ // Payload structure
 void setup() {
   // initialize serial
   Serial.begin(9600);
-  Serial1.begin(9600);
+  //FSerial1.begin(9600);
 
   // reserve 200 bytes for the inputString:
   inputString.reserve(200);
@@ -83,18 +85,12 @@ void handleSerialData(char inData[], byte index) {
   myData.ends = 0x13;
   myData.chksum = 0x99;
   
-  Serial.println(myData.starts, HEX);
-  Serial.println(myData.ends, HEX);
-  Serial.println(myData.chksum, HEX);
-  
   //Address checking
   if(strspn(words[0], "1234567890") <= 1 ){
     Serial.print("Address: ");
     Serial.println(*words[0]);
     
-    myData.addr = (byte) atoi(words[0]);
-    Serial.println(myData.addr, HEX);
-    
+    myData.addr = (byte) atoi(words[0]);    
     //Command Checking
     if(strcmp(words[1], "0") == 0 ) {
       Serial.println("Stop Motors");
@@ -103,8 +99,6 @@ void handleSerialData(char inData[], byte index) {
     }else if(strcmp(words[1], "1") == 0 ) {
       Serial.println("Set Speed");
       myData.cmd = (byte) atoi(words[1]);
-      Serial.println(myData.cmd, HEX);
-
       
       //check valid direction
       if(strspn(words[2], "01") <= 1){
@@ -158,16 +152,27 @@ void handleSerialData(char inData[], byte index) {
 }
 
 void ConstructMessage(struct payload * mypayload){
-  byte buffer[sizeof(&mypayload)];
   
-  memcpy(buffer, &mypayload, sizeof(&mypayload));
+  packet[0] = mypayload->starts;
+  packet[1] = mypayload->addr;
+  packet[2] = mypayload->cmd;
+  packet[3] = mypayload->arg1;
+  packet[4] = mypayload->arg2;
+  packet[5] = mypayload->chksum;
+  packet[6] = mypayload->ends;  
   
-  Serial.println("starting buffer");
-  Serial.println(*buffer, HEX);
-  Serial1.println(*buffer, HEX);
+  for(int i=0; i<7; i++){
+    Serial.print(packet[i], HEX);
+  }
+  
+  Serial.println("\nstarting buffer");
+  
+  //for(int i=0; i<7; i++){
+  //  Serial1.print(packet[i], HEX);
+  //}  
+  
   Serial.println("ending buffer");
   
-  free(buffer);
   
 }
 
