@@ -95,9 +95,7 @@ void handleSerialData(char inData[], byte index) {
   myData.starts = 0x12;
   myData.ends = 0x13;
   myData.chksum = 0x99;
-  
-  Serial1.write(myData.ends);
-  
+ 
   //Address checking
   if(strspn(words[0], "1234567890") <= 1 ){
     Serial.print("Address: ");
@@ -108,6 +106,8 @@ void handleSerialData(char inData[], byte index) {
     if(strcmp(words[1], "0") == 0 ) {
       Serial.println("Stop Motors");
       myData.cmd = (byte) atoi(words[1]);
+      myData.arg1 = 0xF0;
+      myData.arg2 = 0xF0;
       
     }else if(strcmp(words[1], "1") == 0 ) {
       Serial.println("Set Speed");
@@ -149,6 +149,8 @@ void handleSerialData(char inData[], byte index) {
     }else if(strcmp(words[1], "2") == 0 ){ 
       Serial.println("Request Faults");
       myData.cmd = (byte) atoi(words[1]);
+      myData.arg1 = 0x00;
+      myData.arg2 = 0xF0;
 
     }else{
       Serial.println(" Invalid syntax.");
@@ -173,6 +175,8 @@ void ConstructMessage(struct payload * mypayload){
   packet[4] = mypayload->arg2;
   packet[5] = mypayload->chksum;
   packet[6] = mypayload->ends;  
+  
+  //packet[5] = crc8(packet);
   
   Serial.println(packet[6], HEX);
   
@@ -206,7 +210,7 @@ void ConstructMessage(struct payload * mypayload){
 byte crc8(const byte *msg){ 
   
   byte crc = 0;
-  for(byte len = 1; len < 6; len++) {
+  for(byte len = 1; len < 5; len++) {
     uint8_t inbyte = *msg++;
     for (byte i = 8; i; i--) {
       byte mix = (crc ^ inbyte) & 0x01;
