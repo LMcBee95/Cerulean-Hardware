@@ -1,14 +1,19 @@
 void handleSerialData(char inData[], byte index);
 void welcomeMessage(void);
 void ConstructMessage(struct payload *);
+byte crc8(const uint8_t msgr);
 
+#define TransmitControl 13   //RS485 Direction control
+
+#define RS485Transmit    HIGH
+#define RS485Receive     LOW
 
 String inputString = "";         // a string to hold incoming data
 int index= 0; 
 boolean stringComplete = false;  // whether the string is complete
 boolean terminalConnect = false; // indicates if the terminal has connected to the board yet
 
-byte packet[6];
+byte packet[7];
 
 struct payload{ // Payload structure
   byte starts;
@@ -21,9 +26,15 @@ struct payload{ // Payload structure
 };
 
 void setup() {
+  
+  pinMode(TransmitControl, OUTPUT);
+  digitalWrite(TransmitControl, RS485Receive);
+  
   // initialize serial
   Serial.begin(9600);
-  //FSerial1.begin(9600);
+  Serial.flush();
+  Serial1.begin(9600);
+  Serial1.flush();
 
   // reserve 200 bytes for the inputString:
   inputString.reserve(200);
@@ -84,6 +95,8 @@ void handleSerialData(char inData[], byte index) {
   myData.starts = 0x12;
   myData.ends = 0x13;
   myData.chksum = 0x99;
+  
+  Serial1.write(myData.ends);
   
   //Address checking
   if(strspn(words[0], "1234567890") <= 1 ){
@@ -161,20 +174,51 @@ void ConstructMessage(struct payload * mypayload){
   packet[5] = mypayload->chksum;
   packet[6] = mypayload->ends;  
   
-  for(int i=0; i<7; i++){
-    Serial.print(packet[i], HEX);
+  Serial.println(packet[6], HEX);
+  
+  for(byte i=0; i<7; i++){
+    Serial.print("\n");
+    Serial.print(i, DEC); 
+    Serial.print(": "); 
+    Serial.println(packet[i], HEX);
   }
+  
+  Serial.print("\nPrinting CRC:");
+  Serial.println(crc8(packet), HEX);
   
   Serial.println("\nstarting buffer");
   
-  //for(int i=0; i<7; i++){
-  //  Serial1.print(packet[i], HEX);
-  //}  
+  digitalWrite(TransmitControl, RS485Transmit);
+  
+  for(byte i=0; i<7; i++){
+    Serial1.write(packet[i]);
+  }  
+  
+  Serial1.flush();
+  
+  digitalWrite(TransmitControl, RS485Receive);
   
   Serial.println("ending buffer");
   
-  
 }
+
+//straight up CRC8 caclulation 
+byte crc8(const byte *msg){ 
+  
+  byte crc = 0;
+  for(byte len = 1; len < 6; len++) {
+    uint8_t inbyte = *msg++;
+    for (byte i = 8; i; i--) {
+      byte mix = (crc ^ inbyte) & 0x01;
+      crc >>= 1;
+      if (mix) crc ^= 0xD5;
+        inbyte >>= 1;
+      }
+    }
+  return crc;
+}
+
+
 
 void welcomeMessage(void) {
   Serial.print("\r\nWelcome ROV X7 test software\r\n");
