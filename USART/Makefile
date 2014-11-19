@@ -3,7 +3,7 @@ PROJ_NAME=main
 
 BUILDDIR=build
 
-LIBPATH=../../Libraries
+LIBPATH=../Libraries
 
 SRC = main.c stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c
 
