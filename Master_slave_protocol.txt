@@ -1,23 +1,24 @@
 Master protocol
- - initialize
- - clear receive buffer
- - send
-  - write mode
-  - delay
-  - serial write
-  - serial flush
- - Read
-  - read data
-o Check the check sum
+  - initialize
+  - clear receive buffer
+  - send
+  -- write mode
+  -- delay
+  -- serial write
+  -- serial flush
+  - Read
+  -- read data
+  -- Check the check sum
+
 Slave protocol
-• Initialize
-• Clear receive buffer
-• Read
-o read mode
-o Check the check sum
-• Send 
-o Write mode 
-o Delay
-o Serial write
-o Serial flush
+  - Initialize
+  - Clear receive buffer
+  - Read
+  -- read mode
+  -- Check the check sum
+  - Send 
+  -- Write mode 
+  -- Delay
+  -- Serial write
+  -- Serial flush
 
