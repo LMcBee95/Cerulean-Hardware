@@ -1,4 +1,6 @@
 void handleSerialData(char inData[], byte index);
+void handleSerialData2(char inData[], byte index);
+
 void welcomeMessage(void);
 void ConstructMessage(struct payload *);
 byte crc8(const uint8_t msgr);
@@ -13,7 +15,7 @@ int index= 0;
 boolean stringComplete = false;  // whether the string is complete
 boolean terminalConnect = false; // indicates if the terminal has connected to the board yet
 
-byte packet[7];
+char packet[7];
 
 struct payload{ // Payload structure
   byte starts;
@@ -77,7 +79,6 @@ void serialEvent() {
     } 
   }
 }
-
 
 
 void handleSerialData(char inData[], byte index) {
@@ -188,22 +189,68 @@ void ConstructMessage(struct payload * mypayload){
   }
   
   Serial.print("\nPrinting CRC:");
-  Serial.println(crc8(packet), HEX);
+//  Serial.println(crc8(packet), HEX);
   
   Serial.println("\nstarting buffer");
   
   digitalWrite(TransmitControl, RS485Transmit);
   
-  for(byte i=0; i<7; i++){
-    Serial1.write(packet[i]);
-  }  
+ // for(byte i=0; i<7; i++){
+  //  Serial1.write(packet[i]);
+  //}  
+//  Serial1.flush();
   
-  Serial1.flush();
+  handleSerialData2(packet, 7);
   
   digitalWrite(TransmitControl, RS485Receive);
   
   Serial.println("ending buffer");
   
+}
+
+
+void handleSerialData2(char inData, char index) {
+  
+  Serial1.print(inData);
+  Serial1.write(index);
+  
+  Serial1.flush();
+  
+  /*
+  if(inData[1] == ADDRESS){
+   //digitalWrite(GREEN, HIGH);
+    //if(inData[5] == crc8(inData)){
+      //digitalWrite(YELLOW, HIGH);
+      
+   
+  
+       if(inData[2] == 0x00){      
+          digitalWrite(RED, HIGH);
+          digitalWrite(YELLOW, LOW);
+          digitalWrite(GREEN, LOW);
+       }else if(inData[2] == 0x01){
+          digitalWrite(RED, LOW);
+          digitalWrite(YELLOW, HIGH);
+          digitalWrite(GREEN, LOW);
+       }else if(inData[2] == 0x02){
+          digitalWrite(RED, LOW);
+          digitalWrite(YELLOW, LOW);
+          digitalWrite(GREEN, HIGH);
+       }
+       
+       
+    //}else{
+      //break or something
+    //  digitalWrite(YELLOW, LOW);
+    //}
+  
+  
+  }else{
+    //ignore everything
+    //digitalWrite(GREEN, LOW);
+  }
+  
+  */
 }
 
 //straight up CRC8 caclulation 

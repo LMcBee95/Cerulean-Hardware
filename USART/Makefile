@@ -3,7 +3,7 @@ PROJ_NAME=main
 
 BUILDDIR=build
 
-LIBPATH=../Libraries
+LIBPATH=../../Libraries
 
 SRC = main.c stm32f4_discovery.c system_stm32f4xx.c stm32f4xx_it.c
 
@@ -26,11 +26,11 @@ vpath %.c lib
 
 ##Dependancies and include paths
 
-DEFS = -DUSE_STDPERIPH_DRIVER -DSTM32F4XX -DMANGUSTA_DISCOVERY -DUSE_USB_OTG_FS -DHSE_VALUE=8000000
+DEFS = -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx -DMANGUSTA_DISCOVERY -DUSE_USB_OTG_FS -DHSE_VALUE=8000000
 
 MCU = cortex-m4
 MCFLAGS = -mcpu=$(MCU) -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork -std=c99
-STM32_INCLUDES = -I$(LIBPATH)/CMSIS/ST/STM32F4xx/Include/ \
+STM32_INCLUDES = -I$(LIBPATH)/CMSIS/Device/ST/STM32F4xx/Include/ \
 	-I$(LIBPATH)/CMSIS/Include/ \
 	-I$(LIBPATH)/STM32F4xx_StdPeriph_Driver/inc/ \
 	-I$(LIBPATH)/STM32_USB_Device_Library/Class/hid/inc \
