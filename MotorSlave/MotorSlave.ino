@@ -65,22 +65,23 @@ void loop() {
     index = 0;
     stringComplete = false;
   }
+  
 }
 
 //This listens to the serial line for data
 void serialEvent() {
   while (Serial.available()) {
     // get the new byte:
-    char inChar = (char)Serial.read(); 
+    char inChar = (char)Serial.read();
     Serial.print(inChar);
     // add it to the inputString:
     inputString += inChar;
-    index++; 
+    index++;
     // if the incoming character is a newline, set a flag
     // so the main loop can do something about it:
     if (inChar == 0x13) {
       stringComplete = true;
-    } 
+    }
   }
 }
 
