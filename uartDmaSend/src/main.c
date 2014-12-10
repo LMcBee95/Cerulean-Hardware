@@ -62,14 +62,24 @@ int main(void)
   
   // wait until button is pressed
   while (GPIO_ReadInputDataBit(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN));  
-  
+ 
+
  /* Enable USART DMA TX Requsts */
   USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
 
+  GPIO_SetBits(GPIOD, GPIO_Pin_13);
+
+
   /* Waiting the end of Data transfer */
   while (USART_GetFlagStatus(USART1,USART_FLAG_TC)==RESET);    
+
+  GPIO_ResetBits(GPIOD, GPIO_Pin_13);
+  GPIO_SetBits(GPIOD, GPIO_Pin_14);
+
   while (DMA_GetFlagStatus(USART1_TX_DMA_STREAM,USART1_TX_DMA_FLAG_TCIF)==RESET);
   
+  GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+
   /* Clear DMA Transfer Complete Flags */
   DMA_ClearFlag(USART1_TX_DMA_STREAM,USART1_TX_DMA_FLAG_TCIF);
   /* Clear USART Transfer Complete Flags */
