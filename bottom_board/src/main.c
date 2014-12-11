@@ -22,7 +22,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4_discovery.h"
 #include "stm32f4xx_conf.h" // again, added because ST didn't put it here ?
-#include "stm32f4xx_usart.h"
+//#include "stm32f4xx_usart.h"
 
 
 /** @addtogroup STM32F4_Discovery_Peripheral_Examples
@@ -34,11 +34,14 @@
   */ 
 
 /* Private typedef -----------------------------------------------------------*/
-NVIC_InitTypeDef NVIC_InitStructure;
+//NVIC_InitTypeDef NVIC_InitStructure;
 /* Private define ------------------------------------------------------------*/
+typedef uint8_t BottomPacket[7];
+typedef uint8_t TopPacket[16];
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-uint8_t index = 0, pressed = 0;
+uint8_t index = 0;
+uint8_t packet_in_progress = 0;
 int GPIO[] = { GPIO_Pin_12, GPIO_Pin_13, GPIO_Pin_14, GPIO_Pin_15 };
 int leds[] = { 0, 0, 0, 0 };
 /* Private function prototypes -----------------------------------------------*/
@@ -49,9 +52,8 @@ void LEDStartupRoutine();
 void SetLED(uint8_t led, uint8_t value);
 void SetPinMode(uint8_t pin, uint8_t mode, GPIO_TypeDef* block);
 void ToggleLED(uint8_t led);
-
+void USART_puts(USART_TypeDef* USARTx, volatile char *s);
 /* Private functions ---------------------------------------------------------*/
-
 
 /**
   * @brief  Main program
@@ -66,24 +68,23 @@ int main(void) {
 		 system_stm32f4xx.c file
 	*/
 	Initialize();
-
 	LEDStartupRoutine();
+
+	BottomPacket bp;
+	bp[0] = 0x12;
+	bp[1] = 'e';
+	bp[2] = 'l';
+	bp[3] = 'l';
+	bp[4] = 'o';
+	bp[5] = 'h';
+	bp[6] = 0x13;
+	USART_puts(USART1, bp);
+
 	while (1) {
 		Delay(0x3FFFFF);
-		index++;
-		/*if (index == 0) {
-			index = 255;
-		}
-		else if (index == 255) {
-			index = 0;
-		}*/
-		USART_SendData(USART1, 'm');
-		uint16_t rec = USART_ReceiveData(USART1);
-		rec %= 4;
-		SetLED(0, (rec == 0));
-		SetLED(1, (rec == 1));
-		SetLED(2, (rec == 2));
-		SetLED(3, (rec == 3));
+		// Recieve Data
+		ToggleLED(USART_ReceiveData(USART1)%4);
+		
 	}
 }
 
@@ -97,7 +98,6 @@ void ConfigurePin(GPIO_TypeDef* GPIOx, uint32_t pin, GPIOMode_TypeDef mode,\
 	GPIO_InitStructure.GPIO_PuPd = pupd;
 	GPIO_Init(GPIOx, &GPIO_InitStructure);
 }
-
 /* If value is 0, turns led off. Otherwise turn led on.*/
 void SetLED(uint8_t led, uint8_t value) {
 	if (value != 0) {
@@ -118,7 +118,7 @@ void ToggleLED(uint8_t led) {
 		SetLED(led, 1);
 	}
 }
-
+/*8-step light sequence*/
 void LEDStartupRoutine() {
 	// Turn on in sequence
 	SetLED(0, 1);
@@ -139,9 +139,10 @@ void LEDStartupRoutine() {
 	SetLED(3, 0);
 	Delay(0x3FFFFF);
 }
-
+/* Set up all pins for use.*/
 void Initialize() {
 	/* Periph clock enable */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 	RCC_AHB1PeriphClockCmd(USER_BUTTON_GPIO_CLK, ENABLE);
@@ -152,8 +153,12 @@ void Initialize() {
 	ConfigurePin(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15, \
 		GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP, GPIO_PuPd_NOPULL);
 
-	// USART on PB6 (TX) & PB7 (RX)
+	// USART1 on PB6 (TX) & PB7 (RX)
 	ConfigurePin(GPIOB, GPIO_Pin_6 | GPIO_Pin_7, GPIO_Mode_AF, GPIO_Speed_100MHz, \
+		GPIO_OType_PP, GPIO_PuPd_UP);
+
+	// USART2 on PA2 (TX) & PA3 (RX)
+	ConfigurePin(GPIOA, GPIO_Pin_2 | GPIO_Pin_3, GPIO_Mode_AF, GPIO_Speed_100MHz, \
 		GPIO_OType_PP, GPIO_PuPd_UP);
 
 	// Configure Button in output pushpull mode
@@ -164,6 +169,9 @@ void Initialize() {
 	GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_USART1);
 	GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_USART1);
 	
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_USART2);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource3, GPIO_AF_USART2);
+
 	USART_InitTypeDef USART_InitStructure;
 	USART_InitStructure.USART_BaudRate = 9600;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
@@ -171,11 +179,34 @@ void Initialize() {
 	USART_InitStructure.USART_Parity = USART_Parity_No;
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
+	
 	USART_Init(USART1, &USART_InitStructure);
+	USART_Init(USART2, &USART_InitStructure);
 
 	USART_Cmd(USART1, ENABLE); // Enable USART
+	USART_Cmd(USART2, ENABLE); // Enable USART
 }
-
+/* This function is used to transmit a string of characters via
+* the USART specified in USARTx.
+*
+* It takes two arguments: USARTx --> can be any of the USARTs e.g. USART1, USART2 etc.
+* 						   (volatile) char *s is the string you want to send
+*
+* Note: The string has to be passed to the function as a pointer because
+* 		 the compiler doesn't know the 'string' data type. In standard
+* 		 C a string is just an array of characters
+*
+* Note 2: At the moment it takes a volatile char because the received_string variable
+* 		   declared as volatile char --> otherwise the compiler will spit out warnings
+* */
+void USART_puts(USART_TypeDef* USARTx, volatile char *s){
+	while (*s){
+		// wait until data register is empty
+		while (!(USARTx->SR & 0x00000040));
+		USART_SendData(USARTx, *s);
+		s++;
+	}
+}
 /**
   * @brief  Delay Function.
   * @param  nCount:specifies the Delay time length.
@@ -184,7 +215,6 @@ void Initialize() {
 void Delay(__IO uint32_t nCount) {
 	while(nCount--){}
 }
-
 #ifdef  USE_FULL_ASSERT
 
 /**
