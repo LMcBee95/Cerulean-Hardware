@@ -1,5 +1,5 @@
 // slave
-
+byte message = 1;
 
 //This function works with an attiny85 with the rx1 and tx1 conected together
 //It reads the serial buffer and extracts the important information into a globally defined array
@@ -16,10 +16,10 @@ byte arg1 = 0;
 byte sendByte = 1;
 
 //Constants
-#define STOP 0x01
+#define STOP 0x02
 #define CONTROL_MOTOR 0x02
 #define REQUEST_FAULT_DATA 0x03
-#define ADDRESS 0x01
+#define ADDRESS 0x02
 #define RX 3
 #define TX 4
 
@@ -46,23 +46,12 @@ void setup()
 
 void loop()
 {  
- if(mySerial.overflow())
-  {
-      digitalWrite(0, LOW);  
-      while(1)
-      {
-        
-      }
-  }
-  
   boolean received = readPacket(); 
   if(received)
   {  
     usePacket();
   }
-  
 }
-
 
 //The read function which return 0 if it is successful and a positive byte if there was an error. 
 //The delays are in there in order to remove some noise whenever Serial.read() is happening 
@@ -92,13 +81,13 @@ boolean readPacket(void)
         nextByte = mySerial.peek();
         if(nextByte == 0x12)
         { 
-          digitalWrite(0, LOW); /////////////////////////////
+          digitalWrite(0, LOW);
           
           return false;  //Start byte in wrong location
         }
         else if(nextByte == 0x13 && index != 4)
         {
-          digitalWrite(0, LOW); /////////////////////////////
+          digitalWrite(0, LOW);
           return false; //end byte in wrong location
         }
 
@@ -110,8 +99,7 @@ boolean readPacket(void)
       byteReceived = mySerial.read();
       if(byteReceived != 0x13)
       {
-        digitalWrite(0, LOW); /////////////////////////////
-        
+        digitalWrite(0, LOW);
         return false; //last byte is an end byte
       }
 
@@ -122,18 +110,16 @@ boolean readPacket(void)
         {
          mySerial.read(); 
         }
-        //Function returns 0 if everything is successful 
+        //Function returns true if everything is successful 
         return true;  //Yay! Everything Works!
       }
-      digitalWrite(0, LOW); /////////////////////////////
+      digitalWrite(0, LOW);
       return false;  //check sum found an error
-
     }   
 
     //Retruns a number if the first byte is not a 12
     else
     {
-      //digitalWrite(0, LOW); /////////////////////////////
       return false; //first byte of buffer is not start byte
     }
   }
@@ -174,7 +160,7 @@ byte receivedCheckSum(const byte *packet)
 
 boolean usePacket(void)
 {
-  digitalWrite(0, HIGH);
+
   //Checks if this is the correct address
   //If the functions returns true then the device will do something. If it is false then the device will not do anything
   if(receivedPacket[0] == ADDRESS)
@@ -186,34 +172,30 @@ boolean usePacket(void)
    }
    else if(receivedPacket[1] == CONTROL_MOTOR)
    {
-     /*if(receivedPacket[2] == arg1 + 1)
-     {
-        digitalWrite(0, HIGH);
-        arg1 = receivedPacket[2]; 
-     }
-     else
-      {
-          digitalWrite(0, LOW);
-          arg1 = receivedPacket[2];
-      }*/
      return true;
    }
    else if(receivedPacket[1] == REQUEST_FAULT_DATA)
    {
+     digitalWrite(0, HIGH);
      digitalWrite(1, HIGH);
      delay(1);
-     mySerial.write(sendByte);
+     mySerial.write(1);
+     mySerial.write(2);
+     mySerial.write(3);
+     mySerial.write(4);
+     mySerial.write(5);
+     mySerial.write(6);
      sendByte++;
      delay(1);
      digitalWrite(1, LOW);
-     
-     digitalWrite(2, LOW);
      return true;
    }
    else
      return false;
  } 
  else
+ {
+   digitalWrite(0, LOW);
    return false;
+ }
 }
-

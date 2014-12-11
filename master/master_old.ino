@@ -1,4 +1,4 @@
-void handleSerialData(char inData[], byte index);
+/*void handleSerialData(char inData[], byte index);
 void handleSerialData2(char inData[], byte index);
 
 void welcomeMessage(void);
@@ -250,7 +250,7 @@ void handleSerialData2(char inData, char index) {
     //digitalWrite(GREEN, LOW);
   }
   
-  */
+  
 }
 
 //straight up CRC8 caclulation 
@@ -277,5 +277,5 @@ void welcomeMessage(void) {
   Serial.print("Type commands in the following format:\r\n");
   Serial.print("Address Command Arg1 Arg2\r\n");
   Serial.print("EX:\"1 1 1 100\"\r\n\n\n");
-}
+}*/
 

@@ -9,7 +9,8 @@ byte crc8(const byte *packet);
 #define STOP 0x01
 #define CONTROL_MOTOR 0x02
 #define REQUEST_FAULT_DATA 0x03
-#define ADDRESS 0x01
+#define ADDRESS1 0x01
+#define ADDRESS2 0x02
 
 
 //Variables to simulate an actual packet
@@ -20,6 +21,10 @@ byte Arg1 = 0x18;
 byte Arg2 = 0x04;
 byte checkSum = 0xFF;
 byte endByte = 0x13;
+
+byte sendPacket[] = {startByte, address1, command, Arg1, Arg2, checkSum, endByte};
+
+int counter = 0;
 
 void setup()
 {
@@ -33,11 +38,18 @@ void setup()
  } 
 
 void loop()
-{  
-
-  byte sendPacket[] = {startByte, address1, command, Arg1, Arg2, checkSum, endByte};
+{ 
+  if(counter % 2 == 0)
+  { 
+    sendPacket[1] = ADDRESS2;
+    counter++;
+  }
+  else if(counter % 2 == 1)
+  {
+   sendPacket[1] = ADDRESS1;
+   counter++; 
+  }
   sendPacket[5] = crc8(sendPacket);
-  //Serial1.write(sendPacket, sizeof(sendPacket));
   for(int i = 0; i < 7; i++)
   {
      Serial3.write(sendPacket[i]); 
@@ -46,9 +58,7 @@ void loop()
   delay(1);
   digitalWrite(3, LOW);
   
-  delay(5);
-  
-  //while(!Serial3.available());
+  delay(7);
   
   while(Serial3.available())
   {
@@ -61,7 +71,6 @@ void loop()
 
 byte crc8(const byte *packet)
 { 
-
   byte crc = 0;
   *packet++;
   for(byte len = 1; len < 5; len++) {
