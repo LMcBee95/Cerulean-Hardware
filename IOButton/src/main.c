@@ -23,6 +23,7 @@
 #include "stm32f4_discovery.h"
 #include "stm32f4xx_conf.h" // again, added because ST didn't put it here ?
 
+
 /** @addtogroup STM32F4_Discovery_Peripheral_Examples
   * @{
   */
@@ -37,11 +38,16 @@ GPIO_InitTypeDef  GPIO_InitStructure;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+uint8_t index = 0;
+int GPIO[] = { GPIO_Pin_12, GPIO_Pin_13, GPIO_Pin_14, GPIO_Pin_15 };
+int leds[] = { 0, 0, 0, 0 };
 /* Private function prototypes -----------------------------------------------*/
+void LEDStartupRoutine();
 void Delay(__IO uint32_t nCount);
+void SetLED(uint8_t led, uint8_t value);
 void ToggleLED(uint8_t led);
 /* Private functions ---------------------------------------------------------*/
-uint8_t index = 0;
+
 
 /**
   * @brief  Main program
@@ -71,7 +77,7 @@ int main(void)
   /* GPIOD Periph clock enable */
   RCC_AHB1PeriphClockCmd(USER_BUTTON_GPIO_CLK, ENABLE);
 
-  /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
+  /* Configure Button in output pushpull mode */
   GPIO_InitStructure.GPIO_Pin = USER_BUTTON_PIN;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -79,41 +85,61 @@ int main(void)
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(USER_BUTTON_GPIO_PORT, &GPIO_InitStructure);
 
-
-
-
-  while (1)
-  {
+  LEDStartupRoutine();
+  command[] = { 1 };
+  while (1) {
+	  Delay(0x06FFFF);
 	  uint8_t button = GPIO_ReadInputDataBit(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN);
-	  if (button) {
-		  ToggleLED(index);
-	  }
-	  Delay(0x3FFFFF);
 	  index++;
-	  index %= 4;
+	  
+	  if (button) {
+		  SetLED(1, 1);
+	  }
+	  else {
+		  SetLED(1,0);
+	  }
   }
 }
-
-int leds[] = { 0, 0, 0, 0 };
-void ToggleLED(uint8_t led) {
-	uint16_t pin;
-	if (led == 0)
-		pin = GPIO_Pin_12;
-	if (led == 1)
-		pin = GPIO_Pin_13;
-	if (led == 2)
-		pin = GPIO_Pin_14;
-	if (led == 3)
-		pin = GPIO_Pin_15;
-
-	if (leds[led]) {
-		GPIO_ResetBits(GPIOD, pin);
-		leds[led] = 0;
-	}
-	else {
-		GPIO_SetBits(GPIOD, pin);
+/* If value is 0, turns led off. Otherwise turn led on.*/
+void SetLED(uint8_t led, uint8_t value) {
+	if (value != 0) {
+		GPIO_SetBits(GPIOD, GPIO[led]);
 		leds[led] = 1;
 	}
+	else if (value == 0) {
+		GPIO_ResetBits(GPIOD, GPIO[led]);
+		leds[led] = 0;
+	}
+}
+/* If led is on, turn off. If led is off, turn on.*/
+void ToggleLED(uint8_t led) {
+	if (leds[led]) {
+		SetLED(led, 0);
+	}
+	else {
+		SetLED(led, 1);
+	}
+}
+
+void LEDStartupRoutine() {
+	// Turn on in sequence
+	SetLED(0, 1);
+	Delay(0x3FFFFF);
+	SetLED(1, 1);
+	Delay(0x3FFFFF);
+	SetLED(2, 1);
+	Delay(0x3FFFFF);
+	SetLED(3, 1);
+	Delay(0x3FFFFF);
+	// Turn off in sequence
+	SetLED(0, 0);
+	Delay(0x3FFFFF);
+	SetLED(1, 0);
+	Delay(0x3FFFFF);
+	SetLED(2, 0);
+	Delay(0x3FFFFF);
+	SetLED(3, 0);
+	Delay(0x3FFFFF);
 }
 
 /**
