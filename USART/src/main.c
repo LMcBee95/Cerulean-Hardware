@@ -181,7 +181,7 @@ void USART1_IRQHandler(void){
 		else{ // otherwise reset the character counter and print the received string
 			cnt = 0;
 			USART_puts(USART1, received_string);
-      GPIO_SetBits(GPIOD, GPIO_Pin_12);
+			GPIO_SetBits(GPIOD, GPIO_Pin_12);
 		}
 	}
 }

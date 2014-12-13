@@ -45,14 +45,16 @@ uint8_t packet_in_progress = 0;
 int GPIO[] = { GPIO_Pin_12, GPIO_Pin_13, GPIO_Pin_14, GPIO_Pin_15 };
 int leds[] = { 0, 0, 0, 0 };
 /* Private function prototypes -----------------------------------------------*/
+uint8_t checksum(uint8_t* packet);
 void ConfigurePin(GPIO_TypeDef* GPIOx, uint32_t pin, GPIOMode_TypeDef mode, GPIOSpeed_TypeDef speed, GPIOOType_TypeDef type, GPIOPuPd_TypeDef pupd);
 void Delay(__IO uint32_t nCount);
 void Initialize();
 void LEDStartupRoutine();
+void newBottomPacket(uint8_t* bp, uint8_t address, uint8_t cmd, uint8_t arg1, uint8_t arg2);
 void SetLED(uint8_t led, uint8_t value);
 void SetPinMode(uint8_t pin, uint8_t mode, GPIO_TypeDef* block);
 void ToggleLED(uint8_t led);
-void USART_puts(USART_TypeDef* USARTx, volatile char *s);
+void USART_puts(USART_TypeDef* USARTx, volatile uint8_t *s);
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -69,23 +71,54 @@ int main(void) {
 	*/
 	Initialize();
 	LEDStartupRoutine();
+	
+	// Rx
+	uint8_t bottomindex, topindex;
+	TopPacket TopPacketRx;
+	BottomPacket BottomPacketRx;
 
-	BottomPacket bp;
-	bp[0] = 0x12;
-	bp[1] = 'e';
-	bp[2] = 'l';
-	bp[3] = 'l';
-	bp[4] = 'o';
-	bp[5] = 'h';
-	bp[6] = 0x13;
-	USART_puts(USART1, bp);
+	// Tx
+	TopPacket TopPacketTx;
+	BottomPacket BottomPacketTx;
+
+	newBottomPacket(BottomPacketTx, 0, 2, 2, 3);
 
 	while (1) {
-		Delay(0x3FFFFF);
+		Delay(0x0FFFFF);
 		// Recieve Data
-		ToggleLED(USART_ReceiveData(USART1)%4);
+		// From top board
+		SetLED(0, 1);
+		ToggleLED(1);
 		
+		USART_puts(USART1, BottomPacketTx);
 	}
+}
+
+void newBottomPacket(uint8_t* bp, uint8_t address, uint8_t cmd, uint8_t arg1, uint8_t arg2) {
+
+	bp[0] = 0x12;
+	bp[1] = address;
+	bp[2] = cmd;
+	bp[3] = arg1;
+	bp[4] = arg2;
+	bp[5] = checksum(bp);
+	bp[6] = 0x13;
+}
+
+uint8_t checksum(uint8_t* packet) {
+	uint8_t crc = 0;
+	*packet++;
+	for (uint8_t len = 1; len < 5; len++) {
+		uint8_t inbyte = *packet++;
+		for (uint8_t i = 8; i; i--) {
+			uint8_t mix = (crc ^ inbyte) & 0x01;
+			crc >>= 1;
+			if (mix)
+				crc ^= 0xD5;
+			inbyte >>= 1;
+		}
+	}
+	return crc;
 }
 
 void ConfigurePin(GPIO_TypeDef* GPIOx, uint32_t pin, GPIOMode_TypeDef mode,\
@@ -97,47 +130,6 @@ void ConfigurePin(GPIO_TypeDef* GPIOx, uint32_t pin, GPIOMode_TypeDef mode,\
 	GPIO_InitStructure.GPIO_Speed = speed;
 	GPIO_InitStructure.GPIO_PuPd = pupd;
 	GPIO_Init(GPIOx, &GPIO_InitStructure);
-}
-/* If value is 0, turns led off. Otherwise turn led on.*/
-void SetLED(uint8_t led, uint8_t value) {
-	if (value != 0) {
-		GPIO_SetBits(GPIOD, GPIO[led]);
-		leds[led] = 1;
-	}
-	else {
-		GPIO_ResetBits(GPIOD, GPIO[led]);
-		leds[led] = 0;
-	}
-}
-/* If led is on, turn off. If led is off, turn on.*/
-void ToggleLED(uint8_t led) {
-	if (leds[led]) {
-		SetLED(led, 0);
-	}
-	else {
-		SetLED(led, 1);
-	}
-}
-/*8-step light sequence*/
-void LEDStartupRoutine() {
-	// Turn on in sequence
-	SetLED(0, 1);
-	Delay(0x3FFFFF);
-	SetLED(1, 1);
-	Delay(0x3FFFFF);
-	SetLED(2, 1);
-	Delay(0x3FFFFF);
-	SetLED(3, 1);
-	Delay(0x3FFFFF);
-	// Turn off in sequence
-	SetLED(0, 0);
-	Delay(0x3FFFFF);
-	SetLED(1, 0);
-	Delay(0x3FFFFF);
-	SetLED(2, 0);
-	Delay(0x3FFFFF);
-	SetLED(3, 0);
-	Delay(0x3FFFFF);
 }
 /* Set up all pins for use.*/
 void Initialize() {
@@ -199,13 +191,56 @@ void Initialize() {
 * Note 2: At the moment it takes a volatile char because the received_string variable
 * 		   declared as volatile char --> otherwise the compiler will spit out warnings
 * */
-void USART_puts(USART_TypeDef* USARTx, volatile char *s){
-	while (*s){
+void USART_puts(USART_TypeDef* USARTx, volatile uint8_t *s){
+	uint8_t sent = 0;
+	while (sent != 0x13) {
 		// wait until data register is empty
 		while (!(USARTx->SR & 0x00000040));
 		USART_SendData(USARTx, *s);
+		sent = *s;
 		s++;
 	}
+}
+/* If led is on, turn off. If led is off, turn on.*/
+void ToggleLED(uint8_t led) {
+	if (leds[led]) {
+		SetLED(led, 0);
+	}
+	else {
+		SetLED(led, 1);
+	}
+}
+/* If value is 0, turns led off. Otherwise turn led on.*/
+void SetLED(uint8_t led, uint8_t value) {
+	if (value != 0) {
+		GPIO_SetBits(GPIOD, GPIO[led]);
+		leds[led] = 1;
+	}
+	else {
+		GPIO_ResetBits(GPIOD, GPIO[led]);
+		leds[led] = 0;
+	}
+}
+/*8-step light sequence*/
+void LEDStartupRoutine() {
+	// Turn on in sequence
+	SetLED(0, 1);
+	Delay(0x3FFFFF);
+	SetLED(1, 1);
+	Delay(0x3FFFFF);
+	SetLED(2, 1);
+	Delay(0x3FFFFF);
+	SetLED(3, 1);
+	Delay(0x3FFFFF);
+	// Turn off in sequence
+	SetLED(0, 0);
+	Delay(0x3FFFFF);
+	SetLED(1, 0);
+	Delay(0x3FFFFF);
+	SetLED(2, 0);
+	Delay(0x3FFFFF);
+	SetLED(3, 0);
+	Delay(0x3FFFFF);
 }
 /**
   * @brief  Delay Function.
