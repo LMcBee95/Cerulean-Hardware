@@ -16,10 +16,10 @@ byte arg1 = 0;
 byte sendByte = 1;
 
 //Constants
-#define STOP 0x02
+#define STOP 0x01
 #define CONTROL_MOTOR 0x02
 #define REQUEST_FAULT_DATA 0x03
-#define ADDRESS 0x02
+#define ADDRESS 0x01
 #define RX 3
 #define TX 4
 
@@ -179,12 +179,12 @@ boolean usePacket(void)
      digitalWrite(0, HIGH);
      digitalWrite(1, HIGH);
      delay(1);
-     mySerial.write(1);
-     mySerial.write(2);
-     mySerial.write(3);
-     mySerial.write(4);
-     mySerial.write(5);
-     mySerial.write(6);
+     mySerial.write(7);
+     mySerial.write(8);
+     mySerial.write(9);
+     mySerial.write(10);
+     mySerial.write(11);
+     mySerial.write(12);
      sendByte++;
      delay(1);
      digitalWrite(1, LOW);

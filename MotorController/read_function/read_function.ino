@@ -2,17 +2,25 @@
 //It reads the serial buffer and extracts the important information into a globally defined array
 
 //Function protypes for the read function
-byte readPacket(void);
+boolean readPacket(void);
 byte crc8(const byte *packet);
 byte receivedCheckSum (const byte *packet);
+boolean usePacket(void);
+
+//Constants
+#define STOP 0x01
+#define CONTROL_MOTOR 0x02
+#define REQUEST_FAULT_DATA 0x03
+#define ADDRESS 0x01
+
 
 //Variables to simulate an actual packet
 byte startByte = 12;
-byte address = 255;
-byte command = 0;
-byte Arg1 = 255;
-byte Arg2 = 255;
-byte checkSum = 111;
+byte address1 = 0x01;
+byte command = 0x02;
+byte Arg1 = 20;
+byte Arg2 = 0;
+byte checkSum = 0;
 byte endByte = 13;
 
 //Making the array a global array
@@ -24,9 +32,12 @@ void setup()
   Serial.begin(9600);
   Serial1.begin(9600);
 
+  pinMode(10, OUTPUT);
+  pinMode(12, OUTPUT);
+  pinMode(11, OUTPUT);
+
   //Sends the simulated packet to Serial 1. 
-  byte sendPacket[] = {
-    startByte, address, command, Arg1, Arg2, checkSum, endByte  };
+  byte sendPacket[] = {startByte, address1, command, Arg1, Arg2, checkSum, endByte};
   sendPacket[5] = crc8(sendPacket);
 
   Serial1.write(sendPacket, sizeof(sendPacket));
@@ -38,7 +49,7 @@ void loop()
   boolean Received = readPacket(); 
   if(Received)
   {
-    Serial.println("ItWorked!");
+    usePacket();
   }
   delay(1000);
 }
@@ -139,3 +150,29 @@ byte receivedCheckSum(const byte *packet)
   return crc;
 }
 
+boolean usePacket(void)
+{
+ if(receivedPacket[0] == ADDRESS)
+ {
+   if(receivedPacket[1] == STOP)
+   {
+     digitalWrite(11, HIGH);
+     return true;
+   }
+   else if(receivedPacket[1] == CONTROL_MOTOR)
+   {
+     analogWrite(12, receivedPacket[2]);
+     analogWrite(10, receivedPacket[3]);
+     return true;
+   }
+   else if(receivedPacket[1] == REQUEST_FAULT_DATA)
+   {
+     digitalWrite(10, HIGH);
+     return true;
+   }
+   else
+     return false;
+ } 
+ else
+   return false;
+}
