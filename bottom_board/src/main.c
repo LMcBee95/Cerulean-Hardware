@@ -37,7 +37,7 @@
 //NVIC_InitTypeDef NVIC_InitStructure;
 /* Private define ------------------------------------------------------------*/
 typedef uint8_t BottomPacket[7];
-typedef uint8_t TopPacket[16];
+typedef int8_t TopPacket[16];
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 uint8_t index = 0;
@@ -47,7 +47,9 @@ int leds[] = { 0, 0, 0, 0 };
 /* Private function prototypes -----------------------------------------------*/
 uint8_t checksum(uint8_t* packet);
 void ConfigurePin(GPIO_TypeDef* GPIOx, uint32_t pin, GPIOMode_TypeDef mode, GPIOSpeed_TypeDef speed, GPIOOType_TypeDef type, GPIOPuPd_TypeDef pupd);
+void convertTBtoBB(uint8_t* top, BottomPacket* bottom);
 void Delay(__IO uint32_t nCount);
+void getRandomTopPacket(uint8_t* packet);
 void Initialize();
 void LEDStartupRoutine();
 void newBottomPacket(uint8_t* bp, uint8_t address, uint8_t cmd, uint8_t arg1, uint8_t arg2);
@@ -79,23 +81,27 @@ int main(void) {
 
 	// Tx
 	TopPacket TopPacketTx;
-	BottomPacket BottomPacketTx;
-
-	newBottomPacket(BottomPacketTx, 0, 2, 2, 3);
+	BottomPacket BottomPacketTx[8];
 
 	while (1) {
 		Delay(0x0FFFFF);
-		// Recieve Data
-		// From top board
 		SetLED(0, 1);
 		ToggleLED(1);
-		
-		USART_puts(USART1, BottomPacketTx);
+		// Recieve Data
+		// From top board
+		getRandomTopPacket(TopPacketRx);
+		// Convert Packets
+		// TB -> BB
+		convertTBtoBB(TopPacketRx, BottomPacketTx);
+		//Send Data
+		// To motors
+		for (int i = 0; i < 8; i++) {
+			USART_puts(USART1, BottomPacketTx[i]);
+		}
 	}
 }
 
 void newBottomPacket(uint8_t* bp, uint8_t address, uint8_t cmd, uint8_t arg1, uint8_t arg2) {
-
 	bp[0] = 0x12;
 	bp[1] = address;
 	bp[2] = cmd;
@@ -103,6 +109,17 @@ void newBottomPacket(uint8_t* bp, uint8_t address, uint8_t cmd, uint8_t arg1, ui
 	bp[4] = arg2;
 	bp[5] = checksum(bp);
 	bp[6] = 0x13;
+}
+
+void convertTBtoBB(uint8_t* top, BottomPacket* bottom) {
+	for (int i = 0; i < 8; i++) {
+		newBottomPacket(bottom[i], i + 1, 1, scale(top[i]), 0);
+	}
+}
+
+uint8_t scale(int8_t value) {
+	uint8_t sign = (x > 0) - (x < 0);
+
 }
 
 uint8_t checksum(uint8_t* packet) {
@@ -201,6 +218,26 @@ void USART_puts(USART_TypeDef* USARTx, volatile uint8_t *s){
 		s++;
 	}
 }
+
+void getRandomTopPacket(uint8_t* packet) {
+	packet[0] = 0x12;
+	packet[1] = 0; // Motors 1-8
+	packet[2] = 0;
+	packet[3] = 0;
+	packet[4] = 0;
+	packet[5] = 0;
+	packet[6] = 0;
+	packet[7] = 0;
+	packet[8] = 0;
+	packet[9] = 0; // Tool 1-2
+	packet[10] = 0;
+	packet[11] = 0; // RGB
+	packet[12] = 0;
+	packet[13] = 0;
+	packet[14] = 0; // Checksum
+	packet[15] = 0x13;
+}
+
 /* If led is on, turn off. If led is off, turn on.*/
 void ToggleLED(uint8_t led) {
 	if (leds[led]) {
