@@ -25,6 +25,12 @@ byte crc8(const byte *packet);
 boolean readPacket(void);
 boolean usePacket(void);
 
+//Sets what baud rate we are opperating at
+#define BAUD_RATE 9600
+
+//Time in microseconds to send 6 bytes across serial
+int delayTime = (1000 * 1000 * 8 * 6 / BAUD_RATE) + 1 ;
+
 //the address of the motor controller
 #define ADDRESS 0x01
 
@@ -88,7 +94,7 @@ void setup()
   digitalWrite(RESET, LOW);
   
   //begin serial communication
-  mySerial.begin(9600);
+  mySerial.begin(BAUD_RATE);
 }
 
 void loop()
@@ -134,7 +140,7 @@ boolean readPacket(void)
     if(mySerial.read() == 0x12)
     {
       //Dealy to compensate for the speed difference between the serial and how fast the attiny is going.
-      delay(5);
+      delayMicroseconds(delayTime);
       index = 0;
       //Reads the five important bytes into the array
       while(index < 5)
