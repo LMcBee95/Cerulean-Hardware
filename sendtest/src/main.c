@@ -125,13 +125,13 @@ int main(void) {
     GPIO_SetBits(GPIOD, GPIO_Pin_12);
 
     /* Insert delay */
-    Delay(0x3FFFFF);
+    //Delay(0x3FFFFF);
 
     /* PD13 to be toggled */
     GPIO_SetBits(GPIOD, GPIO_Pin_13);
 
     /* Insert delay */
-    Delay(0x3FFFFF);
+    //Delay(0x3FFFFF);
 
     //USART_puts(USART1, 'B');
 		USART_SendData(USART1, 'B');
