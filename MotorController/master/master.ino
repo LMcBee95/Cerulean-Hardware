@@ -1,4 +1,4 @@
-// Master
+  // Master
 
 //This function works with a mega with the rx1 and tx1 conected together
 //It reads the serial buffer and extracts the important information into a globally defined array
@@ -78,7 +78,8 @@ byte crc8(const byte *packet)
     for (byte i = 8; i; i--) {
       byte mix = (crc ^ inbyte) & 0x01;
       crc >>= 1;
-      if (mix) crc ^= 0xD5;
+      if (mix)
+        crc ^= 0xD5;
       inbyte >>= 1;
     }
   }

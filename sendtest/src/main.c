@@ -28,7 +28,6 @@ void init_USART1(uint32_t baudrate){
 	 */
 	GPIO_InitTypeDef GPIO_InitStruct; // this is for the GPIO pins used as TX and RX
 	USART_InitTypeDef USART_InitStruct; // this is for the USART1 initilization
-	NVIC_InitTypeDef NVIC_InitStructure; // this is used to configure the NVIC (nested vector interrupt controller)
 	
 	/* enable APB2 peripheral clock for USART1 
 	 * note that only USART1 and USART6 are connected to APB2
@@ -70,21 +69,6 @@ void init_USART1(uint32_t baudrate){
 	USART_Init(USART1, &USART_InitStruct);					// again all the properties are passed to the USART_Init function which takes care of all the bit setting
 	
 	
-	/* Here the USART1 receive interrupt is enabled
-	 * and the interrupt controller is configured 
-	 * to jump to the USART1_IRQHandler() function
-	 * if the USART1 receive interrupt occurs
-	 */
-	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE); // enable the USART1 receive interrupt 
-	
-	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;		 // we want to configure the USART1 interrupts
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;// this sets the priority group of the USART1 interrupts
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;		 // this sets the subpriority inside the group
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;			 // the USART1 interrupts are globally enabled
-	NVIC_Init(&NVIC_InitStructure);							 // the properties are passed to the NVIC_Init function which takes care of the low level stuff	
-
-	// finally this enables the complete USART1 peripheral
-	USART_Cmd(USART1, ENABLE);
 }
 
 /* This function is used to transmit a string of characters via 
@@ -126,22 +110,31 @@ int main(void) {
 
   init_USART1(9600); // initialize USART1 @ 9600 baud
 
-  USART_puts(USART1, "Init complete! Hello World!\r\n"); // just send a message to indicate that it works
+  USART_Cmd(USART1, ENABLE);
+
   Delay(0x3FFFFF);
   USART_puts(USART1, "FUCK YO COUCH\r\n"); // just send a message to indicate that it works
 
   while (1){  
+
+    //USART_puts(USART1, 'A');
+		USART_SendData(USART1, 'A');
+
+
     //* PD12 to be toggled */
     GPIO_SetBits(GPIOD, GPIO_Pin_12);
 
     /* Insert delay */
-    Delay(0x3FFFFF);
+    //Delay(0x3FFFFF);
 
     /* PD13 to be toggled */
     GPIO_SetBits(GPIOD, GPIO_Pin_13);
 
     /* Insert delay */
-    Delay(0x3FFFFF);
+    //Delay(0x3FFFFF);
+
+    //USART_puts(USART1, 'B');
+		USART_SendData(USART1, 'B');
 
     /* PD14 to be toggled */
     GPIO_SetBits(GPIOD, GPIO_Pin_14);
@@ -162,26 +155,3 @@ int main(void) {
   }
 }
 
-// this is the interrupt request handler (IRQ) for ALL USART1 interrupts
-void USART1_IRQHandler(void){
-	
-	// check if the USART1 receive interrupt flag was set
-	if( USART_GetITStatus(USART1, USART_IT_RXNE) ){
-		
-		static uint8_t cnt = 0; // this counter is used to determine the string length
-		char t = USART1->DR; // the character from the USART1 data register is saved in t
-		
-		/* check if the received character is not the LF character (used to determine end of string) 
-		 * or the if the maximum string length has been been reached 
-		 */
-		if( (t != '\n') && (cnt < MAX_STRLEN) ){ 
-			received_string[cnt] = t;
-			cnt++;
-		}
-		else{ // otherwise reset the character counter and print the received string
-			cnt = 0;
-			USART_puts(USART1, received_string);
-			GPIO_SetBits(GPIOD, GPIO_Pin_12);
-		}
-	}
-}
