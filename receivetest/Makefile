@@ -26,7 +26,7 @@ vpath %.c lib
 
 ##Dependancies and include paths
 
-DEFS = -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx -DMANGUSTA_DISCOVERY -DUSE_USB_OTG_FS -DHSE_VALUE=8000000
+DEFS = -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx -DUSE_STM324xG_EVAL -DMANGUSTA_DISCOVERY -DUSE_USB_OTG_FS -DHSE_VALUE=8000000
 
 MCU = cortex-m4
 MCFLAGS = -mcpu=$(MCU) -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork -std=c99
@@ -36,6 +36,8 @@ STM32_INCLUDES = -I$(LIBPATH)/CMSIS/Device/ST/STM32F4xx/Include/ \
 	-I$(LIBPATH)/STM32_USB_Device_Library/Class/hid/inc \
 	-I$(LIBPATH)/STM32_USB_Device_Library/Core/inc/ \
 	-I$(LIBPATH)/STM32_USB_OTG_Driver/inc/ \
+	-I$(LIBPATH)/STM32_EVAL/STM3240_41_G_EVAL/ \
+	-I$(LIBPATH)/STM32_EVAL/Common/ \
 	-Iinc/
 
 ##Optimizations - keep this at -0s
