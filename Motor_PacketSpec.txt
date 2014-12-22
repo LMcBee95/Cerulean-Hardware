@@ -1,0 +1,68 @@
+Motor Controller Packet
+
+0x12 	= Header byte
+address = byte 
+command = byte
+arg1	= byte
+arg2	= byte
+crc8	= check sum byte
+0x13 	= Tail byte
+
+Address:
+	Master: 0
+	Motors:	1-8
+	
+Command: 
+	0x01 (Control Motor)
+	0x02 (Stop Motor)
+	0x03 (Request fault data)
+	0x04 (Reset H-bridge)
+	
+arg1/arg2
+	0x01 (Control Motor)
+		Arg1: Direction
+			0 = reverse
+			1 = forward
+		
+		Arg2: Speed (Any integer value between 0 and 255)
+			0 	= No speed
+			255 = Full speed
+			
+	0x02 (STOP)
+		Arg1: NA
+		
+		Arg2: NA
+	
+	0x03 (Request Fault Data)
+		Arg1: NA
+		
+		Arg2: NA
+	
+	0x04 (Reset H-bridge)
+		Arg1: NA
+		
+		Arg2: NA
+
+Check Sum
+	
+	Takes an byte array of length 4 and creates a check sum.
+	
+	byte crc8(const byte *packet)
+	{ 
+	  byte crc = 0;
+	  for(byte len = 0; len < 4; len++) {
+		uint8_t inbyte = *packet++;
+		for (byte i = 8; i; i--) {
+		  byte mix = (crc ^ inbyte) & 0x01;
+		  crc >>= 1;
+		  if (mix) crc ^= 0xD5;
+		  inbyte >>= 1;
+		}
+	  }
+	  return crc;
+	}
+
+	
+
+	
+	
