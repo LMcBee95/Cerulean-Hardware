@@ -113,13 +113,13 @@ void newBottomPacket(uint8_t* bp, uint8_t address, uint8_t cmd, uint8_t arg1, ui
 
 void convertTBtoBB(uint8_t* top, BottomPacket* bottom) {
 	for (int i = 0; i < 8; i++) {
-		newBottomPacket(bottom[i], i + 1, 1, scale(top[i]), 0);
+		newBottomPacket(bottom[i], i + 1, 1, top[i], 0);
 	}
 }
 
 uint8_t scale(int8_t value) {
 	uint8_t sign = (x > 0) - (x < 0);
-
+	return 0;
 }
 
 uint8_t checksum(uint8_t* packet) {
