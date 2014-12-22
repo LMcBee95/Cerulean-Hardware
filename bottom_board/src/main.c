@@ -107,7 +107,7 @@ void newBottomPacket(uint8_t* bp, uint8_t address, uint8_t cmd, uint8_t arg1, ui
 	bp[2] = cmd;
 	bp[3] = arg1;
 	bp[4] = arg2;
-	bp[5] = checksum(bp);
+	bp[5] = checksum(bp, 1, 4);
 	bp[6] = 0x13;
 }
 
@@ -121,11 +121,14 @@ uint8_t scale(int8_t value) {
 	uint8_t sign = (x > 0) - (x < 0);
 	return 0;
 }
-
-uint8_t checksum(uint8_t* packet) {
+/*Generates and returns the checksum for the provided values.
+* For BottomPacket, call: checksum(bp, 1, 4)
+* For TopPacket, call: checksum(tp, 1, 13)
+*/
+uint8_t checksum(uint8_t* packet, uint8_t start_index, uint8_t size) {
 	uint8_t crc = 0;
-	*packet++;
-	for (uint8_t len = 1; len < 5; len++) {
+	*packet += start_index;
+	for (uint8_t i = 0; i < size; i++) {
 		uint8_t inbyte = *packet++;
 		for (uint8_t i = 8; i; i--) {
 			uint8_t mix = (crc ^ inbyte) & 0x01;
@@ -234,7 +237,7 @@ void getRandomTopPacket(uint8_t* packet) {
 	packet[11] = 0; // RGB
 	packet[12] = 0;
 	packet[13] = 0;
-	packet[14] = 0; // Checksum
+	packet[14] = checksum(packet, 1, 13); // Checksum
 	packet[15] = 0x13;
 }
 
