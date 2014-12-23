@@ -1,4 +1,4 @@
-#include "stm32f4_discovery.h"
+   #include "stm32f4_discovery.h"
 #include "stm32f4xx_conf.h"
 #include <misc.h>			 // I recommend you have a look at these in the ST firmware folder
 #include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
@@ -169,6 +169,9 @@ void convertTBtoBB(uint8_t* top) {
 		motor[i][0] = 0x12;
 		motor[i][1] = i + 1;
 		motor[i][2] = 1;
+		
+		motor[0][1] = 2;
+		
 		motor[i][3] = direction;
 		motor[i][4] = magnitude;
 		motor[i][5] = checksum(motor[i], 1, 4);
@@ -225,7 +228,7 @@ int main(void) {
 		
 		if(counter > 15) //When we read in the entire top packet
 		{
-			if(checksum(storage, 2, 13) == storage[14]) //If the checksum is correct
+			if(1 || checksum(storage, 2, 13) == storage[14]) //If the checksum is correct
 			{
 				convertTBtoBB(storage);
 				sendPackets(); //Sends out the motor commands
@@ -245,4 +248,3 @@ int main(void) {
 
   }
 }
-
