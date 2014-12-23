@@ -108,35 +108,12 @@ void init_USART1(uint32_t baudrate){
  * 		   declared as volatile char --> otherwise the compiler will spit out warnings
  * */
 
-
-int main(void) {
-
-/* GPIOD Periph clock enable */
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-
-  /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15 | GPIO_Pin_1;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_Init(GPIOD, &GPIO_InitStructure); 
-
-
-  init_USART1(115200); // initialize USART1 baud rate
-
-  USART_Cmd(USART1, ENABLE);
-  GPIO_SetBits(GPIOD, GPIO_Pin_1);
-  
-  uint8_t sendPacket[] = {0x12, 1, 1, 4, 4, 5,0x13};
-  sendPacket[5] = crc8(sendPacket);
-  uint32_t delayTime= 0x0000FFFF;  //A delay to reduce the noise from sending serial too quickly.
-
-  Delay(0x3FFFFF);
-
-  while (1){  
+ uint32_t delayTime= 0x0000FFFF;  //A delay to reduce the noise from sending serial too quickly.
+ void send_packet(uint8_t command)
+{
+	uint8_t sendPacket[] = {0x12, 1, command, 4, 4, 5,0x13};
 	
-    USART_puts(USART1, sendPacket[0]);
+	USART_puts(USART1, sendPacket[0]);
 	
     // PD12 to be toggled 
     GPIO_SetBits(GPIOD, GPIO_Pin_12);
@@ -162,9 +139,6 @@ int main(void) {
 	
 	USART_puts(USART1, sendPacket[3]);
 
-    // PD12 to be toggled 
-    GPIO_SetBits(GPIOD, GPIO_Pin_14);
-
 	//Adds a delay to smooth out serial
 	Delay(delayTime);
 	
@@ -184,8 +158,76 @@ int main(void) {
 	Delay(delayTime);
 	
 	Delay(0x00FFFFFF);
+	//Delay(0x00FFFFFF);
 
     GPIO_ResetBits(GPIOD, GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15);
+	GPIO_SetBits(GPIOD, GPIO_Pin_1);
+}
+
+int main(void) 
+{
+
+/* GPIOD Periph clock enable */
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+
+  /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15 | GPIO_Pin_1;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOD, &GPIO_InitStructure); 
+
+
+  init_USART1(9600); // initialize USART1 baud rate
+
+  USART_Cmd(USART1, ENABLE);
+  GPIO_SetBits(GPIOD, GPIO_Pin_1);
+  
+  uint8_t sendPacket[] = {0x12, 1, 1, 4, 4, 5,0x13};
+  sendPacket[5] = crc8(sendPacket);
+
+  Delay(0x3FFFFF);
+
+  uint8_t i = 1;
+  uint8_t counter = 0;
+  uint8_t storage[7];
+  while (1){  
+	
+    send_packet(3);
+	
+	Delay(0x03FFFF); //delay 1 ms
+	
+	GPIO_ResetBits(GPIOD, GPIO_Pin_1);
+	
+	while(!USART_GetFlagStatus(USART1, USART_FLAG_RXNE))
+	{
+		GPIO_SetBits(GPIOD, GPIO_Pin_14);
+	}
+	GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+	
+	if(USART_GetFlagStatus(USART1, USART_FLAG_RXNE)){
+		while(counter < 8)
+		{
+			while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE)) //if data is received store it in the array storage
+			{
+				storage[counter] = USART_ReceiveData(USART1);	//Reads in the data from the buffer into an array
+				counter++;	//Increments the counter
+			}
+			
+			if(counter > 7) //A packet has been received
+			{
+				if(crc8(storage) == storage[6])
+				{
+					GPIO_SetBits(GPIOD, GPIO_Pin_15);	//Turns on led to indicate that serial is receiving data
+				}				
+			}
+		}
+		Delay(0x03FFFF);
+		GPIO_SetBits(GPIOD, GPIO_Pin_1);
+		counter = 0;
+		
 	}
   }
+ }
 

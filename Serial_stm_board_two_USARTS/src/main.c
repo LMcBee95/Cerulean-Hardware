@@ -4,6 +4,10 @@
 #include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
 GPIO_InitTypeDef  GPIO_InitStructure;
 
+uint8_t counter = 0;	//Counter used to increment the data received from the top board into an array
+uint8_t storage[16];	//Array used to store the data received from the top board
+uint8_t motor[8][7];	//Initializes a multidimensional array to store all of the motor commands
+
 
 void Delay(__IO uint32_t nCount) {
   while(nCount--) {
@@ -19,12 +23,14 @@ void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 		
 		// wait until data register is empty
 		while( !(USARTx->SR & 0x00000040) ); 
-		USART_SendData(USARTx, data);
+		USART_SendData(USARTx, data);;
+		Delay(0x0000FFFF);//Added delay to reduce noise. Don't know why we need it, because the while loop should reduce the noise.
 }
 
-/* This funcion initializes the USART1 peripheral
+
+/* This function initializes USART1 peripheral
  * 
- * Arguments: baudrate --> the baudrate at which the USART is 
+ * Arguments: baud rate --> the baud rate at which the USART is 
  * 						   supposed to operate
  */
 void init_USART1(uint32_t baudrate){
@@ -94,7 +100,7 @@ void init_USART2(uint32_t baudrate){
 	/* GPIOA clock enable */
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 
-	/* GPIOA Configuration:  USART2 TX on PA2 */
+	//Initialized A2 as Tx and A3 as Rx
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -119,17 +125,55 @@ void init_USART2(uint32_t baudrate){
 
 }
 
-uint8_t motor[8][7];	//Initializes a multidimensional array to store all of the motor commands
+uint8_t checksum(uint8_t* packet, uint8_t start_index, uint8_t size) {
+	uint8_t crc = 0;
+	*packet += start_index;
+	for (uint8_t i = 0; i < size; i++) {
+		uint8_t inbyte = *packet++;
+		for (uint8_t i = 8; i; i--) {
+			uint8_t mix = (crc ^ inbyte) & 0x01;
+			crc >>= 1;
+			if (mix)
+				crc ^= 0xD5;
+			inbyte >>= 1;
+		}
+	}
+	return crc;
+}
 
+//Reads through the motor commands and sends them to the motors
 void sendPackets(void){
-	for(int i = 0; i < 8; i++)  //Cycles through all of the packets
+	for(uint8_t i = 0; i < 8; i++)  //Cycles through all of the packets
 	{
-		for(int j = 0; j < 7; j++) //Cycles through all of the information in the packets
+		for(uint8_t j = 0; j < 7; j++) //Cycles through all of the information in the packets
 		{
 			USART_puts(USART1, motor[i][j]);
 		}
 	}
 	
+}
+
+//Converts the motor commands sent from the top board to packets that the motor controllers can read
+void convertTBtoBB(uint8_t* top) {
+	//Reads throught the motor values from the top packet
+	for (int i = 0; i < 8; i++) {
+		// 0 for reverse, 1 for forward.
+		uint8_t direction = (top[i+ 1] < 128);
+		// Make positive, bit shift to get values between 0 and 254, values will only be even.
+		uint8_t magnitude = (top[i + 1] & 127) << 1;
+		// Motor controller cannot accept 18.
+		if (magnitude == 18)
+			magnitude = 17;
+		
+		//Stores the correct values into the packets to be sent to the motors
+		motor[i][0] = 0x12;
+		motor[i][1] = i + 1;
+		motor[i][2] = 1;
+		motor[i][3] = direction;
+		motor[i][4] = magnitude;
+		motor[i][5] = checksum(motor[i], 1, 4);
+		motor[i][6] = 0x13;
+	}
 }
 
 
@@ -151,8 +195,6 @@ int main(void) {
   init_USART2(9600);	// initialize USART2 baud rate
   
   GPIO_ResetBits(GPIOD, GPIO_Pin_1);
-  
-  uint32_t rval;	//Variable used to hold the received serial data
 
   Delay(0x3FFFFF);
 
@@ -161,21 +203,44 @@ int main(void) {
    *	USART2, rx: A3  tx: A2, used to communicate with the top board
    */
   
+  
+  GPIO_SetBits(GPIOD, GPIO_Pin_1);	//Turns the read/write pin for rs485 to write mode
+  Delay(0x0000FFFF); 
+  
   while (1){  
+
 	
 	if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE)){
 	  
-	  GPIO_SetBits(GPIOD, GPIO_Pin_12);	//Turns on led to indicate that serial is working
+		GPIO_SetBits(GPIOD, GPIO_Pin_12);	//Turns on led to indicate that serial is working
+		
+		while(counter < 16) //Loops until it reads the entire packet
+		{
+			if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE))
+			{
+				storage[counter] = USART_ReceiveData(USART2);	//Reads in the data from the buffer into an array
+				counter++;	//Increments through the storrage variable
+			}
+		}
+		
+		if(counter > 15) //When we read in the entire top packet
+		{
+			if(checksum(storage, 2, 13) == storage[14]) //If the checksum is correct
+			{
+				convertTBtoBB(storage);
+				sendPackets(); //Sends out the motor commands
+				//Send packet back to the main compunter
+			}	
+			else
+			{
+				//Send back that there was an error?
+			}
+			counter = 0;	
+	    }
+		
+		Delay(0x0000FF);
 	  
-	  rval = USART_ReceiveData(USART2);	//Reads in the data from the buffer
-      
-	  GPIO_SetBits(GPIOD, GPIO_Pin_1);	//Turns on the read/write pin for rs485
-	  Delay(0x0000FFFF);
-	  
-	  USART_puts(USART1, rval);		//Sends the data received in USART2 out through USART1
-	  Delay(0x0000FF);
-	  
-	  GPIO_ResetBits(GPIOD, GPIO_Pin_12);	//Turns off the led  
+		GPIO_ResetBits(GPIOD, GPIO_Pin_12);	//Turns off the led  
     }
 
   }
