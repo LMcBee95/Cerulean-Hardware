@@ -25,7 +25,7 @@ arg1/arg2
 			1 = forward
 		
 		Arg2: Speed (Any integer value between 0 and 255)
-			0 	= No speed
+			0 = No speed
 			255 = Full speed
 			
 	0x02 (STOP)

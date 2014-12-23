@@ -45,7 +45,8 @@ uint8_t packet_in_progress = 0;
 int GPIO[] = { GPIO_Pin_12, GPIO_Pin_13, GPIO_Pin_14, GPIO_Pin_15 };
 int leds[] = { 0, 0, 0, 0 };
 /* Private function prototypes -----------------------------------------------*/
-uint8_t checksum(uint8_t* packet);
+uint8_t checksum(uint8_t* packet, uint8_t index, uint8_t length);
+
 void ConfigurePin(GPIO_TypeDef* GPIOx, uint32_t pin, GPIOMode_TypeDef mode, GPIOSpeed_TypeDef speed, GPIOOType_TypeDef type, GPIOPuPd_TypeDef pupd);
 void convertTBtoBB(uint8_t* top, BottomPacket* bottom);
 void Delay(__IO uint32_t nCount);
@@ -89,6 +90,7 @@ int main(void) {
 		ToggleLED(1);
 		// Recieve Data
 		// From top board
+		//TODO: Recieve data from top board on USART2
 		getRandomTopPacket(TopPacketRx);
 		// Convert Packets
 		// TB -> BB
@@ -113,13 +115,15 @@ void newBottomPacket(uint8_t* bp, uint8_t address, uint8_t cmd, uint8_t arg1, ui
 
 void convertTBtoBB(uint8_t* top, BottomPacket* bottom) {
 	for (int i = 0; i < 8; i++) {
-		newBottomPacket(bottom[i], i + 1, 1, top[i], 0);
+		// 0 for reverse, 1 for forward.
+		uint8_t direction = (top[i] < 128);
+		// Make positive, bitshift to get values between 0 and 254, values will only be even.
+		uint8_t magnitude = (top[i] & 127) << 1;
+		// Motorcontroller cannot accept 18 or 19.
+		if (magnitude == 18 | magnitude == 19)
+			magnitude = 17;
+		newBottomPacket(bottom[i], i + 1, 1, direction, magnitude);
 	}
-}
-
-uint8_t scale(int8_t value) {
-	uint8_t sign = (x > 0) - (x < 0);
-	return 0;
 }
 /*Generates and returns the checksum for the provided values.
 * For BottomPacket, call: checksum(bp, 1, 4)
