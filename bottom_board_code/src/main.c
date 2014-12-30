@@ -259,37 +259,45 @@ void resetMotor(uint8_t address)
 
 uint8_t handleTopPacket(void)
 {
-	if(0x12 == USART_ReceiveData(USART2))
+	
+	if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE))
 	{
-		uint8_t timer = 0;	//Timer used to stop the function from waiting for data if there is an error
-		GPIO_SetBits(GPIOD, GPIO_Pin_12);	//Turns on the green led 
-		uint8_t counter = 0;	//Counter used to count how many bytes we have read in from the top borad
-		while(counter < 16 && timer < 0xFFFF)  //Waits until all 16 bytes are read in. If no data comes then the function will break 
-											   //out after a short period of time
-		{
-			while(USART_GetFlagStatus(USART2, USART_FLAG_RXNE)) //if data is received store it in the array storage
-			{
-				storage[counter] = USART_ReceiveData(USART2);	//Reads in the data from the buffer into an array
-				counter++;	//Increments the counter
-			}
-			GPIO_SetBits(GPIOD, GPIO_Pin_13);
-			timer++;
-		}	
-		GPIO_ResetBits(GPIOD, GPIO_Pin_13);
-		if(checksum(storage, 13) == storage[14] && storage[15] == 0x13)  //Checks the check sum and the end byte
-		{	
-			convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
-			sendPackets();	//Sends the motor controler commands produced by the convert function
-			return(1); //Reading the packet was successful!
-		}
-		else	
-		{
-			return(0);  //Returns 0 if the check sum or end byte were incorrect
-		}
+		uint8_t received = USART_ReceiveData(USART2);
 		
+		if(0x12 == received )
+		{
+			uint8_t timer = 0;	//Timer used to stop the function from waiting for data if there is an error
+			GPIO_SetBits(GPIOD, GPIO_Pin_12);	//Turns on the green led 
+			uint8_t counter = 1;	//Counter used to count how many bytes we have read in from the top borad
+			while(counter < 16 && timer < 0xFFFF)  //Waits until all 16 bytes are read in. If no data comes then the function will break 
+												   //out after a short period of time
+			{
+				if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE)) //if data is received store it in the array storage
+				{
+					storage[counter] = USART_ReceiveData(USART2);	//Reads in the data from the buffer into an array
+					counter++;	//Increments the counter
+				}
+				GPIO_SetBits(GPIOD, GPIO_Pin_13);
+				timer++;
+			}	
+			GPIO_ResetBits(GPIOD, GPIO_Pin_13);
+			if((checksum(storage, 13) == storage[14]) && (storage[15] == 0x13))  //Checks the check sum and the end byte
+			{	
+				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
+				sendPackets();	//Sends the motor controller commands produced by the convert function
+				return(1); //Reading the packet was successful!
+			}
+			else	
+			{
+				return(0);  //Returns 0 if the check sum or end byte were incorrect
+			}
+			
+		}
+		else
+			return(0);  //Makes the function recursive until we get a response from the top board
 	}
 	else
-		return handleTopPacket();  //Makes the function recursive until we get a response from the top board
+		return(0);
 }
  
 /*
@@ -302,49 +310,49 @@ uint8_t handleTopPacket(void)
 uint8_t readSlavePacket(void)
 {
 	uint32_t timer = 0;  //Variable to make the code break out of the next while loop if no data comes
+	uint8_t received = 0;  //Stores initial variable received
 	Delay(0x3FFF);		//Wait for the read write pin to turn low
 	GPIO_ResetBits(GPIOD, GPIO_Pin_1);
 	
-	while(!USART_GetFlagStatus(USART1, USART_FLAG_RXNE) && timer < 0x4FFFF)
-	{
-		timer++;	//Increases timer until data is received or timer is greater than 0xFFFFFF
-	}	
 	
-	if(0x12 == USART_ReceiveData(USART1))
+	while(timer < 0x4FFFF)
 	{
-		uint8_t counter = 1;
-		pollReceived[0] = 0x12;
-		timer = 0;  //resets the timer
-		while(counter < 7 && timer < 0x4FFFF)  //Cycles through the data until all 7 byte are read
+		if(USART_GetFlagStatus(USART1, USART_FLAG_RXNE))
 		{
-			while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE)) //if data is received store it in the array pollReceived
-			{
-				pollReceived[counter] = USART_ReceiveData(USART1);	//Reads in the data from the buffer into an array
-				counter++;	//Increments the counter
-			}
-			timer++; 
-		}
-		if(checksum(pollReceived, 4) == pollReceived[5] && pollReceived[6] == 0x13)  //If the check sum and end byte are correct
-		{
-			GPIO_SetBits(GPIOD, GPIO_Pin_15);	//Turns on led to indicate that serial is receiving data
+			received = USART_ReceiveData(USART1);
 			
-			GPIO_SetBits(GPIOD, GPIO_Pin_1);
-			counter = 1;
-			return(1); //Reading the packet was successful
+			if(received == 0x12)
+			{
+				uint8_t counter = 1;
+				pollReceived[0] = 0x12;
+				timer = 0;  //resets the timer after it recieves the state byte
+				while(counter < 7 && timer < 0x4FFFF)  //Cycles through the data until all 7 byte are read
+				{
+					while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE)) //if data is received store it in the array pollReceived
+					{
+						pollReceived[counter] = USART_ReceiveData(USART1);	//Reads in the data from the buffer into an array
+						counter++;	//Increments the counter
+					}
+					timer++; 
+				}
+				if(checksum(pollReceived, 4) == pollReceived[5] && pollReceived[6] == 0x13)  //If the check sum and end byte are correct
+				{
+					GPIO_SetBits(GPIOD, GPIO_Pin_15);	//Turns on led to indicate that serial is receiving data
+					
+					GPIO_SetBits(GPIOD, GPIO_Pin_1);  //Sets the read/write pin to write mode
+					return(1); //Reading the packet was successful
+				}
+				else	
+				{
+					GPIO_SetBits(GPIOD, GPIO_Pin_1);  //Sets the read/write pin to write mode
+					return(0);  //Did not read the packet successfully
+				}
+			}
 		}
-		else	
-			return(0);  //Did not read the packet successfully
-		
+		timer++;	//Increases timer until data is received or timer is greater than 0x4FFFF
 	}
-	else if(timer >= 0x4FFFF)  //If no data came, then the function returns a 0
-	{
-		GPIO_SetBits(GPIOD, GPIO_Pin_1);
-		return(0);	
-	}
-	else
-	{
-		return readSlavePacket();  //recursively repeats the function
-	}
+	GPIO_SetBits(GPIOD, GPIO_Pin_1);  //Sets the read/write pin to write mode
+	return(0); //No data was received
 }
 
 int main(void) {
@@ -385,14 +393,16 @@ int main(void) {
 				//Sends a packet to poll the motor at pollAddress
 				pollMotor(pollAddress);	
 				
-				if(readSlavePacket())  //If we read the packet correctly
+				if(!readSlavePacket())  //If we cannot read the packet
 				{
-					//Increments through the addresses and goes back to address one after eight time
-					pollAddress++;  //Changes which motor will be polled next
-					if(pollAddress == 9)
-						pollAddress = 1;
-				}	
+					//TODO
+				}
+				//Add the fault data information to the packet we are sending back to the battle station						
 				
+				//Increments through the addresses and goes back to address one after eight time
+				pollAddress++;  //Changes which motor will be polled next
+				if(pollAddress == 9)
+					pollAddress = 1;
 				pollCounter = 0;  //Resets the poll counter
 			}
 		}	
