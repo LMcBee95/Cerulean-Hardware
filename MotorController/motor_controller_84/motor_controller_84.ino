@@ -174,10 +174,6 @@ byte readPacket(void)
       byte receivedCheck = crc8(receivedPacket);
       if(receivedPacket[4] == receivedCheck) //Function returns true if everything is successful 
       {
-        while(mySerial.available()) //Clear the Serial Buffer
-        {
-           mySerial.read(); 
-        }
         return 1;  //Yay! Everything Works!
       }
       return 0;  //Check Sum Found an Error
