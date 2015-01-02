@@ -18,6 +18,8 @@
  * Under Developement
  ************************************************************************************************************/
 
+//Figure out what values signify a fault
+
 #include <SoftwareSerial.h>
 
 //function declarations
@@ -26,10 +28,8 @@ boolean readPacket(void);
 boolean usePacket(void);
 
 //Sets what baud rate we are opperating at
-#define BAUD_RATE 9600
+#define BAUD_RATE 28800
 
-//Time in microseconds to send 6 bytes across serial
-int delayTime = (1000 * 1000 * 8 * 6 / BAUD_RATE) + 1 ;
 
 //the address of the motor controller
 #define ADDRESS 0x01
@@ -81,7 +81,7 @@ void setup()
   //Serail Communication
   pinMode(TX, OUTPUT);
   pinMode(RX, INPUT);
-  pinMode(READWRITE, INPUT);
+  pinMode(READWRITE, OUTPUT);
 
   //Information sent to the h-bridge from the attiny 84
   pinMode(DIRECTION, OUTPUT);
@@ -95,11 +95,16 @@ void setup()
   
   //begin serial communication
   mySerial.begin(BAUD_RATE);
+  
+  pinMode(8, OUTPUT);
+ 
+  digitalWrite(8, LOW); 
+
 }
 
 void loop()
-{  
-  boolean received = readPacket();
+{ 
+  byte received = readPacket();
   if(received)
   {
    usePacket(); 
@@ -124,7 +129,7 @@ byte crc8(const byte *packet)
   return crc;
 }
 
-boolean readPacket(void)
+byte readPacket(void)
 {
   digitalWrite(READWRITE, LOW);
   
@@ -133,14 +138,12 @@ boolean readPacket(void)
   int index = 0;
   byte nextByte = 0; 
     
-  if(mySerial.available())
+  if(mySerial.available() >= 7)
   {
     //Dealy to compensate for the speed difference between the serial and how fast the attiny is going.
     //Checks if the first byte is a start byte.
     if(mySerial.read() == 0x12)
-    {
-      //Dealy to compensate for the speed difference between the serial and how fast the attiny is going.
-      delayMicroseconds(delayTime);
+    {      
       index = 0;
       //Reads the five important bytes into the array
       while(index < 5)
@@ -149,48 +152,68 @@ boolean readPacket(void)
         nextByte = mySerial.peek();
         if(nextByte == 0x12)
         { 
-                  return false;  //Start byte in wrong location
+          return 0;  //Start byte in wrong location
         }
         else if(nextByte == 0x13 && index != 4)
         {
-          return false; //end byte in wrong location
+          return 0; //end byte in wrong location
         }
 
         receivedPacket[index] = mySerial.read();
         index++;
       }
-
+      
+      //mySerial.write(receivedPacket[0]);
+      
       //Makes sure the last byte it a 13
       byteReceived = mySerial.read();
       if(byteReceived != 0x13)
       {
-        return false; //last byte is an end byte
+        return 0; //last byte is an end byte
       }
-
+      
       byte receivedCheck = crc8(receivedPacket);
       if(receivedPacket[4] == receivedCheck)
       {
-        while(mySerial.available())
-        {
-         mySerial.read(); 
-        }
         //Function returns true if everything is successful 
-        return true;  //Yay! Everything Works!
+        /*while(mySerial.available())
+        {
+           mySerial.read(); 
+        }*/
+        return 1;  //Yay! Everything Works!
       }
-      return false;  //check sum found an error
+      return 0;  //check sum found an error
     }   
 
     //Retruns a number if the first byte is not a 12
     else
     {
-      return false; //first byte of buffer is not start byte
+      return 0; //first byte of buffer is not start byte
     }
   }
+  else
+    return 0;
 } 
+
+byte returnCrc8(const byte *packet)
+{ 
+
+  byte crc = 0;
+  *packet++;
+  for(byte len = 1; len < 5; len++) {
+    uint8_t inbyte = *packet++;
+    for (byte i = 8; i; i--) {
+      byte mix = (crc ^ inbyte) & 0x01;
+      crc >>= 1;
+      if (mix) crc ^= 0xD5;
+      inbyte >>= 1;
+    }
+  }
+  return crc;
+}
 
 boolean usePacket(void)
 {
-
   //Checks if this is the correct address
   //If the functions returns true then the device will do something. If it is false then the device will not do anything
  if(receivedPacket[0] == ADDRESS)
@@ -205,30 +228,43 @@ boolean usePacket(void)
    }
    else if(receivedPacket[1] == CONTROL_MOTOR)
    {
+     digitalWrite(8, LOW);
      analogWrite(POWER, receivedPacket[2]);
      digitalWrite(DIRECTION, receivedPacket[3]);
      return true;
    }
    else if(receivedPacket[1] == REQUEST_FAULT_DATA)
    {
+     digitalWrite(8, HIGH);
      returnPacket[3] = digitalRead(FAULT1);
      returnPacket[4] = digitalRead(FAULT2);
-     returnPacket[5] = crc8(returnPacket);
+     returnPacket[5] = returnCrc8(returnPacket);
+     
      
      //Puts the rs485 chip in write mode, sends data to the bottom board, and puts the rs485 chip in read mode
      digitalWrite(READWRITE, HIGH);
-     delay(1);
+     delay(2);
+     mySerial.write(15);
      for(int i = 0; i < 7; i++)
      {
-      mySerial.write(returnPacket[i]); 
+       mySerial.write(returnPacket[i]);
      }
-     delay(1);
+     mySerial.write(14);
+     delay(2);
      digitalWrite(READWRITE, LOW);
+     
+     while(mySerial.available())
+     {
+        mySerial.read(); 
+     }
+        
      return true;
    }
    else if(receivedPacket[1] == RESET_HBRIDGE)
    {
     digitalWrite(RESET, HIGH); 
+    delay(10);
+    digitalWrite(RESET, LOW);
    }
    else
      return false;

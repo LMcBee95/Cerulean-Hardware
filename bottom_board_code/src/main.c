@@ -222,7 +222,7 @@ void pollMotor(uint8_t address)
 	poll[5] = checksum(poll,4);
 	poll[6] = 0x13;
 	poll[0] = 0x12;  //This packet is out of place because it gives errors if this value is assigned first
-	
+
 	//Sends the packet to poll the motor
 	for(uint8_t i = 0; i < 7; i++)
 		USART_puts(USART1, poll[i]);
@@ -274,8 +274,18 @@ uint8_t handleTopPacket(void)
 			{
 				if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE)) //if data is received store it in the array storage
 				{
-					storage[counter] = USART_ReceiveData(USART2);	//Reads in the data from the buffer into an array
-					counter++;	//Increments the counter
+					received = USART_ReceiveData(USART2);
+					if(received != 0x12)
+					{
+						storage[counter] = received;	//Reads in the data from the buffer into an array
+						counter++;	//Increments the counter
+					}
+					else
+					{
+						return(0);
+					}
+					
+					
 				}
 				GPIO_SetBits(GPIOD, GPIO_Pin_13);
 				timer++;
@@ -388,8 +398,13 @@ int main(void) {
 			pollCounter++;
 				
 			//Waits for twenty packets to be sent to the motors before polling a motor.
-			if(pollCounter > 20)
+			if(pollCounter > 1)
 			{
+				if(pollAddress == 1)
+				{
+						GPIO_SetBits(GPIOD, GPIO_Pin_14);
+				}
+				
 				//Sends a packet to poll the motor at pollAddress
 				pollMotor(pollAddress);	
 				
@@ -407,7 +422,8 @@ int main(void) {
 			}
 		}	
 	  
-		GPIO_ResetBits(GPIOD, GPIO_Pin_12);	//Turns off the led  
+		GPIO_ResetBits(GPIOD, GPIO_Pin_12);	//Turns off the led 
+		GPIO_ResetBits(GPIOD, GPIO_Pin_14);		
     }
 
   }
