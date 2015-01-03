@@ -290,9 +290,9 @@ uint8_t handleTopPacket(void)
 				GPIO_SetBits(GPIOD, GPIO_Pin_13);
 				timer++;
 			}	
-			GPIO_ResetBits(GPIOD, GPIO_Pin_13);
 			if((checksum(storage, 13) == storage[14]) && (storage[15] == 0x13))  //Checks the check sum and the end byte
 			{	
+				GPIO_ResetBits(GPIOD, GPIO_Pin_13);
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 				sendPackets();	//Sends the motor controller commands produced by the convert function
 				return(1); //Reading the packet was successful!
@@ -398,12 +398,9 @@ int main(void) {
 			pollCounter++;
 				
 			//Waits for twenty packets to be sent to the motors before polling a motor.
-			if(pollCounter > 1)
+			if(pollCounter > 20)
 			{
-				if(pollAddress == 1)
-				{
 						GPIO_SetBits(GPIOD, GPIO_Pin_14);
-				}
 				
 				//Sends a packet to poll the motor at pollAddress
 				pollMotor(pollAddress);	

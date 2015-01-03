@@ -32,7 +32,7 @@ boolean usePacket(void);
 
 
 //the address of the motor controller
-#define ADDRESS 0x01
+#define ADDRESS 0x04
 
 //different commands of the motor controller
 #define CONTROL_MOTOR 0x01
@@ -175,13 +175,9 @@ byte readPacket(void)
       byte receivedCheck = crc8(receivedPacket);
       if(receivedPacket[4] == receivedCheck)
       {
-        //Function returns true if everything is successful 
-        /*while(mySerial.available())
-        {
-           mySerial.read(); 
-        }*/
         return 1;  //Yay! Everything Works!
       }
+      digitalWrite(8, HIGH);
       return 0;  //check sum found an error
     }   
 
@@ -192,7 +188,9 @@ byte readPacket(void)
     }
   }
   else
+  {
     return 0;
+  }
 } 
 
 byte returnCrc8(const byte *packet)
@@ -235,7 +233,6 @@ boolean usePacket(void)
    }
    else if(receivedPacket[1] == REQUEST_FAULT_DATA)
    {
-     digitalWrite(8, HIGH);
      returnPacket[3] = digitalRead(FAULT1);
      returnPacket[4] = digitalRead(FAULT2);
      returnPacket[5] = returnCrc8(returnPacket);
@@ -244,12 +241,10 @@ boolean usePacket(void)
      //Puts the rs485 chip in write mode, sends data to the bottom board, and puts the rs485 chip in read mode
      digitalWrite(READWRITE, HIGH);
      delay(2);
-     mySerial.write(15);
      for(int i = 0; i < 7; i++)
      {
        mySerial.write(returnPacket[i]);
      }
-     mySerial.write(14);
      delay(2);
      digitalWrite(READWRITE, LOW);
      
