@@ -320,7 +320,7 @@ boolean usePacket(void);
 #define READWRITE 1
 
 //Pins That Control the Motor
-#define POWER 5
+#define SPEED 5
 #define DIRECTION 3
 
 //Pin That Leads to H-Bridge Reset
@@ -353,6 +353,7 @@ void setup()
   pinMode(DIRECTION, OUTPUT);
   pinMode(RESET, OUTPUT);
   pinMode(LED, OUTPUT);
+  pinMode(SPEED, OUTPUT);
   
   //Put the rs485 Chip in Read Mode
   digitalWrite(READWRITE, LOW);
@@ -471,13 +472,13 @@ boolean usePacket(void)
 
    if(receivedPacket[1] == CONTROL_MOTOR) // Control the Speed and Direction of the Motor's Spin
    {
-     analogWrite(POWER, receivedPacket[2]);
-     digitalWrite(DIRECTION, receivedPacket[3]);
+     digitalWrite(DIRECTION, receivedPacket[2]);
+     analogWrite(SPEED, receivedPacket[3]);
      return true;
    }
    else if(receivedPacket[1] == STOP) //Stop the Motor
    {
-     analogWrite(POWER, 0);
+     analogWrite(SPEED, 0);
      return true;
    }
    else if(receivedPacket[1] == REQUEST_FAULT_DATA)
