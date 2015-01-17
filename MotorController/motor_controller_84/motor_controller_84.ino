@@ -1,4 +1,4 @@
-/************************************************************************************************************
+             /************************************************************************************************************
  * Motor Controller Sketch
  * Purdue IEEE ROV 2014
  * 
@@ -77,6 +77,8 @@ void setup()
   //Fault Inputs
   pinMode(FAULT1, INPUT);
   pinMode(FAULT2, INPUT);
+  digitalWrite(FAULT1, HIGH);  //internal pullup for fault 1
+  digitalWrite(FAULT2, HIGH);  //internal pullup for fault 2
 
   //Serail Communication
   pinMode(TX, OUTPUT);
@@ -177,7 +179,6 @@ byte readPacket(void)
       {
         return 1;  //Yay! Everything Works!
       }
-      digitalWrite(8, HIGH);
       return 0;  //check sum found an error
     }   
 
@@ -226,15 +227,16 @@ boolean usePacket(void)
    }
    else if(receivedPacket[1] == CONTROL_MOTOR)
    {
-     digitalWrite(8, LOW);
+     digitalWrite(8, HIGH);
      analogWrite(POWER, receivedPacket[2]);
      digitalWrite(DIRECTION, receivedPacket[3]);
      return true;
    }
    else if(receivedPacket[1] == REQUEST_FAULT_DATA)
    {
-     returnPacket[3] = digitalRead(FAULT1);
-     returnPacket[4] = digitalRead(FAULT2);
+     digitalWrite(8, HIGH);
+     returnPacket[3] = !(digitalRead(FAULT1));
+     returnPacket[4] = !(digitalRead(FAULT2));
      returnPacket[5] = returnCrc8(returnPacket);
      
      
@@ -261,15 +263,5 @@ boolean usePacket(void)
      return false; //Undefined Motor Command
  } 
  else
-   return false; //Motor Address Was Incorrect
-}
-    digitalWrite(RESET, LOW);
-   }
-   else
-     return false;
- } 
- else
- {
-   return false;
- }
+   return false; //Motor Address Was Incorrectu
 }
