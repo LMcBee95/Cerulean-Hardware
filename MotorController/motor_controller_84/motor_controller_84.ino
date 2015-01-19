@@ -1,4 +1,4 @@
-             /************************************************************************************************************
+/****************************************************************************************************************************************
  * Motor Controller Sketch
  * Purdue IEEE ROV 2014
  * 
@@ -6,19 +6,32 @@
  * This sketch also dictates how information is sent and received from the motor controllers.
  *
  * Digital Pins:
- * 0 - tx (sends out serial communication)
- * 1 - readWrite (tells the attiny 84, the slave, whether to be sending or recieving serial communication)
- * 2 - rx (receives serial communication)
- * 3 - Direction (tell the motor which direction to spin)
- * 4 - reset (resets the h-bridge)
- * 5 - speed (how fast the motor goes)
- * 6 - fault2 (Fault check 2)
- * 7 - fault1 (Fault check 1)
+ *   0 - tx (sends out serial communication)
+ *   1 - readWrite (tells the attiny 84, the slave, whether to be sending or recieving serial communication)
+ *   2 - rx (receives serial communication)
+ *   3 - Direction (tell the motor which direction to spin)
+ *   4 - reset (resets the h-bridge)
+ *   5 - speed (how fast the motor goes)
+ *   6 - fault2 (Fault check 2)
+ *   7 - fault1 (Fault check 1)
  *
- * Under Developement
- ************************************************************************************************************/
-
-//Figure out what values signify a fault
+ *  Serial Protocol:
+ *   [Start Byte, Address, Command, Argument 1, Argument 2, Check Sum, End Byte]
+ *
+ * Function Definitions:
+ *   crc8 - Creates a check sum using the second, third, fourth, and fifth elements of an array
+ *   readPacket -  Reads in a packet sent from the bottom board and puts it in an array if the packet is not corrupted
+ *   returnCrc8 -  Creates a check sum using the first, second, thired, and fourth elements of an array
+ *   usePacket -  Uses the array created within readPacket in order to tell the microcontroller a specific task to do
+ *
+ * Commands:
+ *   Control Motor - Sets the speed and direction of the motors spin
+ *   STOP - Instantly stops the motor
+ *   Request Fault Data - Determines the condition of the motor through two fault sensors and send the data back to the bottom board
+ *   Reset H-Bridge - Resets the h-bridge
+ *   Send Back Fault Data - The command given to the packet sent back to the bottom board
+ *
+ ***************************************************************************************************************************************/
 
 #include <SoftwareSerial.h>
 
@@ -28,11 +41,10 @@ boolean readPacket(void);
 boolean usePacket(void);
 
 //Sets what baud rate we are opperating at
-#define BAUD_RATE 28800
-
+#define BAUD_RATE 57600
 
 //the address of the motor controller
-#define ADDRESS 0x04
+#define ADDRESS 0x01                                                                                                                                                                                                                       
 
 //different commands of the motor controller
 #define CONTROL_MOTOR 0x01
@@ -40,23 +52,16 @@ boolean usePacket(void);
 #define REQUEST_FAULT_DATA 0x03
 #define RESET_HBRIDGE 0x04
 
-//Serial Communication pins
-#define RX 2
+//Pin Numbers
 #define TX 0
-
-//Pin numbers for the faults
-#define FAULT1 7
-#define FAULT2 6
-
-//Pin that tells the attinty 84 to either to recieve data or to write data
 #define READWRITE 1
-
-//Pins that tells the motor what speed and direction to operate at
-#define POWER 5
+#define RX 2
 #define DIRECTION 3
-
-//Pin that leads to the h-bridge reset pin
 #define RESET 4
+#define SPEED 5
+#define FAULT2 6
+#define FAULT1 7
+#define LED 8
 
 //variable that stores the fault values
 int fault1 = LOW;
@@ -66,7 +71,7 @@ int fault2 = LOW;
 // [address, command, argument 1, argument 2, check sum]
 byte receivedPacket[] = {0, 0, 0, 0, 0};
 
-//data that is send back to the bottom board
+//Serial Protocol from bottom board
 //[start byte, address, command, argument 1, argument 2, check sum, end byte]
 byte returnPacket[] = {0x12, 0x00, 0x05, 0, 0, 0, 0x13};
 
@@ -74,33 +79,24 @@ SoftwareSerial mySerial(RX, TX);
 
 void setup()
 {
-  //Fault Inputs
+  //Pin Definitions
   pinMode(FAULT1, INPUT);
   pinMode(FAULT2, INPUT);
   digitalWrite(FAULT1, HIGH);  //internal pullup for fault 1
   digitalWrite(FAULT2, HIGH);  //internal pullup for fault 2
-
-  //Serail Communication
   pinMode(TX, OUTPUT);
   pinMode(RX, INPUT);
   pinMode(READWRITE, OUTPUT);
-
-  //Information sent to the h-bridge from the attiny 84
   pinMode(DIRECTION, OUTPUT);
   pinMode(RESET, OUTPUT);
-  
-  //Put the rs485 chip in read mode
   digitalWrite(READWRITE, LOW);
-  
-  //Put the reset in LOW
   digitalWrite(RESET, LOW);
+  pinMode(LED, OUTPUT);
   
-  //begin serial communication
+  //Begin serial communication
   mySerial.begin(BAUD_RATE);
-  
-  pinMode(8, OUTPUT);
  
-  digitalWrite(8, LOW); 
+  digitalWrite(LED, LOW); 
 
 }
 
@@ -114,7 +110,6 @@ void loop()
 }
 
 //function definitions
-
 byte crc8(const byte *packet)
 { 
 
@@ -164,8 +159,6 @@ byte readPacket(void)
         receivedPacket[index] = mySerial.read();
         index++;
       }
-      
-      //mySerial.write(receivedPacket[0]);
       
       //Makes sure the last byte it a 13
       byteReceived = mySerial.read();
@@ -222,19 +215,18 @@ boolean usePacket(void)
    //Stop the motor
    if(receivedPacket[1] == STOP)
    {
-     analogWrite(POWER, 0);
+     analogWrite(SPEED, 0);
      return true;
    }
    else if(receivedPacket[1] == CONTROL_MOTOR)
    {
-     digitalWrite(8, HIGH);
-     analogWrite(POWER, receivedPacket[2]);
-     digitalWrite(DIRECTION, receivedPacket[3]);
+     analogWrite(LED, receivedPacket[3]);
+     analogWrite(SPEED, receivedPacket[3]);
+     digitalWrite(DIRECTION, receivedPacket[2]);
      return true;
    }
    else if(receivedPacket[1] == REQUEST_FAULT_DATA)
    {
-     digitalWrite(8, HIGH);
      returnPacket[3] = !(digitalRead(FAULT1));
      returnPacket[4] = !(digitalRead(FAULT2));
      returnPacket[5] = returnCrc8(returnPacket);
