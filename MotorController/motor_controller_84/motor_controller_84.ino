@@ -37,14 +37,22 @@
 
 //function declarations
 byte crc8(const byte *packet);
-boolean readPacket(void);
-boolean usePacket(void);
+byte readPacket(void);
+byte usePacket(void);
 
 //Sets what baud rate we are opperating at
 #define BAUD_RATE 57600
 
+//Time to allow for read write pin on RS485 to switch states (ms)
+//We chose this value based upon testing delay values between 
+//250 us and 10 s
+#define RS485_DELAY_TIME 2
+
+//Time we chose to set the reset pin high (ms)
+#define RESET_DELAY_TIME 10
+
 //the address of the motor controller
-#define ADDRESS 0x01                                                                                                                                                                                                                       
+#define ADDRESS 0x07                                                                                                                                                                                                                       
 
 //different commands of the motor controller
 #define CONTROL_MOTOR 0x01
@@ -75,6 +83,11 @@ byte receivedPacket[] = {0, 0, 0, 0, 0};
 //[start byte, address, command, argument 1, argument 2, check sum, end byte]
 byte returnPacket[] = {0x12, 0x00, 0x05, 0, 0, 0, 0x13};
 
+//delay to kill if nothing sent in that time
+//40000 is ~1 seconds
+#define KILL_DELAY (3 * 40000)
+unsigned long long killSwitch = 0;
+
 SoftwareSerial mySerial(RX, TX);
 
 void setup()
@@ -103,18 +116,28 @@ void setup()
 void loop()
 { 
   byte received = readPacket();
+  
   if(received)
   {
+   killSwitch = 0;
    usePacket(); 
+  }
+  
+  killSwitch++;
+  if(killSwitch > KILL_DELAY)
+  {
+   killSwitch = 0;
+   analogWrite(LED, 0);
+   analogWrite(SPEED, 0); 
   }
 }
 
 //function definitions
-byte crc8(const byte *packet)
+byte crc8(const byte *packet, const byte pos_first_byte, const byte num_bytes_data)
 { 
 
   byte crc = 0;
-  for(byte len = 0; len < 4; len++) {
+  for(byte len = pos_first_byte; len < (pos_first_byte + num_bytes_data); len++) {
     uint8_t inbyte = *packet++;
     for (byte i = 8; i; i--) {
       byte mix = (crc ^ inbyte) & 0x01;
@@ -167,7 +190,7 @@ byte readPacket(void)
         return 0; //last byte is an end byte
       }
       
-      byte receivedCheck = crc8(receivedPacket);
+      byte receivedCheck = crc8(receivedPacket, 0, 4);
       if(receivedPacket[4] == receivedCheck)
       {
         return 1;  //Yay! Everything Works!
@@ -187,24 +210,7 @@ byte readPacket(void)
   }
 } 
 
-byte returnCrc8(const byte *packet)
-{ 
-
-  byte crc = 0;
-  *packet++;
-  for(byte len = 1; len < 5; len++) {
-    uint8_t inbyte = *packet++;
-    for (byte i = 8; i; i--) {
-      byte mix = (crc ^ inbyte) & 0x01;
-      crc >>= 1;
-      if (mix) crc ^= 0xD5;
-      inbyte >>= 1;
-    }
-  }
-  return crc;
-}
-
-boolean usePacket(void)
+byte usePacket(void)
 {
   //Checks if this is the correct address
   //If the functions returns true then the device will do something. If it is false then the device will not do anything
@@ -216,44 +222,44 @@ boolean usePacket(void)
    if(receivedPacket[1] == STOP)
    {
      analogWrite(SPEED, 0);
-     return true;
+     return 1;
    }
    else if(receivedPacket[1] == CONTROL_MOTOR)
    {
      analogWrite(LED, receivedPacket[3]);
      analogWrite(SPEED, receivedPacket[3]);
      digitalWrite(DIRECTION, receivedPacket[2]);
-     return true;
+     return 1;
    }
    else if(receivedPacket[1] == REQUEST_FAULT_DATA)
    {
      returnPacket[3] = !(digitalRead(FAULT1));
      returnPacket[4] = !(digitalRead(FAULT2));
-     returnPacket[5] = returnCrc8(returnPacket);
+     returnPacket[5] = crc8(returnPacket, 1, 4);
      
      
      //Puts the rs485 chip in write mode, sends data to the bottom board, and puts the rs485 chip in read mode
      digitalWrite(READWRITE, HIGH);
-     delay(2);
+     delay(RS485_DELAY_TIME);
      for(int i = 0; i < 7; i++)
      {
        mySerial.write(returnPacket[i]);
      }
-     delay(2);
+     delay(RS485_DELAY_TIME);
      digitalWrite(READWRITE, LOW);
         
-     return true;
+     return 1;
    }
    else if(receivedPacket[1] == RESET_HBRIDGE)
    {
     digitalWrite(RESET, HIGH); 
-    delay(10);
+    delay(RESET_DELAY_TIME);
     digitalWrite(RESET, LOW);
-    return true;
+    return 1;
    }
    else 
-     return false; //Undefined Motor Command
+     return 0; //Undefined Motor Command
  } 
  else
-   return false; //Motor Address Was Incorrectu
+   return 0; //Motor Address Was Incorrectu
 }
