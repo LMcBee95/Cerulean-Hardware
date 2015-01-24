@@ -4,7 +4,7 @@
  *	then sends the packets out to the motors. The code will automatically poll a motor every twenty packets
  *	to check for any faults.
  *	
- *	The read/write enabler pin for the RS485 is D1. For USART1, the Rx is B7 and the Tx is B6. For USART2, 
+ *	The read/write enabler pin for the RS485 is D1. For USART6, the Rx is B7 and the Tx is B6. For USART2, 
  *	the Rx is A3 and the Tx is A2.	
  *
  *  The important part of the code is at the bottom, within main(). Everything before that is just initializing
@@ -12,15 +12,31 @@
  *
  */
 
-
 #include "stm32f4_discovery.h"
 #include "stm32f4xx_conf.h"
 #include <misc.h>			 // I recommend you have a look at these in the ST firmware folder
 #include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
+
 GPIO_InitTypeDef  GPIO_InitStructure;
 
+#define PACKET_SIZE 16
+#define TOP_BOTTOM_BAUD 19200
+#define BOTTOM_MOTOR_BAUD 57600
 
-uint8_t storage[16];	 //Array used to store the data received from the top board
+#define USART6_ENABLE_PIN			GPIO_Pin_8					//check if these are correct 
+#define USART6_ENABLE_PORT			GPIOC
+#define USART6_ENABLE_CLK			RCC_AHB1Periph_GPIOC
+
+#define USART6_DISABLE_PIN			GPIO_Pin_9					//check if these are correct 
+#define USART6_DISABLE_PORT			GPIOC
+#define USART6_DISABLE_CLK			RCC_AHB1Periph_GPIOC
+
+#define USART6_ENABLE_PIN GPIO_PIN_8
+#define USART6_DISABLE_PIN GPI0_PIN_9
+
+
+
+uint8_t storage[PACKET_SIZE];	 //Array used to store the data received from the top board
 uint8_t motor[8][7];	 //A multidimensional array to store all of the motor commands
 uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
 uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
@@ -33,6 +49,7 @@ void Delay(__IO uint32_t nCount) {
   while(nCount--) {
   }
 }
+
 
 /*
  * This function waits until it can write serial data and then 
@@ -47,68 +64,73 @@ void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 }
 
 
-/* This function initializes USART1 peripheral
+/* This function initializes USART6 peripheral
  * 
  * Arguments: baud rate --> the baud rate at which the USART is 
  * 						   supposed to operate
  */
-void init_USART1(uint32_t baudrate){
+void init_USART6(uint32_t baudrate){
 	
 	/* This is a concept that has to do with the libraries provided by ST
 	 * to make development easier the have made up something similar to 
 	 * classes, called TypeDefs, which actually just define the common
 	 * parameters that every peripheral needs to work correctly
-	 * 
 	 * They make our life easier because we don't have to mess around with 
 	 * the low level stuff of setting bits in the correct registers
 	 */
+	 /*Enable the read write pins*/
+	 PinOutput(USART6_ENABLE_PIN, USART6_ENABLE_PORT, USART6_ENABLE_CLK);
+     PinOutput(USART6_DISABLE_PIN, USART6_DISABLE_PORT, USART6_DISABLE_CLK);
+	 
 	GPIO_InitTypeDef GPIO_InitStruct;   // this is for the GPIO pins used as TX and RX
-	USART_InitTypeDef USART_InitStruct; // this is for the USART1 initialization
+	USART_InitTypeDef USART_InitStruct; // this is for the USART6 initialization
 	
-	/* enable APB2 peripheral clock for USART1 
-	 * note that only USART1 and USART6 are connected to APB2
+	/* enable APB2 peripheral clock for USART6 
+	 * note that only USART6 and USART6 are connected to APB2
 	 * the other USARTs are connected to APB1
 	 */
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART6, ENABLE);
 	
 	/* enable the peripheral clock for the pins used by 
-	 * USART1, PB6 for TX and PB7 for RX
+	 * USART6, PC6 for R and PC7 for TX
 	 */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 	
 	/* This sequence sets up the TX and RX pins 
-	 * so they work correctly with the USART1 peripheral
+	 * so they work correctly with the USART6 peripheral
 	 */
 	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7; // Pins 6 (TX) and 7 (RX) are used
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF; 			// the pins are configured as alternate function so the USART peripheral has access to them
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;		// this defines the IO speed and has nothing to do with the baud rate!
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;			// this defines the output type as push pull mode (as opposed to open drain)
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;			// this activates the pull up resistors on the IO pins
-	GPIO_Init(GPIOB, &GPIO_InitStruct);					// now all the values are passed to the GPIO_Init() function which sets the GPIO registers
+	GPIO_Init(GPIOC, &GPIO_InitStruct);					// now all the values are passed to the GPIO_Init() function which sets the GPIO registers
 	
 	/* The RX and TX pins are now connected to their AF
-	 * so that the USART1 can take over control of the 
+	 * so that the USART6 can take over control of the 
 	 * pins
 	 */
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_USART1); 
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_USART1);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_USART6); 
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_USART6);
 	
 	/* Now the USART_InitStruct is used to define the 
-	 * properties of USART1 
+	 * properties of USART6 
 	 */
 	USART_InitStruct.USART_BaudRate = baudrate;				  // the baud rate is set to the value we passed into this function
 	USART_InitStruct.USART_WordLength = USART_WordLength_8b;  // we want the data frame size to be 8 bits (standard)
 	USART_InitStruct.USART_StopBits = USART_StopBits_1;		  // we want 1 stop bit (standard)
 	USART_InitStruct.USART_Parity = USART_Parity_No;		  // we don't want a parity bit (standard)
 	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None; // we don't want flow control (standard)
-	USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx; // we want to enable the transmitter and the receiver
-	USART_Init(USART1, &USART_InitStruct);					  // again all the properties are passed to the USART_Init function which takes care of all the bit setting
 	
-	USART_Cmd(USART1, ENABLE);	//Enables USART1
+	USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx; // we want to enable the transmitter and the receiver
+	
+	USART_Init(USART6, &USART_InitStruct);					  // again all the properties are passed to the USART_Init function which takes care of all the bit setting
+	
+	USART_Cmd(USART6, ENABLE);	//Enables USART6
 }
 
 
-//Same set up as USART1 except for the USART2 pins
+//Same set up as USART6 except for the USART2 pins
 void init_USART2(uint32_t baudrate){
 
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -119,26 +141,36 @@ void init_USART2(uint32_t baudrate){
 
 
 	/* GPIOA clock enable */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA|RCC_AHB1Periph_GPIOD, ENABLE);
 
-	//Initialized A2 as Tx and A3 as Rx
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_3;
+	//Initialized A2 as Tx and D6 as Rx
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	
+	//Initializes the D6 pin
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_6;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOD, &GPIO_InitStructure);
 
 	/* Connect USART2 pins to AF2 */
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_USART2);
-	GPIO_PinAFConfig(GPIOA, GPIO_PinSource3, GPIO_AF_USART2);
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
 
 	USART_InitStructure.USART_BaudRate = baudrate;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-	USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
+	
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	
 	USART_Init(USART2, &USART_InitStructure);
 
 	USART_Cmd(USART2, ENABLE); //Enable USART2
@@ -169,7 +201,7 @@ void sendPackets(void){
 	{
 		for(uint8_t j = 0; j < 7; j++) //Cycles through all of the information in the packets
 		{
-			USART_puts(USART1, motor[i][j]);
+			USART_puts(USART6, motor[i][j]);
 		}
 	}
 	
@@ -225,7 +257,7 @@ void pollMotor(uint8_t address)
 
 	//Sends the packet to poll the motor
 	for(uint8_t i = 0; i < 7; i++)
-		USART_puts(USART1, poll[i]);
+		USART_puts(USART6, poll[i]);
 }
 
 /*
@@ -245,7 +277,7 @@ void resetMotor(uint8_t address)
 	
 	//Sends the packet to reset the motor
 	for(uint8_t i = 0; i < 7; i++)
-		USART_puts(USART1, reset[i]);
+		USART_puts(USART6, reset[i]);
 }
 
 /*
@@ -269,7 +301,7 @@ uint8_t handleTopPacket(void)
 			uint8_t timer = 0;	//Timer used to stop the function from waiting for data if there is an error
 			GPIO_SetBits(GPIOD, GPIO_Pin_12);	//Turns on the green led 
 			uint8_t counter = 1;	//Counter used to count how many bytes we have read in from the top borad
-			while(counter < 16 && timer < 0xFFFF)  //Waits until all 16 bytes are read in. If no data comes then the function will break 
+			while(counter < PACKET_SIZE && timer < 0xFFFF)  //Waits until all 16 bytes are read in. If no data comes then the function will break 
 												   //out after a short period of time
 			{
 				if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE)) //if data is received store it in the array storage
@@ -290,7 +322,7 @@ uint8_t handleTopPacket(void)
 				GPIO_SetBits(GPIOD, GPIO_Pin_13);
 				timer++;
 			}	
-			if((checksum(storage, 13) == storage[14]) && (storage[15] == 0x13))  //Checks the check sum and the end byte
+			if((checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == 0x13))  //Checks the check sum and the end byte
 			{	
 				GPIO_ResetBits(GPIOD, GPIO_Pin_13);
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
@@ -299,6 +331,7 @@ uint8_t handleTopPacket(void)
 			}
 			else	
 			{
+				
 				return(0);  //Returns 0 if the check sum or end byte were incorrect
 			}
 			
@@ -322,14 +355,14 @@ uint8_t readSlavePacket(void)
 	uint32_t timer = 0;  //Variable to make the code break out of the next while loop if no data comes
 	uint8_t received = 0;  //Stores initial variable received
 	Delay(0x3FFF);		//Wait for the read write pin to turn low
-	GPIO_ResetBits(GPIOD, GPIO_Pin_1);
-	
+	GPIO_ResetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);
+	GPIO_ResetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN); 
 	
 	while(timer < 0x4FFFF)
 	{
-		if(USART_GetFlagStatus(USART1, USART_FLAG_RXNE))
+		if(USART_GetFlagStatus(USART6, USART_FLAG_RXNE))
 		{
-			received = USART_ReceiveData(USART1);
+			received = USART_ReceiveData(USART6);
 			
 			if(received == 0x12)
 			{
@@ -338,9 +371,9 @@ uint8_t readSlavePacket(void)
 				timer = 0;  //resets the timer after it recieves the state byte
 				while(counter < 7 && timer < 0x4FFFF)  //Cycles through the data until all 7 byte are read
 				{
-					while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE)) //if data is received store it in the array pollReceived
+					while(USART_GetFlagStatus(USART6, USART_FLAG_RXNE)) //if data is received store it in the array pollReceived
 					{
-						pollReceived[counter] = USART_ReceiveData(USART1);	//Reads in the data from the buffer into an array
+						pollReceived[counter] = USART_ReceiveData(USART6);	//Reads in the data from the buffer into an array
 						counter++;	//Increments the counter
 					}
 					timer++; 
@@ -349,19 +382,22 @@ uint8_t readSlavePacket(void)
 				{
 					GPIO_SetBits(GPIOD, GPIO_Pin_15);	//Turns on led to indicate that serial is receiving data
 					
-					GPIO_SetBits(GPIOD, GPIO_Pin_1);  //Sets the read/write pin to write mode
+					GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //Sets the read/write pin to write mode
+					GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN); 
 					return(1); //Reading the packet was successful
 				}
 				else	
 				{
-					GPIO_SetBits(GPIOD, GPIO_Pin_1);  //Sets the read/write pin to write mode
+					GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //Sets the read/write pin to write mode
+					GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN); 
 					return(0);  //Did not read the packet successfully
 				}
 			}
 		}
 		timer++;	//Increases timer until data is received or timer is greater than 0x4FFFF
 	}
-	GPIO_SetBits(GPIOD, GPIO_Pin_1);  //Sets the read/write pin to write mode
+	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //Sets the read/write pin to write mode
+	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN); 
 	return(0); //No data was received
 }
 
@@ -371,7 +407,7 @@ int main(void) {
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
   /* Configures the leds and the read/write pin on D1 */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15 | GPIO_Pin_1;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15 | USART6_ENABLE_PIN | USART6_DISABLE_PIN;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
@@ -379,10 +415,10 @@ int main(void) {
   GPIO_Init(GPIOD, &GPIO_InitStructure); 
 
 
-  init_USART1(28800); 	// initialize USART1 baud rate
-  init_USART2(19200);	// initialize USART2 baud rate
+  init_USART6(BOTTOM_MOTOR_BAUD); 	// initialize USART6 baud rate
+  init_USART2(TOP_BOTTOM_BAUD);	// initialize USART2 baud rate
 
-  GPIO_SetBits(GPIOD, GPIO_Pin_1);	//Turns the read/write pin for rs485 to write mode
+  GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);	//Turns the read/write pin for rs485 to write mode
   Delay(0xFFF); //Delays to give the read/write pin time to initialize
   
   while (1){  
