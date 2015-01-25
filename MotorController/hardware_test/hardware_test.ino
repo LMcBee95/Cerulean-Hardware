@@ -7,32 +7,37 @@ int RST_PIN = 4;
 
 
 void setup(){
-  pinMode(FAULT1_PIN,INPUT);
-  //set internal pullup high
-  digitalWrite(FAULT1_PIN,HIGH);
-  pinMode(FAULT2_PIN,INPUT);
-  //set internal pullup high
-  digitalWrite(FAULT2_PIN,HIGH);
-  pinMode(LED_PIN,OUTPUT);
-  pinMode(PWM_PIN,OUTPUT);
-  pinMode(DIR_PIN,OUTPUT);
-  pinMode(RST_PIN,OUTPUT);
-  digitalWrite(RST_PIN,HIGH);
+pinMode(RST_PIN,OUTPUT);
+digitalWrite(RST_PIN,LOW);
+pinMode(DIR_PIN,OUTPUT);
+pinMode(PWM_PIN,OUTPUT);
+analogWrite(PWM_PIN,0);
+digitalWrite(DIR_PIN,LOW);
+pinMode(LED_PIN,OUTPUT);
+
+
+pinMode(FAULT1_PIN,OUTPUT);
+//digitalWrite(FAULT1_PIN,HIGH);
+pinMode(FAULT2_PIN,OUTPUT);
+//digitalWrite(FAULT2_PIN,HIGH);
+digitalWrite(RST_PIN,HIGH);
+
 }
 
 void loop(){
-  if(!analogRead(FAULT1_PIN) || !analogRead(FAULT2_PIN)){
-    digitalWrite(LED_PIN,HIGH);
-    delay(100);
-    digitalWrite(LED_PIN,LOW);
-  }
-  digitalWrite(DIR_PIN,0);
+  digitalWrite(LED_PIN,HIGH);
+  digitalWrite(DIR_PIN,LOW);
+  analogWrite(PWM_PIN,100);
+  delay(1000);
   analogWrite(PWM_PIN,0);
-  delay(5000);
-  analogWrite(PWM_PIN,128);
-  delay(5000);
-  digitalWrite(RST_PIN,LOW);
-  delay(10);
-  digitalWrite(RST_PIN,HIGH);
+  delay(1000);
+  digitalWrite(LED_PIN,LOW);
+
+  digitalWrite(DIR_PIN,HIGH);
+  analogWrite(PWM_PIN,100);
+  delay(1000);
+  analogWrite(PWM_PIN,0);
+  delay(1000);
+
 }
 
