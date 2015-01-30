@@ -52,7 +52,7 @@ byte usePacket(void);
 #define RESET_DELAY_TIME 10
 
 //the address of the motor controller
-#define ADDRESS 0x07                                                                                                                                                                                                                       
+#define ADDRESS 0x01                                                                                                                                                                                                                       
 
 //different commands of the motor controller
 #define CONTROL_MOTOR 0x01
@@ -100,11 +100,13 @@ void setup()
   pinMode(TX, OUTPUT);
   pinMode(RX, INPUT);
   pinMode(READWRITE, OUTPUT);
+  pinMode(SPEED, OUTPUT);
   pinMode(DIRECTION, OUTPUT);
   pinMode(RESET, OUTPUT);
   digitalWrite(READWRITE, LOW);
-  digitalWrite(RESET, LOW);
+  digitalWrite(RESET, HIGH);
   pinMode(LED, OUTPUT);
+  
   
   //Begin serial communication
   mySerial.begin(BAUD_RATE);
