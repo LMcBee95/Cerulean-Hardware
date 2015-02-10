@@ -15,15 +15,13 @@ analogWrite(PWM_PIN,0);
 digitalWrite(DIR_PIN,LOW);
 pinMode(LED_PIN,OUTPUT);
 
-pinMode(FAULT1_PIN,OUTPUT);
+pinMode(FAULT1_PIN,INPUT);
 digitalWrite(FAULT1_PIN,HIGH);
-pinMode(FAULT2_PIN,OUTPUT);
+pinMode(FAULT2_PIN,INPUT);
 digitalWrite(FAULT2_PIN,HIGH);
+
 digitalWrite(RST_PIN,HIGH);
-
 }
-
-
 
 void loop(){
   if(digitalRead(FAULT1_PIN)){
