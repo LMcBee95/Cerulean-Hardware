@@ -8,29 +8,26 @@
 
 int main(void)
 {
-   TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
-   TIM_OCInitTypeDef  TIM_OCInitStructure;
 
   /* TIM config */
 
   GPIO_InitTypeDef GPIO_InitStructure;
 
-
   /* TIM4 clock enable */
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
-
 
   /* LEDs are on GPIOD */
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
   
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  //Configures the pins as outputs and using their alternate functions
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15; //the specific pins you are using
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;  //specifies you want to use their alternate functions
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;  
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
-  GPIO_Init(GPIOD, &GPIO_InitStructure);
+  GPIO_Init(GPIOD, &GPIO_InitStructure);	//initializes the pin
 
-
+  //Sets up the pins as their alternate TIM4 configurations
   GPIO_PinAFConfig(GPIOD, GPIO_PinSource12, GPIO_AF_TIM4);
   GPIO_PinAFConfig(GPIOD, GPIO_PinSource13, GPIO_AF_TIM4);
   GPIO_PinAFConfig(GPIOD, GPIO_PinSource14, GPIO_AF_TIM4);
@@ -38,17 +35,18 @@ int main(void)
 
   /* pwm set up */
 
-
   /* Compute the prescaler value */
-  uint16_t PrescalerValue = (uint16_t) ((SystemCoreClock / 2) / 1000000) - 1;
-  uint16_t PreCalPeriod = 1000000 / 20000;
+  uint16_t PrescalerValue = (uint16_t) ((SystemCoreClock / 2) / 1000000) - 1;	//Calculates the clock prescaller. The clock prescaller divides the actual cpu clock to get the tim clock speed
+  uint16_t PreCalPeriod = 1000000 / 20000;  
 
+  TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+  TIM_OCInitTypeDef  TIM_OCInitStructure;
+  
   /* Time base configuration */
   TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;
-  TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
+  TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //divides the cpu clock to get the tim clock. can be between 0x0000 and 0xFFFF
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
   TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-
 
   TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
 
@@ -58,47 +56,29 @@ int main(void)
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
   TIM_OCInitStructure.TIM_Pulse = 0;
   TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-
-
   TIM_OC1Init(TIM4, &TIM_OCInitStructure);
-
-
   TIM_OC1PreloadConfig(TIM4, TIM_OCPreload_Enable);
 
 
   /* PWM1 Mode configuration: Channel2 */
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
   TIM_OCInitStructure.TIM_Pulse = 0;
-
-
   TIM_OC2Init(TIM4, &TIM_OCInitStructure);
-
-
   TIM_OC2PreloadConfig(TIM4, TIM_OCPreload_Enable);
 
 
   /* PWM1 Mode configuration: Channel3 */
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
   TIM_OCInitStructure.TIM_Pulse = 0;
-
-
   TIM_OC3Init(TIM4, &TIM_OCInitStructure);
-
-
   TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
 
 
   /* PWM1 Mode configuration: Channel4 */
   TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
   TIM_OCInitStructure.TIM_Pulse = 0;
-
-
   TIM_OC4Init(TIM4, &TIM_OCInitStructure);
-
-
   TIM_OC4PreloadConfig(TIM4, TIM_OCPreload_Enable);
-
-
   TIM_ARRPreloadConfig(TIM4, ENABLE);
 
 
