@@ -37,7 +37,7 @@ int main(void)
 
   /* Compute the prescaler value */
   uint16_t PrescalerValue = (uint16_t) ((SystemCoreClock / 2) / 1000000) - 1;	//Calculates the clock prescaller. The clock prescaller divides the actual cpu clock to get the tim clock speed
-  uint16_t PreCalPeriod = 1000000 / 20000;  
+  uint16_t PreCalPeriod = 1000000 / 90000;  
 
   TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
   TIM_OCInitTypeDef  TIM_OCInitStructure;
