@@ -1,8 +1,9 @@
 /*
- *	This program creates pulse width modulation on TIM(er) 3. Pins C6: channel 1, C7: channel 2, C8 channel 3, and C9 channel 4. 
- *	To set the duty cycle of the specific pin, TIMx->CCRy = duty cycle, where x is the TIM(er) that you are using and y is the 
- *	channel within the TIM(er) that you want to use. 
- *
+ *	This program creates pulse width modulation on TIM(er) 3 to run a servo motor. Pins C6: channel 1.   
+ *	The frequency is 50 Hz, which means the period is is 20 ms, the same rate that servos take commands.
+ *	Servos take a pwm pulse between 1 and 2 ms. 1 ms being the servo turned to 0 degrees and 2 ms meaning 
+ *  the servo is turned to 180 degrees. The servo must receive a command every 24 or so ms or else the servo
+ *  motor will disengage. 
  */
 
 #include "stm32f4_discovery.h"
@@ -13,13 +14,13 @@
 
 /*This function initializes the pins that are used in pwm, assigns them to their alternate functions, 
  *and then initializes the TIM(ers) for those pins. For parameters, it takes the frequency of the pwm 
- *and the prescaler for the clock. The frequency will work fine for anything bellow 525000, but it is 
- *not guaranteed to work above that. The prescaler divides into the stm boards own internal clock to 
- *get a clock speed for the timer. The prescaler works good at 1, but it can take any multiple of two 
+ *and the pre scaler for the clock. The frequency will work fine for anything bellow 525000, but it is 
+ *not guaranteed to work above that. The pre scaler divides into the stm boards own internal clock to 
+ *get a clock speed for the timer. The pre scaler works good at 1, but it can take any multiple of two 
  *as its input. The function will return the period of the pwm which is used to calculate the duty cycle 
  *when setting the pwm for each pin 
  */
-int32_t initialize_timers(uint32_t frequency, uint16_t preScaler)
+uint16_t initialize_timers(uint16_t frequency, uint16_t preScaler)
 {
 	// Enable TIM3 and GPIOC clocks
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
@@ -28,7 +29,7 @@ int32_t initialize_timers(uint32_t frequency, uint16_t preScaler)
 	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
 	
 	// Configure PC6-PC9 pins as AF, Pull-Down
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;  //specifies which pins are used
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
@@ -37,21 +38,19 @@ int32_t initialize_timers(uint32_t frequency, uint16_t preScaler)
 	 
 	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
 	GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_TIM3);
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_TIM3);
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource8, GPIO_AF_TIM3);
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource9, GPIO_AF_TIM3);
+
 	 
 	// Compute prescaler value for timebase
-	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 * preScaler)) - 1;  //To figure out what the numbers do
+	uint16_t PrescalerValue = (uint16_t) ((SystemCoreClock /2) / (84000000 * preScaler)) - 1;  //To figure out what the numbers do
 	//second value in the divide is the frequency
-	uint32_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
+	uint16_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
 
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
     TIM_OCInitTypeDef  TIM_OCInitStructure;
 	
 	// Setup timebase for TIM3
 	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
-	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the prescaller which is divided into the cpu clock to get a clock speed that is small enough to use for timers
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the pre scaler which is divided into the cpu clock to get a clock speed that is small enough to use for timers
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);  //initializes this part of the code
@@ -62,15 +61,10 @@ int32_t initialize_timers(uint32_t frequency, uint16_t preScaler)
 	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
 	TIM_OCInitStructure.TIM_Pulse = 0;
 	TIM_OC1Init(TIM3, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
-	TIM_OC2Init(TIM3, &TIM_OCInitStructure);
-	TIM_OC3Init(TIM3, &TIM_OCInitStructure);
-	TIM_OC4Init(TIM3, &TIM_OCInitStructure);
+	
 	 
 	// Enable TIM3 peripheral Preload register on CCR1 for 4 channels
 	TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
-	TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
-	TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable);
-	TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
 	 
 	// Enable TIM3 peripheral Preload register on ARR.
 	TIM_ARRPreloadConfig(TIM3, ENABLE);
@@ -87,23 +81,34 @@ int32_t initialize_timers(uint32_t frequency, uint16_t preScaler)
  *cycle (which can be obtained from the initialization function), and the desired duty cycle (between 0 and 255).
  */
 
-void anologWrite(uint32_t channel, uint8_t dutyCycle, uint32_t period)
+void anologWrite(uint32_t channel, uint32_t period, uint8_t dutyCycle)
 {
 	channel = (period + 1) * dutyCycle / 255.0;
+}
+
+/*
+ *	This function sets the angle of the servo motor. It takes the tim(er) and the second ardument is the channel 
+ *  on that tim(er) that you want to move a servo on. The third argument is the angle you want to set the servo to.
+ *  The servo varies from 0 to 180 degrees. The period of the servo will always be 50 Hz, and the variables MAX and 
+ *  MIN should be adjusted to represented the pulse length in micro seconds that the pulse needs to be on for the servo
+ *  to be at 0 degrees and 180 degrees respectively. 
+ */
+
+void setAngle(uint32_t channel, uint8_t angle)
+{
+	uint16_t MAX = 2000;	//The max time to send a pulse to the servo, 180 degrees
+	uint16_t MIN = 1000;	//The min time to send a pulse to the servo, 0 degrees
+	
+	channel = (MAX - MIN) * angle / 180 + MIN; 
 }
 
 
 int main(void)
 {
-	uint32_t period = initialize_timers(525000, 1);
+	uint16_t period = initialize_timers(50, 1);
 	
 	while(1)
 	{
-			anologWrite(TIM3->CCR1, 125, period) ; //Sets the dury cycle of the pulse width modulation. The duty cycle is how long the pin stay on during a cycle.
-							 //So the higher the duty cycle, up until the max duty cycle, the higher the voltage the pulse width will emit.
-			//sets the duty cycle of the other pins
-			TIM3->CCR2 = 40; 
-			TIM3->CCR3 = 40; 
-			TIM3->CCR4 = 40; 
+		setAngle(TIM3->CCR1, 90);  //Sets the angle of the servo attached to pin C6 to 90 degrees
 	}
 }

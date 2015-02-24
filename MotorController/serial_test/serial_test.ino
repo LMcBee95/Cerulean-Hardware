@@ -25,14 +25,14 @@ void setup()
 	
 	//Puts mock data into the packet
 	
-	topPacket[1] = 0;
-	topPacket[2] = 0;
-	topPacket[3] = 0;
-	topPacket[4] = 0;
-	topPacket[5] = 0;
-	topPacket[6] = 50;
-	topPacket[7] = 0;
-	topPacket[8] = 0;
+	topPacket[1] = 80;
+	topPacket[2] = 80;
+	topPacket[3] = 80; 
+	topPacket[4] = 80;
+	topPacket[5] = 80;
+	topPacket[6] = 80;
+	topPacket[7] = 80;
+	topPacket[8] = 80;
 	topPacket[9] = 9;
 	topPacket[10] = 10;
 	topPacket[11] = 11;

@@ -31,9 +31,6 @@ GPIO_InitTypeDef  GPIO_InitStructure;
 #define USART6_DISABLE_PORT			GPIOC
 #define USART6_DISABLE_CLK			RCC_AHB1Periph_GPIOC
 
-#define USART6_ENABLE_PIN GPIO_PIN_8
-#define USART6_DISABLE_PIN GPI0_PIN_9
-
 
 
 uint8_t storage[PACKET_SIZE];	 //Array used to store the data received from the top board
@@ -79,8 +76,8 @@ void init_USART6(uint32_t baudrate){
 	 * the low level stuff of setting bits in the correct registers
 	 */
 	 /*Enable the read write pins*/
-	 PinOutput(USART6_ENABLE_PIN, USART6_ENABLE_PORT, USART6_ENABLE_CLK);
-     PinOutput(USART6_DISABLE_PIN, USART6_DISABLE_PORT, USART6_DISABLE_CLK);
+	 //PinOutput(USART6_ENABLE_PIN, USART6_ENABLE_PORT, USART6_ENABLE_CLK);
+     //PinOutput(USART6_DISABLE_PIN, USART6_DISABLE_PORT, USART6_DISABLE_CLK);
 	 
 	GPIO_InitTypeDef GPIO_InitStruct;   // this is for the GPIO pins used as TX and RX
 	USART_InitTypeDef USART_InitStruct; // this is for the USART6 initialization
