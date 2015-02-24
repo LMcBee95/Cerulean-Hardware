@@ -52,7 +52,7 @@ byte usePacket(void);
 #define RESET_DELAY_TIME 10
 
 //the address of the motor controller
-#define ADDRESS 0x01                                                                                                                                                                                                                       
+#define ADDRESS 0x02                                                                                                                                                                                                                       
 
 //different commands of the motor controller
 #define CONTROL_MOTOR 0x01

@@ -1,3 +1,7 @@
+#include "stm32f4_discovery.h"
+#include "stm32f4xx_conf.h"
+#include <misc.h>			 // I recommend you have a look at these in the ST firmware folder
+#include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
 
 
 uint8_t checksum(uint8_t* packet, uint8_t size) {

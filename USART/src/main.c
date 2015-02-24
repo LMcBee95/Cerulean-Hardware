@@ -132,28 +132,11 @@ int main(void) {
 
   while (1){  
     //* PD12 to be toggled */
-    GPIO_SetBits(GPIOD, GPIO_Pin_12);
-
-    /* Insert delay */
-    Delay(0x3FFFFF);
-
-    /* PD13 to be toggled */
     GPIO_SetBits(GPIOD, GPIO_Pin_13);
 
     /* Insert delay */
     Delay(0x3FFFFF);
 
-    /* PD14 to be toggled */
-    GPIO_SetBits(GPIOD, GPIO_Pin_14);
-
-    /* Insert delay */
-    Delay(0x3FFFFF);
-
-    /* PD15 to be toggled */
-    GPIO_SetBits(GPIOD, GPIO_Pin_15);
-
-    /* Insert delay */
-    Delay(0x7FFFFF);
 
     GPIO_ResetBits(GPIOD, GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15);
 
@@ -165,6 +148,8 @@ int main(void) {
 // this is the interrupt request handler (IRQ) for ALL USART1 interrupts
 void USART1_IRQHandler(void){
 	
+	GPIO_SetBits(GPIOD, GPIO_Pin_12);
+
 	// check if the USART1 receive interrupt flag was set
 	if( USART_GetITStatus(USART1, USART_IT_RXNE) ){
 		
