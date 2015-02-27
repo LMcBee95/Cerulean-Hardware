@@ -25,19 +25,19 @@ void setup()
 	
 	//Puts mock data into the packet
 	
-	topPacket[1] = 80;
-	topPacket[2] = 80;
-	topPacket[3] = 80; 
-	topPacket[4] = 80;
-	topPacket[5] = 80;
-	topPacket[6] = 80;
-	topPacket[7] = 80;
+	topPacket[1] = 10;
+	topPacket[2] = 20;
+	topPacket[3] = 30; 
+	topPacket[4] = 40;
+	topPacket[5] = 50;
+	topPacket[6] = 60;
+	topPacket[7] = 70;
 	topPacket[8] = 80;
-	topPacket[9] = 9;
-	topPacket[10] = 10;
-	topPacket[11] = 11;
-	topPacket[12] = 12;
-	topPacket[13] = 13;
+	topPacket[9] = 90;
+	topPacket[10] = 100;
+	topPacket[11] = 110;
+	topPacket[12] = 120;
+	topPacket[13] = 130;
 	topPacket[14] = checksum(topPacket, 1, 13);
 	topPacket[15] = 0x13;
 	delay(10);
@@ -48,7 +48,7 @@ void setup()
 	
 	uint16_t timer = 0;
 
-        Serial.begin(19200);
+        Serial.begin(115200);
 }
 
 void sendPacket(void)
@@ -62,7 +62,7 @@ void sendPacket(void)
 	void loop()
 	{
 			sendPacket();
-		        delay(200);
+		        delay(50);
 		
 	}
 

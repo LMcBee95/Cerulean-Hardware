@@ -1,14 +1,6 @@
 /*									       Information about this code
  *				
- *	This code currently takes a packet from the top board, converts it to packets the motor controllers can use, and
- *	then sends the packets out to the motors. The code will automatically poll a motor every twenty packets
- *	to check for any faults.
- *	
- *	The read/write enabler pin for the RS485 is D1. For USART6, the Rx is B7 and the Tx is B6. For USART2, 
- *	the Rx is A3 and the Tx is A2.	
- *
- *  The important part of the code is at the bottom, within main(). Everything before that is just initializing
- *  variables and creating functions.
+ *	This code uses a serial interrupt on USART 2 and 6 to toggle LEDS
  *
  */
 
@@ -20,13 +12,20 @@
 GPIO_InitTypeDef  GPIO_InitStructure;
 
 #define PACKET_SIZE 16
-#define TOP_BOTTOM_BAUD 19200
-#define BOTTOM_MOTOR_BAUD 57600
+#define TOP_BOTTOM_BAUD 115200
+#define BOTTOM_MOTOR_BAUD 115200
 
 
 void Delay(__IO uint32_t nCount) {
   while(nCount--) {
   }
+}
+
+void USART_puts(USART_TypeDef* USARTx, uint8_t data){
+		
+		// wait until data register is empty
+		while(!(USARTx->SR & 0x00000040)); 
+		USART_SendData(USARTx, data);
 }
 
 /* This function initializes USART6 peripheral
@@ -153,8 +152,36 @@ void init_USART2(uint32_t baudrate){
 	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 }
 
+//Initiate Serial Interrupts
+void init_IRQ(void)
+{
+	/*
+		Interrupt Priorities
+		0 : USART 2
+		1 : USART 6	
+	*/
+	
+	NVIC_InitTypeDef NVIC_InitStruct;
+	
+	//Initiate Interrupt Request on USART 2
+	NVIC_InitStruct.NVIC_IRQChannel = USART2_IRQn;
+	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
+	NVIC_Init(&NVIC_InitStruct);
+	
+	//Initiate Interrupt Request for USART 6
+	NVIC_InitStruct.NVIC_IRQChannel = USART6_IRQn;
+	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
+	NVIC_Init(&NVIC_InitStruct);
+}
+
 int main(void) {
 
+	init_IRQ();
+	
 	/* GPIOD Periph clock enable */
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
@@ -172,30 +199,41 @@ int main(void) {
 
 	Delay(0xFFFFF); //Delays to give the read/write pin time to initialize
 
-	GPIO_SetBits(GPIOD, GPIO_Pin_15);
 
-	while (1){
-		//* PD12 to be toggled */
-		GPIO_SetBits(GPIOD, GPIO_Pin_14);
-
-		/* Insert delay */
-		Delay(0x3FFFFF);
-
-		GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-
-		/* Insert delay */
-		Delay(0xFFFFFF);
+	while (1)
+	{
+		GPIO_SetBits(GPIOD, GPIO_Pin_15);
+		
+		Delay(0x3fffff);
+		
+		GPIO_ResetBits(GPIOD, GPIO_Pin_15);
+		
+		Delay(0x3fffff);
 	}
 }
 
 void USART6_IRQHandler(void)
 {
-	GPIO_SetBits(GPIOD, GPIO_Pin_12);
-	GPIO_SetBits(GPIOD, GPIO_Pin_14);
+
+	
 	return;
 }
 
-void USART2_IRQHandler(void)
-{
-	GPIO_SetBits(GPIOD, GPIO_Pin_13);
+void USART2_IRQHandler(void) {
+    //Check if interrupt was because data is received
+    if(USART_GetITStatus(USART2, USART_IT_RXNE)) {
+        //Do your stuff here
+        
+		GPIO_SetBits(GPIOD, GPIO_Pin_14); 
+		
+		uint8_t received = USART_ReceiveData(USART2);
+		 	
+		USART_puts(USART6, received);
+		
+		
+        //Clear interrupt flag
+		USART_ClearITPendingBit(USART2, USART_IT_RXNE);
+    }
 }
+
+

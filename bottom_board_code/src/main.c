@@ -37,10 +37,12 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //Why is this at the top of the code?
 uint8_t storage[PACKET_SIZE];	 //Array used to store the data received from the top board
 uint8_t motor[8][7];	 //A multidimensional array to store all of the motor commands
 uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
-uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
-uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since we last polled a motor
-uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
-uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
+volatile uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
+volatile uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
+
+volatile uint8_t counter = 0;
+volatile uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since we last polled a motor
+volatile uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
 
 
 void Delay(__IO uint32_t nCount) {
@@ -246,7 +248,7 @@ void init_USART6(uint32_t baudrate){
 
 //Creates a check sum 
 //You pass in the name of the array, and how many bytes you want the checksum to read
-uint8_t checksum(uint8_t* packet, uint8_t size) {
+uint8_t checksum(volatile uint8_t* packet, uint8_t size) {
 	uint8_t crc = 0;
 	
 	for (uint8_t i = 1; i < size + 1; i++) {
@@ -492,9 +494,8 @@ int main(void) {
   GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);	//Turns the read/write pin for rs485 to write mode
   Delay(0xFFF); //Delays to give the read/write pin time to initialize
   
-  while (1){  
-
-	
+  while (1)
+  {  
 		//Reads the top packet, converts the top packet to motor packets, and then sends the motor packets to the motor controllers
 
 		if(handleTopPacket())  //If the read top packet function was successful, go within the if statement
@@ -530,5 +531,5 @@ int main(void) {
 		GPIO_ResetBits(GPIOD, GPIO_Pin_12);	//Turns off the led 
 		GPIO_ResetBits(GPIOD, GPIO_Pin_14);		
     }
-
-  }
+	
+}
