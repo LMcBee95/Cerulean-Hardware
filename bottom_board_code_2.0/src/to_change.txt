@@ -1,5 +1,0 @@
-1. Abstract all functions to a separate file.
-2. #define all constants at the top of the new abstraction folder.
-3. Add more comments.
-4. #define the USART Pins and set up the code so I can change it through the #define.
-5.

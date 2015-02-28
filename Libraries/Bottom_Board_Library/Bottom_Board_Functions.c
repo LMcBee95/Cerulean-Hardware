@@ -201,14 +201,55 @@ void resetMotor(uint8_t address)
 		USART_puts(USART6, reset[i]);
 }
 
+
+//UNDER PROGRESS
 void USART2_IRQHandler(void) {
     //Check if interrupt was because data is received
-    if (USART_GetITStatus(USART2, USART_IT_RXNE)) {
-        //Do your stuff here
-        
-        //Clear interrupt flag
-        USART_ClearITPendingBit(USART1, USART_IT_RXNE);
-    }
+    if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
+	{	
+		received = USART_ReceiveData(USART2);
+		
+		if(received == 0x12)
+		{
+			storage[counter] = received;
+			counter = 1;
+		}
+		else if(counter > 0 && received != 0x12)
+		{
+			storage[counter] = received;
+			counter++;
+			
+			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == 0x13))
+			{
+				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
+				sendPackets();	//Sends the motor controller commands produced by the convert function
+				counter = 0; //Reset the counter
+				pollCounter++;
+				
+				if(pollCounter > 20)
+				{
+					pollMotor(pollAddress);
+					
+					if(!readSlavePacket())
+					{
+					
+					}
+					
+					pollAddress++;
+					if(pollAddress == 9)
+					{
+						pollAddress = 1;
+					}
+					pollCounter = 0;  //Resets the poll counter
+					
+				}
+			}
+		}
+		else
+		{
+			counter = 0;
+		}
+	}
 }
 
 void USART6_IRQHandler(void) {
@@ -220,6 +261,7 @@ void USART6_IRQHandler(void) {
         USART_ClearITPendingBit(USART6, USART_IT_RXNE);
     }
 }
+
 
 void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 		

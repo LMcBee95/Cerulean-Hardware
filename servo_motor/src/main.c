@@ -12,13 +12,21 @@
 #include <stm32f4xx_tim.h>  //library that contains all of the code the makes the pwm work
 
 
+void Delay(__IO uint32_t nCount) {
+  while(nCount--) {
+  }
+}
+
 /*This function initializes the pins that are used in pwm, assigns them to their alternate functions, 
  *and then initializes the TIM(ers) for those pins. For parameters, it takes the frequency of the pwm 
  *and the pre scaler for the clock. The frequency will work fine for anything bellow 525000, but it is 
  *not guaranteed to work above that. The pre scaler divides into the stm boards own internal clock to 
  *get a clock speed for the timer. The pre scaler works good at 1, but it can take any multiple of two 
  *as its input. The function will return the period of the pwm which is used to calculate the duty cycle 
- *when setting the pwm for each pin 
+ *when setting the pwm for each pin. 
+ *
+ *When deciding on the prescaller, use lower numbers for when you need higher frequencies and use higher
+ *numbers when you need lower frequencies.  
  */
 uint16_t initialize_timers(uint16_t frequency, uint16_t preScaler)
 {
@@ -41,9 +49,9 @@ uint16_t initialize_timers(uint16_t frequency, uint16_t preScaler)
 
 	 
 	// Compute prescaler value for timebase
-	uint16_t PrescalerValue = (uint16_t) ((SystemCoreClock /2) / (84000000 * preScaler)) - 1;  //To figure out what the numbers do
+	uint16_t PrescalerValue = (uint16_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
 	//second value in the divide is the frequency
-	uint16_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
+	uint16_t PreCalPeriod = ((84000000 / preScaler) / frequency) - 1;  //To figure out what the numbers do
 
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
     TIM_OCInitTypeDef  TIM_OCInitStructure;
@@ -94,21 +102,38 @@ void anologWrite(uint32_t channel, uint32_t period, uint8_t dutyCycle)
  *  to be at 0 degrees and 180 degrees respectively. 
  */
 
-void setAngle(uint32_t channel, uint8_t angle)
+void setAngle(uint32_t channel, uint8_t angle, uint16_t period)
 {
-	uint16_t MAX = 2000;	//The max time to send a pulse to the servo, 180 degrees
-	uint16_t MIN = 1000;	//The min time to send a pulse to the servo, 0 degrees
+	uint16_t length = 1000 * angle / 180 + 100;  //1000 is the length of the max - min pulse length in u S. 180 is the full range of angles the servo motor can move. 500 is the minimum pulse length that corresponds with 0 degrees.
 	
-	channel = (MAX - MIN) * angle / 180 + MIN; 
+	TIM3->CCR1 = (period + 1) * 2.25 / 20;  //Sets the pulse width length to be length micro Seconds
 }
 
 
 int main(void)
 {
-	uint16_t period = initialize_timers(50, 1);
+	uint16_t period = initialize_timers(50, 64);
+	
+	//setAngle(TIM3->CCR1, 90, period);  //Sets the angle of the servo attached to pin C6 to 90 degrees
+	
+	uint32_t max = 2.25;  //max length of pulse in mili seconds that the servo will take
+	uint32_t min = 0.75;  //min length of pulse in mili seconds that the servo will take
 	
 	while(1)
 	{
-		setAngle(TIM3->CCR1, 90);  //Sets the angle of the servo attached to pin C6 to 90 degrees
+		TIM3->CCR1 = (period + 1) * 0.75 / 20;
+		
+		Delay(0xFFFFFF);
+		
+		
+		TIM3->CCR1 = (period + 1) * 1.5 / 20;
+		
+		Delay(0xFFFFFF);
+		
+		
+		TIM3->CCR1 = (period + 1) * 2.25 / 20;
+		
+		Delay(0xFFFFFF);
+	
 	}
 }
