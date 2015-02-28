@@ -42,7 +42,7 @@ int32_t initialize_timers(uint32_t frequency, uint16_t preScaler)
 	GPIO_PinAFConfig(GPIOC, GPIO_PinSource9, GPIO_AF_TIM3);
 	 
 	// Compute prescaler value for timebase
-	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 * preScaler)) - 1;  //To figure out what the numbers do
+	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
 	//second value in the divide is the frequency
 	uint32_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
 
@@ -99,8 +99,9 @@ int main(void)
 	
 	while(1)
 	{
-			anologWrite(TIM3->CCR1, 125, period) ; //Sets the dury cycle of the pulse width modulation. The duty cycle is how long the pin stay on during a cycle.
-							 //So the higher the duty cycle, up until the max duty cycle, the higher the voltage the pulse width will emit.
+			//anologWrite(TIM3->CCR1, 125.0, period) ; //Sets the dury cycle of the pulse width modulation. The duty cycle is how long the pin stay on during a cycle.
+			TIM3->CCR1 = (period + 1) * 125.0 / 255.0;
+			//So the higher the duty cycle, up until the max duty cycle, the higher the voltage the pulse width will emit.
 			//sets the duty cycle of the other pins
 			TIM3->CCR2 = 40; 
 			TIM3->CCR3 = 40; 

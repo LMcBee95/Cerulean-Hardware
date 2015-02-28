@@ -1,120 +1,89 @@
 #include "stm32f4_discovery.h"
 #include "stm32f4xx_conf.h"
 #include <misc.h>			 // I recommend you have a look at these in the ST firmware folder
-#include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
 #include <stm32f4xx_dma.h>
 #include <stm32f4xx_adc.h>
+#include <stm32f4xx_tim.h>
 
 volatile uint8_t value = 7;
 
 uint16_t ADC3ConvertedValue[7];
 
-void init_USART1(uint32_t baudrate){
-	
-	/* This is a concept that has to do with the libraries provided by ST
-	 * to make development easier the have made up something similar to 
-	 * classes, called TypeDefs, which actually just define the common
-	 * parameters that every peripheral needs to work correctly
-	 * 
-	 * They make our life easier because we don't have to mess around with 
-	 * the low level stuff of setting bits in the correct registers
-	 */
-	GPIO_InitTypeDef GPIO_InitStruct;   // this is for the GPIO pins used as TX and RX
-	USART_InitTypeDef USART_InitStruct; // this is for the USART1 initialization
-	
-	/* enable APB2 peripheral clock for USART1 
-	 * note that only USART1 and USART6 are connected to APB2
-	 * the other USARTs are connected to APB1
-	 */
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-	
-	/* enable the peripheral clock for the pins used by 
-	 * USART1, PB6 for TX and PB7 for RX
-	 */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-	
-	/* This sequence sets up the TX and RX pins 
-	 * so they work correctly with the USART1 peripheral
-	 */
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7; // Pins 6 (TX) and 7 (RX) are used
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF; 			// the pins are configured as alternate function so the USART peripheral has access to them
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;		// this defines the IO speed and has nothing to do with the baud rate!
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;			// this defines the output type as push pull mode (as opposed to open drain)
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;			// this activates the pull up resistors on the IO pins
-	GPIO_Init(GPIOB, &GPIO_InitStruct);					// now all the values are passed to the GPIO_Init() function which sets the GPIO registers
-	
-	/* The RX and TX pins are now connected to their AF
-	 * so that the USART1 can take over control of the 
-	 * pins
-	 */
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_USART1); 
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_USART1);
-	
-	/* Now the USART_InitStruct is used to define the 
-	 * properties of USART1 
-	 */
-	USART_InitStruct.USART_BaudRate = baudrate;				  // the baud rate is set to the value we passed into this function
-	USART_InitStruct.USART_WordLength = USART_WordLength_8b;  // we want the data frame size to be 8 bits (standard)
-	USART_InitStruct.USART_StopBits = USART_StopBits_1;		  // we want 1 stop bit (standard)
-	USART_InitStruct.USART_Parity = USART_Parity_No;		  // we don't want a parity bit (standard)
-	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None; // we don't want flow control (standard)
-	USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx; // we want to enable the transmitter and the receiver
-	USART_Init(USART1, &USART_InitStruct);					  // again all the properties are passed to the USART_Init function which takes care of all the bit setting
-	
-	USART_Cmd(USART1, ENABLE);	//Enables USART1
-}
 
-
-//Functions that helps send information with USART
-void USART_puts(USART_TypeDef* USARTx, uint8_t data){
-		
-		// wait until data register is empty
-		while(!(USARTx->SR & 0x00000040)); 
-		USART_SendData(USARTx, data);
-}
-
-void print16(uint16_t value)
-{
-	uint8_t thous = 0;
-	uint8_t hund = 0;
-	uint8_t tens = 0;
-	uint8_t ones = 0; 
-	
-	uint16_t temp = value;
-	while(temp >= 1000)
-	{
-		thous++;
-		temp -= 1000; 
-	}
-	while(temp >= 100)
-	{
-		hund++;
-		temp -= 100;
-	}
-	while(temp >= 10)
-	{
-		tens++;
-		temp -= 10;
-	}
-	while(temp >= 1)
-	{
-		ones++;
-		temp--;
-	}
-	
-	USART_puts(USART1, (char)ones);
-	USART_puts(USART1, (char)tens);
-	USART_puts(USART1, (char)hund);
-	USART_puts(USART1, (char)thous);
-	
-}
-
-/*
- *	This function takes the name of the array to which you are storing the adc data. The next parameter is the size of the array that you are sending the data to. 
- *
+/*This function initializes the pins that are used in pwm, assigns them to their alternate functions, 
+ *and then initializes the TIM(ers) for those pins. For parameters, it takes the frequency of the pwm 
+ *and the prescaler for the clock. The frequency will work fine for anything bellow 525000, but it is 
+ *not guaranteed to work above that. The prescaler divides into the stm boards own internal clock to 
+ *get a clock speed for the timer. The prescaler works good at 1, but it can take any multiple of two 
+ *as its input. The function will return the period of the pwm which is used to calculate the duty cycle 
+ *when setting the pwm for each pin 
  */
+int32_t initialize_timers(uint32_t frequency, uint16_t preScaler)
+{
+	// Enable TIM3 and GPIOC clocks
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	 
+	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
+	
+	// Configure PC6-PC9 pins as AF, Pull-Down
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);	//initializes the structure
+	 
+	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_TIM3);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_TIM3);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource8, GPIO_AF_TIM3);
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource9, GPIO_AF_TIM3);
+	 
+	// Compute prescaler value for timebase
+	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
+	//second value in the divide is the frequency
+	uint32_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
 
-void initDma(uint16_t *array, uint16_t size)
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+	
+	// Setup timebase for TIM3
+	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the prescaller which is divided into the cpu clock to get a clock speed that is small enough to use for timers
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);  //initializes this part of the code
+	 
+	// Initialize TIM3 for 4 channels
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OCInitStructure.TIM_Pulse = 0;
+	TIM_OC1Init(TIM3, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
+	TIM_OC2Init(TIM3, &TIM_OCInitStructure);
+	TIM_OC3Init(TIM3, &TIM_OCInitStructure);
+	TIM_OC4Init(TIM3, &TIM_OCInitStructure);
+	 
+	// Enable TIM3 peripheral Preload register on CCR1 for 4 channels
+	TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	 
+	// Enable TIM3 peripheral Preload register on ARR.
+	TIM_ARRPreloadConfig(TIM3, ENABLE);
+	 
+	// Enable TIM3 counter
+	TIM_Cmd(TIM3, ENABLE); 
+	
+	return(PreCalPeriod);
+}
+
+
+
+
+void initDma(void)
 {
 	 ADC_InitTypeDef       ADC_InitStruct;
     ADC_CommonInitTypeDef ADC_CommonInitStruct;
@@ -126,9 +95,9 @@ void initDma(uint16_t *array, uint16_t size)
     /* DMA2 Stream0 channel0 configuration **************************************/
     DMA_InitStruct.DMA_Channel = DMA_Channel_2;
     DMA_InitStruct.DMA_PeripheralBaseAddr = (uint32_t)&ADC3->DR;//ADC3's data register
-    DMA_InitStruct.DMA_Memory0BaseAddr = (uint32_t)array; //specifies where the memory goes when it is received
+    DMA_InitStruct.DMA_Memory0BaseAddr = (uint32_t)&ADC3ConvertedValue;
     DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralToMemory;
-    DMA_InitStruct.DMA_BufferSize = size;
+    DMA_InitStruct.DMA_BufferSize = value;
     DMA_InitStruct.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStruct.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;//Reads 16 bit values
@@ -189,6 +158,17 @@ void initDma(uint16_t *array, uint16_t size)
     ADC_SoftwareStartConv(ADC3);
 }
 
+/*
+ *This function controls the voltage outputted by each pwm pin. For parameters, it takes the TIM(er) of the 
+ *pin that is being changed, which CCRx (Constant current reduction) should be selected, the period of the duty 
+ *cycle (which can be obtained from the initialization function), and the desired duty cycle (between 0 and 255).
+ */
+
+void anologWrite(uint32_t channel, uint8_t dutyCycle, uint32_t period)
+{
+	channel = (period + 1) * dutyCycle / 255.0;
+}
+
 void main(void)
 {
 	GPIO_InitTypeDef  GPIO_InitStructure;
@@ -203,8 +183,9 @@ void main(void)
 	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	  GPIO_Init(GPIOD, &GPIO_InitStructure); 
 	
-	initDma(ADC3ConvertedValue, 7);
-	init_USART1(9600);
+	initDma();
+	
+	uint32_t period = initialize_timers(525000, 1);
 	
 	 /* GPIOD Periph clock enable */
 	 RCC_AHB1PeriphClockCmd(USER_BUTTON_GPIO_CLK, ENABLE);
@@ -223,33 +204,35 @@ void main(void)
 	while(1)
 	{
 		
-	    if(ADC3ConvertedValue[0] > 1000)
+	    TIM3->CCR1 = (period + 1) * ADC3ConvertedValue[0] / 4000;
+		
+		/*if(ADC3ConvertedValue[0] > 1000)
 		{
 			GPIO_SetBits(GPIOD, GPIO_Pin_13);
+			TIM3->CCR1 = (period + 1) * 50.0 / 100;
 		}
-		if(ADC3ConvertedValue[1] > 1000)
+		else if(ADC3ConvertedValue[1] > 1000)
 		{
 			GPIO_SetBits(GPIOD, GPIO_Pin_14);
+			TIM3->CCR2 = (period + 1) * 50.0 / 100;
 		}
-		if(ADC3ConvertedValue[2] > 1000)
+		else if(ADC3ConvertedValue[2] > 1000)
 		{
 			GPIO_SetBits(GPIOD, GPIO_Pin_15);
+			TIM3->CCR3 = (period + 1) * 50.0 / 100;
 		}
-		if(ADC3ConvertedValue[3] > 1000)
+		else if(ADC3ConvertedValue[3] > 1000)
 		{
 			GPIO_SetBits(GPIOD, GPIO_Pin_12);
+			TIM3->CCR4 = (period + 1) * 50.0 / 100;
 		}
-		
-		button = GPIO_ReadInputDataBit(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN);
-		while(!button)
+		else
 		{
-			button = GPIO_ReadInputDataBit(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN);
-		}
-		while(button)
-		{
-			button = GPIO_ReadInputDataBit(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN);
-		}
-		
+			TIM3->CCR1 = (period + 1) * 0 / 100;
+			TIM3->CCR2 = (period + 1) * 0 / 100;
+			TIM3->CCR3 = (period + 1) * 0 / 100;
+			TIM3->CCR4 = (period + 1) * 0 / 100;
+		}*/
 		
 		GPIO_ResetBits(GPIOD, GPIO_Pin_12);
 		GPIO_ResetBits(GPIOD, GPIO_Pin_13);
