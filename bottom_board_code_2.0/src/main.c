@@ -17,7 +17,8 @@
 #include "stm32f4_discovery.h"
 #include "stm32f4xx_conf.h"
 #include <misc.h>			 // I recommend you have a look at these in the ST firmware folder
-#include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
+//#include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
+//#include "Bottom_Board_Initializations.h"
 
 GPIO_InitTypeDef  GPIO_InitStructure;  //Why is this at the top of the code?
 
@@ -33,8 +34,6 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //Why is this at the top of the code?
 #define USART6_DISABLE_PORT			GPIOC
 #define USART6_DISABLE_CLK			RCC_AHB1Periph_GPIOC
 
-
-uint8_t storage[PACKET_SIZE];	 //Array used to store the data received from the top board
 uint8_t motor[8][7];	 //A multidimensional array to store all of the motor commands
 uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
 volatile uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
@@ -268,9 +267,9 @@ uint8_t checksum(volatile uint8_t* packet, uint8_t size) {
 
 //Reads through the motor commands and sends them to the motors
 void sendPackets(void){
-	for(uint8_t i = 0; i < 8; i++)  //Cycles through all of the packets
+	for(uint8_t i = 0; i < 8; i++)  //Cycles through all of the packets (All 8 motors)
 	{
-		for(uint8_t j = 0; j < 7; j++) //Cycles through all of the information in the packets
+		for(uint8_t j = 0; j < 7; j++) //Cycles through all of the information in the packets (7 bytes in 1 packet)
 		{
 			USART_puts(USART6, motor[i][j]);
 		}
@@ -290,7 +289,7 @@ void convertTBtoBB(uint8_t* top)
 	{
 		
 		// 0 for reverse, 1 for forward
-		uint8_t direction = (top[i+ 1] < 128);
+		uint8_t direction = (top[i + 1] < 128);
 		
 		// Removes the first byte that gave the direction, and 
 		//Bit shifts the rest of the number to multiply the value by two to get the values between 0 and 254
@@ -350,69 +349,6 @@ void resetMotor(uint8_t address)
 	for(uint8_t i = 0; i < 7; i++)
 		USART_puts(USART6, reset[i]);
 }
-
-/*
- *	This function handles receiving the top packet and then sending out the commands to the motor  
- *	controllers. It takes no arguments. The function will keep cycling until it receives a 0x12. Then 
- *	function stores the top board information into an array, produces motor control commands from the 
- *	top packet,and then sends the commands to all of the motors. The function checks before it sends 
- * 	the command to make sure the check sum is correct and that the last byte is a 0x13. If this is 
- * 	true then the function returns a one and if it isn't, then the function returns a 0.
- */
-
-uint8_t handleTopPacket(void)
-{
-	
-	if((USART2, USART_FLAG_RXNE))
-	{
-		uint8_t received = USART_ReceiveData(USART2);
-		
-		if(0x12 == received )
-		{
-			uint8_t timer = 0;	//Timer used to stop the function from waiting for data if there is an error
-			GPIO_SetBits(GPIOD, GPIO_Pin_12);	//Turns on the green led 
-			uint8_t counter = 1;	//Counter used to count how many bytes we have read in from the top borad
-			while(counter < PACKET_SIZE && timer < 0xFFFF)  //Waits until all 16 bytes are read in. If no data comes then the function will break 
-			//out after a short period of time
-			{
-				if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE)) //if data is received store it in the array storage
-				{
-					received = USART_ReceiveData(USART2);
-					if(received != 0x12)
-					{
-						storage[counter] = received;	//Reads in the data from the buffer into an array
-						counter++;	//Increments the counter
-					}
-					else
-					{
-						return(0);
-					}
-					
-					
-				}
-				GPIO_SetBits(GPIOD, GPIO_Pin_13);
-				timer++;
-			}	
-			if((checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == 0x13))  //Checks the check sum and the end byte
-			{	
-				GPIO_ResetBits(GPIOD, GPIO_Pin_13);
-				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
-				sendPackets();	//Sends the motor controller commands produced by the convert function
-				return(1); //Reading the packet was successful!
-			}
-			else	
-			{
-				
-				return(0);  //Returns 0 if the check sum or end byte were incorrect
-			}
-			
-		}
-		else
-			return(0); 
-	}
-	else
-		return(0);
-}
  
 /*
  *	This function reads the data that the motors send back after we poll them.
@@ -439,7 +375,7 @@ uint8_t readSlavePacket(void)
 			{
 				uint8_t counter = 1;
 				pollReceived[0] = 0x12;
-				timer = 0;  //resets the timer after it recieves the state byte
+				timer = 0;  //resets the timer after it receives the state byte
 				while(counter < 7 && timer < 0x4FFFF)  //Cycles through the data until all 7 byte are read
 				{
 					while(USART_GetFlagStatus(USART6, USART_FLAG_RXNE)) //if data is received store it in the array pollReceived
@@ -465,14 +401,21 @@ uint8_t readSlavePacket(void)
 				}
 			}
 		}
-		timer++;	//Increases timer until data is received or timer is greater than 0x4FFFF
+		timer++; //Increases timer until data is received or timer is greater than 0x4FFFF
 	}
+	
 	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //Sets the read/write pin to write mode
 	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN); 
+	
+	while(USART_GetFlagStatus(USART6, USART_FLAG_RXNE)) //if data is received store it in the array pollReceived
+	{
+		pollReceived[counter] = USART_ReceiveData(USART6);	//Reads in the data from the buffer into an array
+	}
+	
 	return(0); //No data was received
 }
 
-//Initiate Serial Interrupts
+//Initiate Interrupts
 void init_IRQ(void)
 {
 	/*
@@ -501,6 +444,7 @@ void init_IRQ(void)
 //USART2 Serial Handler
 //UNDER PROGRESS
 
+/*
 void USART2_IRQHandler(void) {
     //Check if interrupt was because data is received
     if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
@@ -531,12 +475,12 @@ void USART2_IRQHandler(void) {
 				{
 					pollMotor(pollAddress);
 					
-					/*
-					if(!readSlavePacket())
-					{
 					
-					}
-					*/
+					//if(!readSlavePacket())
+					//{
+					
+					//}
+					
 					
 					pollAddress++;
 					if(pollAddress == 9)
@@ -560,7 +504,7 @@ void USART2_IRQHandler(void) {
 	}
 	USART_ClearITPendingBit(USART2, USART_IT_RXNE);
 }
-
+*/
 
 int main(void) {
 

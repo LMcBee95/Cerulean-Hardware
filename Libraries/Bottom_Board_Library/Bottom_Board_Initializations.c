@@ -1,3 +1,8 @@
+#include "stm32f4_discovery.h"
+#include "stm32f4xx_conf.h"
+#include <misc.h>			 // I recommend you have a look at these in the ST firmware folder
+#include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
+#include "Bottom_Board_Initializations.h"
 
 
 void init_IRQ(void)
@@ -29,6 +34,7 @@ void init_LEDS(void)
 {
 	/* GPIOD Periph clock enable */
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+	GPIO_InitTypeDef GPIO_InitStructure;
 
 	/* Configures the leds and the read/write pin on D1 */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15 | USART6_ENABLE_PIN | USART6_DISABLE_PIN;
@@ -154,6 +160,7 @@ void init_USART6(uint32_t baudrate){
     //PinOutput(USART6_DISABLE_PIN, USART6_DISABLE_PORT, USART6_DISABLE_CLK);
 	
 	 RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	 GPIO_InitTypeDef GPIO_InitStructure;
 
 	 /* Configures the leds and the read/write pin on C8 and C9 */
 	 GPIO_InitStructure.GPIO_Pin = USART6_ENABLE_PIN | USART6_DISABLE_PIN;
