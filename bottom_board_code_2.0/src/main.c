@@ -22,7 +22,11 @@
 
 GPIO_InitTypeDef  GPIO_InitStructure;  //Why is this at the top of the code?
 
+#define POLL_MOTOR_TIME_OUT = 10  //how many top board packets the bottom board can receive while trying to poll a motor before we move on
+
+
 #define PACKET_SIZE 16
+#define MOTOR_PACKET_SIZE 7
 #define TOP_BOTTOM_BAUD 115200
 #define BOTTOM_MOTOR_BAUD 57600
 
@@ -34,11 +38,16 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //Why is this at the top of the code?
 #define USART6_DISABLE_PORT			GPIOC
 #define USART6_DISABLE_CLK			RCC_AHB1Periph_GPIOC
 
+uint8_t pollingMotors = 0;  //stores a 0 if we are not polling the motors and a 1 if the motors are being polled
+uint8_t notPolledCounter = 0;  //stores how many times the bottom board received a top board packet before it received the poll response from the motor controllers
+
 uint8_t motor[8][7];	 //A multidimensional array to store all of the motor commands
 uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
+uint8_t storage[PACKET_SIZE];  //stores the message the packet that is sent from the top board
+uint8_t pollStorage[MOTOR_PACKET_SIZE];
+
 volatile uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
 volatile uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
-
 volatile uint8_t counter = 0;
 volatile uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since we last polled a motor
 volatile uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
@@ -245,6 +254,8 @@ void init_USART6(uint32_t baudrate){
 	USART_Init(USART6, &USART_InitStruct);					  // again all the properties are passed to the USART_Init function which takes care of all the bit setting
 	
 	USART_Cmd(USART6, ENABLE);	//Enables USART6
+	
+	USART_ITConfig(USART6, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 }
 
 //Creates a check sum 
@@ -361,9 +372,7 @@ uint8_t readSlavePacket(void)
 {
 	uint32_t timer = 0;  //Variable to make the code break out of the next while loop if no data comes
 	uint8_t received = 0;  //Stores initial variable received
-	Delay(0x3FFF);		//Wait for the read write pin to turn low
-	GPIO_ResetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);
-	GPIO_ResetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN); 
+	 
 	
 	while(timer < 0x4FFFF)
 	{
@@ -444,7 +453,7 @@ void init_IRQ(void)
 //USART2 Serial Handler
 //UNDER PROGRESS
 
-/*
+
 void USART2_IRQHandler(void) {
     //Check if interrupt was because data is received
     if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
@@ -466,31 +475,46 @@ void USART2_IRQHandler(void) {
 			{
 				GPIO_SetBits(GPIOD, GPIO_Pin_14);
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
-				sendPackets();	//Sends the motor controller commands produced by the convert function
-				counter = 0; //Reset the counter
-				pollCounter++;
 				
-				
-				if(pollCounter > 20)
+				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
 				{
-					pollMotor(pollAddress);
-					
-					
-					//if(!readSlavePacket())
-					//{
-					
-					//}
-					
-					
-					pollAddress++;
-					if(pollAddress == 9)
+					sendPackets();	//Sends the motor controller commands produced by the convert function
+					pollCounter++;
+				
+					if(pollCounter > 20)
 					{
-						pollAddress = 1;
-					}
-					pollCounter = 0;  //Resets the poll counter
+						pollMotor(pollAddress);
+						
+						pollingMotors = 1;
+						
+						Delay(0x3FFF);		//Wait for the read write pin to turn low
+						GPIO_ResetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
+						GPIO_ResetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
+						
+						pollAddress++;
+						if(pollAddress == 9)
+						{
+							pollAddress = 1;
+						}
+						pollCounter = 0;  //Resets the poll counter
 
-					
+					}
 				}
+				else
+				{
+					notPolledCounter++;
+					
+					if(notPolledCounter > POLL_MOTOR_TIME_OUT)
+					{
+						pollingMotors = 0;
+						
+						//print error message or send some message to the top board.
+					}
+				}
+				counter = 0; //Reset the counter
+				
+				
+				
 			}
 			else if(counter == PACKET_SIZE)
 			{
@@ -504,7 +528,17 @@ void USART2_IRQHandler(void) {
 	}
 	USART_ClearITPendingBit(USART2, USART_IT_RXNE);
 }
-*/
+
+void USART6_IRQHandler(void) {
+    //Check if interrupt was because data is received
+    if (USART_GetITStatus(USART6, USART_IT_RXNE)) {
+        //Do your stuff here
+        
+        //Clear interrupt flag
+        USART_ClearITPendingBit(USART6, USART_IT_RXNE);
+    }
+}
+
 
 int main(void) {
 
