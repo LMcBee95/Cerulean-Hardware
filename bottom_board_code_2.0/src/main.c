@@ -532,7 +532,40 @@ void USART2_IRQHandler(void) {
 void USART6_IRQHandler(void) {
     //Check if interrupt was because data is received
     if (USART_GetITStatus(USART6, USART_IT_RXNE)) {
-        //Do your stuff here
+		received = USART_ReceiveData(USART6);
+		
+		if(received == 0x12)
+		{
+			pollStorage[pollCounter] = received;
+			pollCounter = 1;
+		}
+		else if(pollCounter > 0 && received != 0x12)
+		{
+			//GPIO_SetBits(GPIOD, GPIO_Pin_12);
+			pollStorage[pollCounter] = received;
+			pollCounter++;
+			
+			if(pollCounter == MOTOR_PACKET_SIZE  && (checksum(pollStorage, MOTOR_PACKET_SIZE - 3) == pollStorage[MOTOR_PACKET_SIZE - 2]) && (pollStorage[MOTOR_PACKET_SIZE - 1] == 0x13))
+			{
+				//do stuff with the received data
+				
+				
+				
+				pollCounter = 0; //Reset the counter
+				
+				
+				pollingMotors = 0;  //resets the variable that will allow the board to start sending out motor commands again
+			}
+			else if(pollCounter == MOTOR_PACKET_SIZE)
+			{
+				//GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+			}
+		}
+		else
+		{
+			pollCounter = 0;
+		}
+	}
         
         //Clear interrupt flag
         USART_ClearITPendingBit(USART6, USART_IT_RXNE);
