@@ -1,0 +1,1 @@
+1. Remove all globally defined functions in both main.c and Bottom_Board_Functions.c

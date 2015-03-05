@@ -17,12 +17,12 @@
 #include "stm32f4_discovery.h"
 #include "stm32f4xx_conf.h"
 #include <misc.h>			 // I recommend you have a look at these in the ST firmware folder
-//#include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
+#include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
 //#include "Bottom_Board_Initializations.h"
 
 GPIO_InitTypeDef  GPIO_InitStructure;  //Why is this at the top of the code?
 
-#define POLL_MOTOR_TIME_OUT = 10  //how many top board packets the bottom board can receive while trying to poll a motor before we move on
+#define POLL_MOTOR_TIME_OUT 10  //how many top board packets the bottom board can receive while trying to poll a motor before we move on
 
 
 #define PACKET_SIZE 16
@@ -445,10 +445,15 @@ void init_IRQ(void)
 	//Initiate Interrupt Request for USART 6
 	NVIC_InitStruct.NVIC_IRQChannel = USART6_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;  
 	NVIC_Init(&NVIC_InitStruct);
 }
+
+
+
+
+
 
 //USART2 Serial Handler
 //UNDER PROGRESS
@@ -570,7 +575,7 @@ void USART6_IRQHandler(void) {
         //Clear interrupt flag
         USART_ClearITPendingBit(USART6, USART_IT_RXNE);
     }
-}
+
 
 
 int main(void) {

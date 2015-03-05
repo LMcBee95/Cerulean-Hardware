@@ -214,7 +214,7 @@ byte readPacket(void)
 
 byte usePacket(void)
 {
-  digitalWrite(13, HIGH);
+  
   
   //Checks if this is the correct address
   //If the functions returns true then the device will do something. If it is false then the device will not do anything
@@ -233,6 +233,7 @@ byte usePacket(void)
      analogWrite(LED, receivedPacket[3]);
      analogWrite(SPEED, receivedPacket[3]);
      digitalWrite(DIRECTION, receivedPacket[2]);
+     digitalWrite(LED, HIGH);
      return 1;
    }
    else if(receivedPacket[1] == REQUEST_FAULT_DATA)
