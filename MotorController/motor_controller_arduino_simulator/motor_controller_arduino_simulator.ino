@@ -106,6 +106,7 @@ void setup()
   digitalWrite(READWRITE, LOW);
   digitalWrite(RESET, HIGH);
   pinMode(LED, OUTPUT);
+  pinMode(9, OUTPUT);
   
   
   //Begin serial communication
@@ -129,7 +130,7 @@ void loop()
   if(killSwitch > KILL_DELAY)
   {
    killSwitch = 0;
-   analogWrite(LED, 0);
+   //analogWrite(LED, 0);
    analogWrite(SPEED, 0); 
   }
 }
@@ -140,7 +141,7 @@ byte crc8(const byte *packet, const byte pos_first_byte, const byte num_bytes_da
 
   byte crc = 0;
   for(byte len = pos_first_byte; len < (pos_first_byte + num_bytes_data); len++) {
-    uint8_t inbyte = *packet++;
+    uint8_t inbyte = packet[len];
     for (byte i = 8; i; i--) {
       byte mix = (crc ^ inbyte) & 0x01;
       crc >>= 1;
@@ -230,10 +231,12 @@ byte usePacket(void)
    }
    else if(receivedPacket[1] == CONTROL_MOTOR)
    {
-     analogWrite(LED, receivedPacket[3]);
+     //analogWrite(LED, receivedPacket[3]);
      analogWrite(SPEED, receivedPacket[3]);
      digitalWrite(DIRECTION, receivedPacket[2]);
-     digitalWrite(LED, HIGH);
+     
+     digitalWrite(9, HIGH);
+     
      return 1;
    }
    else if(receivedPacket[1] == REQUEST_FAULT_DATA)
@@ -242,6 +245,7 @@ byte usePacket(void)
      returnPacket[4] = !(digitalRead(FAULT2));
      returnPacket[5] = crc8(returnPacket, 1, 4);
      
+     digitalWrite(LED, HIGH);
      
      //Puts the rs485 chip in write mode, sends data to the bottom board, and puts the rs485 chip in read mode
      digitalWrite(READWRITE, HIGH);
