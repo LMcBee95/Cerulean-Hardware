@@ -1,6 +1,24 @@
 #ifndef BOTTOM_BOARD_FUNCTIONS_H_
 #define BOTTOM_BOARD_FUNCTIONS_H_
 
+#include "stm32f4xx.h"
+#include "stm32f4_discovery.h"
+#include <misc.h>			 // I recommend you have a look at these in the ST firmware folder
+
+#include "stm32f4xx_conf.h"
+#include <stm32f4xx_dma.h>
+#include <stm32f4xx_gpio.h>
+#include <stm32f4xx_i2c.h>
+#include <stm32f4xx_it.h>
+#include <stm32f4xx_rcc.h>
+#include <stm32f4xx_syscfg.h>
+#include <stm32f4xx_spi.h>
+#include <stm32f4xx_tim.h>
+#include <stm32f4xx_usart.h>
+
+
+#include "Bottom_Board_Functions.h"
+
 #define PACKET_SIZE 16
 #define MOTOR_PACKET_SIZE 7
 #define TOP_BOTTOM_BAUD 115200
