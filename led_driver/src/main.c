@@ -204,7 +204,7 @@ void main(void)
 	while(1)
 	{
 		
-	    TIM3->CCR1 = (period + 1) * ADC3ConvertedValue[0] / 4000;
+	    TIM3->CCR1 = (period + 1) * ADC3ConvertedValue[0] / 4000 / 4.5;
 		
 		/*if(ADC3ConvertedValue[0] > 1000)
 		{
