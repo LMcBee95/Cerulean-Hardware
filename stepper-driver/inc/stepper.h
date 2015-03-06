@@ -72,7 +72,7 @@ int Stepper_GetStep(Stepper* stepper);
 
 //Set the stepper to the given angle in degrees
 // 0 degrees is forward
-void Stepper_SetAngle(Stepper* stepper, float angle);
+void Stepper_SetAngle(Stepper* stepper, int angle);
 
 //Get current angle of the stepper motor in degrees
 int Stepper_GetAngle(Stepper* stepper);

@@ -86,7 +86,7 @@ int main(void)
 	Stepper_SetStep(stepper, -80);
 	Stepper_SetStep(stepper, 1);
 	fun = Stepper_GetAngle(stepper);
-	Beep(fun, GPIOD, GPIO_Pin_15);
+	//Beep(fun, GPIOD, GPIO_Pin_15);
 	Stepper_Reset(stepper);          //Return the stepper to its base position
 	Stepper_Disable(stepper);
 	Delay(0xFFFFFF);
