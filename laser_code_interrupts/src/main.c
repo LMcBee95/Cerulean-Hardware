@@ -97,8 +97,6 @@ void USART1_IRQHandler(void) {
 	{
 		uint8_t received = USART_ReceiveData(USART1);
 		
-		GPIO_SetBits(GPIOD, GPIO_Pin_12);
-		
 		twoPreviousValue = previousValue;
 		previousValue = currentValue;
 		currentValue = received;
@@ -108,7 +106,6 @@ void USART1_IRQHandler(void) {
 		{
 			tempLaserData[laserSerialCounter] = currentValue;
 			laserSerialCounter++;
-			GPIO_SetBits(GPIOD, GPIO_Pin_13);
 		}
 		else if (previousValue == ','&& (twoPreviousValue >= '0' && twoPreviousValue <= '9'))
 		{
@@ -124,13 +121,35 @@ void USART1_IRQHandler(void) {
 					{
 						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
 					}
+				}
+				GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_13);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+				
+				if(laserDataBuff[dataMeasurementCounter] < 50)
+				{
+					GPIO_SetBits(GPIOD, GPIO_Pin_12);
+				}
+				else if(laserDataBuff[dataMeasurementCounter] < 100)
+				{
+					GPIO_SetBits(GPIOD, GPIO_Pin_12);
+					GPIO_SetBits(GPIOD, GPIO_Pin_13);
+				}
+				else if(laserDataBuff[dataMeasurementCounter] < 150)
+				{
+					GPIO_SetBits(GPIOD, GPIO_Pin_12);
+					GPIO_SetBits(GPIOD, GPIO_Pin_13);
 					GPIO_SetBits(GPIOD, GPIO_Pin_14);
 				}
-				
-				if(laserDataBuff[dataMeasurementCounter] < 20)
+				else if(laserDataBuff[dataMeasurementCounter] < 200)
 				{
+					GPIO_SetBits(GPIOD, GPIO_Pin_12);
+					GPIO_SetBits(GPIOD, GPIO_Pin_13);
+					GPIO_SetBits(GPIOD, GPIO_Pin_14);
 					GPIO_SetBits(GPIOD, GPIO_Pin_15);
 				}
+				
 				
 				dataMeasurementCounter++;
 				laserSerialCounter = 0;
