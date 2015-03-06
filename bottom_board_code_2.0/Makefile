@@ -93,8 +93,8 @@ SRC += \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.c \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_usart.c \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_wwdg.c \
-	#$(LIBPATH)/Bottom_Board_Library\Bottom_Board_Functions.c \
-	#$(LIBPATH)/Bottom_Board_Library\Bottom_Board_Initializations.c \
+	$(LIBPATH)/Bottom_Board_Library\Bottom_Board_Functions.c \
+	$(LIBPATH)/Bottom_Board_Library\Bottom_Board_Initializations.c \
 
 
 OBJDIR = ./$(BUILDDIR)

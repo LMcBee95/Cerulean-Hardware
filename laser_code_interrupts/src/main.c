@@ -3,12 +3,19 @@
 #include <misc.h>			 // I recommend you have a look at these in the ST firmware folder
 #include <stm32f4xx_usart.h> // under Libraries/STM32F4xx_StdPeriph_Driver/inc and src
 
+uint8_t tempLaserData[10];  //Stores the decimal values of the length of the measurement.
+uint16_t laserDataBuff[100];  //Stores the actual value of the length in mm from the target
+
+volatile uint8_t laserSerialCounter = 0;  //Counter that determines where in the tempLaserData to store the next value
+volatile uint8_t dataMeasurementCounter = 0;  //Counter that determines 
+volatile uint8_t twoPreviousValue = 0;  //The value from two serial readings ago
+volatile uint8_t previousValue = 0;    //The value from the last serial reading
+volatile uint8_t currentValue = 0;     //The current value from the serial
 
 void Delay(__IO uint32_t nCount) {
   while(nCount--) {
   }
 }
-
 
 //initializes pin B6 as TX and B7 as RX
 void init_USART1(uint32_t baudrate){
@@ -84,24 +91,57 @@ void init_IRQ(void)
 	
 }
 
-
-
-
-
-
-
 void USART1_IRQHandler(void) {
     //Check if interrupt was because data is received
     if (USART_GetITStatus(USART1, USART_IT_RXNE)) 
 	{
-		uint16_t received = USART_ReceiveData(USART1);
+		uint8_t received = USART_ReceiveData(USART1);
 		
-		if(received == 1)
+		GPIO_SetBits(GPIOD, GPIO_Pin_12);
+		
+		twoPreviousValue = previousValue;
+		previousValue = currentValue;
+		currentValue = received;
+		
+		//See if the previous value was a space or a number and if the current value is a number
+		if((previousValue == ' ' || (previousValue >= '0' && previousValue <= '9')) && (currentValue >= '0' && previousValue <= '9'))
 		{
-			GPIO_SetBits(GPIOD, GPIO_Pin_12);
+			tempLaserData[laserSerialCounter] = currentValue;
+			laserSerialCounter++;
+			GPIO_SetBits(GPIOD, GPIO_Pin_13);
 		}
-		else
-			GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+		else if (previousValue == ','&& (twoPreviousValue >= '0' && twoPreviousValue <= '9'))
+		{
+			if(currentValue == 'c')
+			{
+				for(int i = 0; i < (laserSerialCounter - 1); i++)
+				{
+					if(i == 0)
+					{
+						laserDataBuff[dataMeasurementCounter] = (tempLaserData[i] - '0');
+					}
+					else
+					{
+						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
+					}
+					GPIO_SetBits(GPIOD, GPIO_Pin_14);
+				}
+				
+				if(laserDataBuff[dataMeasurementCounter] < 20)
+				{
+					GPIO_SetBits(GPIOD, GPIO_Pin_15);
+				}
+				
+				dataMeasurementCounter++;
+				laserSerialCounter = 0;
+			}
+			else
+			{
+				laserSerialCounter = 0;
+			}
+		
+		}
+		
 	
         //Clear interrupt flag
         USART_ClearITPendingBit(USART1, USART_IT_RXNE);
