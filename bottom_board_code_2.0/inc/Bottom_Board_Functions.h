@@ -23,6 +23,7 @@
 #define MOTOR_PACKET_SIZE 7
 #define TOP_BOTTOM_BAUD 115200
 #define BOTTOM_MOTOR_BAUD 57600
+#define POLL_MOTOR_TIME_OUT 7 
 
 #define USART6_ENABLE_PIN			GPIO_Pin_8					//check if these are correct 
 #define USART6_ENABLE_PORT			GPIOC

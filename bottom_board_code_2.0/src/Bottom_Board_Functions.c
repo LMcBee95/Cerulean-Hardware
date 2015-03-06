@@ -9,12 +9,12 @@ uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
 uint8_t storage[PACKET_SIZE];  //stores the message the packet that is sent from the top board
 uint8_t pollStorage[MOTOR_PACKET_SIZE];
 
-volatile uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
-volatile uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
-volatile uint8_t counter = 0;
-volatile uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since we last polled a motor
-volatile uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
-volatile uint8_t received;
+uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
+uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
+uint8_t counter = 0;
+uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since we last polled a motor
+uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
+uint8_t received;
 
 GPIO_InitTypeDef  GPIO_InitStructure;
 
@@ -296,20 +296,6 @@ void init_LEDS(void)
 	GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
-void init_LEDS(void)
-{
-	/* GPIOD Periph clock enable */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-	GPIO_InitTypeDef GPIO_InitStructure;
-
-	/* Configures the leds and the read/write pin on D1 */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15 | USART6_ENABLE_PIN | USART6_DISABLE_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOD, &GPIO_InitStructure);
-}
 
 void init_USART1(uint32_t baudrate){
         
