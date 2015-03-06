@@ -7,19 +7,27 @@ typedef struct Stepper_st Stepper;
 //INCLUDE STATEMENTS
 #include "stm32f4_discovery.h"
 #include "stm32f4xx_conf.h"
+#include <math.h>
+#include <stdlib.h>
 
 //CONSTANTS
-#define NUM_STEPS 400 //The number of steps in a full 360 degree rotation
-#define STEP_DELAY 0x05FFFF //The amount of time to delay between steps
+#define NUM_STEPS 200       //The number of steps in a full 360 degree rotation
+#define STEP_DELAY 0x02FFFF //The amount of time to delay between steps
+#define STEPPER_ENABLE_INVERTED 1   //Whether or not the enable pin is inverted
 
 //STRUCT DEFINITION
 struct Stepper_st{
-	int polarity;
+	int polarity; //The polarity of the stepper
 	int position; //The current position
-	uint16_t stepPin;
+	int angle;
 	GPIO_TypeDef* stepBlock;
-	uint16_t dirPin;
+	uint16_t stepPin;
+	
 	GPIO_TypeDef* dirBlock;
+	uint16_t dirPin;
+	
+	GPIO_TypeDef* enableBlock;
+	uint16_t enablePin;
 };
 
 //FUNCTION DECLARATIONS
@@ -28,7 +36,11 @@ struct Stepper_st{
 //stepPin & stepBlock:  The pin and block of the step pin
 //dirPin & dirBlock:    The pin and block of the direction control pin
 //polarity:             -1 or +1, controls which way a positive step is.  Figure it out.
-Stepper* Stepper_Initialize(GPIO_TypeDef* stepBlock, uint16_t stepPin, GPIO_TypeDef* dirBlock, uint16_t dirPin, int polarity);
+Stepper* Stepper_Initialize(
+	GPIO_TypeDef* stepBlock, uint16_t stepPin,
+	GPIO_TypeDef* dirBlock, uint16_t dirPin,
+	GPIO_TypeDef* enableBlock, uint16_t enablePin,
+	int polarity);
 
 //Free the memory taken up by the stepper object
 void Stepper_Destroy(Stepper* stepper); 
@@ -36,6 +48,12 @@ void Stepper_Destroy(Stepper* stepper);
 //Declare the current position of the stepper to be position 0
 //This will not actually move the stepper, just re-calibrate it
 void Stepper_Calibrate(Stepper* stepper);
+
+//Turn on the stepper and allow it to hold its position
+void Stepper_Enable(Stepper* stepper);
+
+//Disable the stepper so it stops holding its position
+void Stepper_Disable(Stepper* stepper);
 
 //Reset the stepper to its zero position
 void Stepper_Reset(Stepper* stepper);
@@ -54,9 +72,9 @@ int Stepper_GetStep(Stepper* stepper);
 
 //Set the stepper to the given angle in degrees
 // 0 degrees is forward
-void Stepper_SetAngle(Stepper* stepper, float angle) __attribute__((error("Function broken, don't use")));
+void Stepper_SetAngle(Stepper* stepper, float angle);
 
 //Get current angle of the stepper motor in degrees
-float Stepper_GetAngle(Stepper* stepper) __attribute__((error("Function broken, don't use")));
+int Stepper_GetAngle(Stepper* stepper);
 
 #endif /*__STEPPER_INCLUDED*/

@@ -2,8 +2,6 @@
 #include "stm32f4xx_conf.h"
 #include "stepper.h"
 
-#include <stdlib.h>
-#include <math.h>
 
 //STATIC FUNCTION DECLARATIONS
 
@@ -14,15 +12,26 @@ static void Delay(__IO uint32_t nCount);
 static int Normalize(int steps);
 
 //FUNCTION DEFINITIONS
-Stepper* Stepper_Initialize(GPIO_TypeDef* stepBlock, uint16_t stepPin, GPIO_TypeDef* dirBlock, uint16_t dirPin, int polarity)
+Stepper* Stepper_Initialize(
+	GPIO_TypeDef* stepBlock, uint16_t stepPin,
+	GPIO_TypeDef* dirBlock, uint16_t dirPin,
+	GPIO_TypeDef* enableBlock, uint16_t enablePin,
+	int polarity)
 {
 	Stepper* stepper = malloc(sizeof(Stepper));
 	stepper -> stepPin = stepPin;
 	stepper -> stepBlock = stepBlock;
+	
 	stepper -> dirPin = dirPin;
 	stepper -> dirBlock = dirBlock;
+	
+	stepper -> enablePin = enablePin;
+	stepper -> enableBlock = enableBlock;
+	
 	stepper -> polarity = polarity;
 	stepper -> position = 0;
+	
+	Stepper_Disable(stepper);
 	
 	return stepper;
 }
@@ -31,6 +40,8 @@ Stepper* Stepper_Initialize(GPIO_TypeDef* stepBlock, uint16_t stepPin, GPIO_Type
 void Stepper_Step(Stepper* stepper, int steps)
 {
 	int i; //For iteration
+	Stepper_Enable(stepper);
+	
 	steps *= stepper -> polarity;
 	stepper -> position += steps;
 	stepper -> position = Normalize(stepper -> position);
@@ -54,6 +65,24 @@ void Stepper_Step(Stepper* stepper, int steps)
 	}
 }
 
+//Turn on the stepper and allow it to hold its position
+void Stepper_Enable(Stepper* stepper)
+{
+	if(STEPPER_ENABLE_INVERTED)
+		GPIO_ResetBits(stepper->enableBlock, stepper->enablePin);
+	else
+		GPIO_SetBits(stepper->enableBlock, stepper->enablePin);
+}
+
+//Disable the stepper so it stops holding its position
+void Stepper_Disable(Stepper* stepper)
+{
+	if(STEPPER_ENABLE_INVERTED)
+		GPIO_SetBits(stepper->enableBlock, stepper->enablePin);
+	else
+		GPIO_ResetBits(stepper->enableBlock, stepper->enablePin);
+}
+
 void Stepper_Calibrate(Stepper* stepper)
 {
 	stepper -> position = 0;
@@ -66,6 +95,7 @@ void Stepper_Reset(Stepper* stepper)
 
 void Stepper_Destroy(Stepper* stepper)
 {
+	Stepper_Disable(stepper);
 	free(stepper);
 }
 
@@ -85,17 +115,16 @@ int Stepper_GetStep(Stepper* stepper)
 }
 
 //Set the stepper to the given angle in degrees
-void Stepper_SetAngle(Stepper* stepper, float angle)
+void Stepper_SetAngle(Stepper* stepper, int angle)
 {
-	int step = (int)round(NUM_STEPS * angle / 360);
+	int step = NUM_STEPS * angle / 3600;
 	Stepper_SetStep(stepper, step);
-	
 }
 
 //Get current angle of the stepper motor in degrees
-float Stepper_GetAngle(Stepper* stepper)
+int Stepper_GetAngle(Stepper* stepper)
 {
-	return (stepper -> position) * 360.0 /  NUM_STEPS;
+	return ((stepper -> position)  * 3600 /  NUM_STEPS);
 }
 
 

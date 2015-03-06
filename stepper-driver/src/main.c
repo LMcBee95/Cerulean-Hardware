@@ -24,6 +24,9 @@
 #include "stm32f4xx_conf.h" // again, added because ST didn't put it here ?
 #include "stepper.h"
 
+#include <stdlib.h>
+#include <math.h>
+
 /** @addtogroup STM32F4_Discovery_Peripheral_Examples
   * @{
   */
@@ -40,6 +43,8 @@ GPIO_InitTypeDef  GPIO_InitStructure;
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
 void Delay(__IO uint32_t nCount);
+void Beep(int beeps, GPIO_TypeDef* beepBlock, uint16_t beepPin);
+
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -69,27 +74,22 @@ int main(void)
   
   //Initialize the stepper structure, with the step pin set to pin 12 and the direction
   //pin set to pin 13
-  Stepper* stepper = Stepper_Initialize(GPIOD, GPIO_Pin_12, GPIOD, GPIO_Pin_13, 1);
+  Stepper* stepper = Stepper_Initialize(
+	GPIOD, GPIO_Pin_12,
+	GPIOD, GPIO_Pin_13,
+	GPIOD, GPIO_Pin_14, 1);
 
+  int fun = 90;
   while (1)
   {
-	float angle;
-	
-	Stepper_Step(stepper, 10);         //Go 10 steps right
-	Stepper_Step(stepper, -20);        //Go 20 steps left
-	Stepper_Step(stepper, 40);         //Go 40 steps right
-	Stepper_Step(stepper, -80);        //Go 80 steps left
-	Stepper_Step(stepper, 160);        //Go 160 steps right
-	
-	//BROKEN angle = Stepper_GetAngle(stepper); //Get the angle of the stepper
-	
-	/* Do some sort of calculation with angle */
-	
-	//BROKEN Stepper_SetAngle(stepper, 180);    //Set the stepper to 180 degrees
-	
-	Stepper_SetStep(stepper, 100);     //Set the stepper to step number 100 (90 degrees)
-	
-	Stepper_Reset(stepper);            //Return the stepper to its base position
+	Stepper_SetStep(stepper, 80);
+	Stepper_SetStep(stepper, -80);
+	Stepper_SetStep(stepper, 1);
+	fun = Stepper_GetAngle(stepper);
+	Beep(fun, GPIOD, GPIO_Pin_15);
+	Stepper_Reset(stepper);          //Return the stepper to its base position
+	Stepper_Disable(stepper);
+	Delay(0xFFFFFF);
   }
 }
 
@@ -103,6 +103,18 @@ void Delay(__IO uint32_t nCount)
   while(nCount--)
   {
   }
+}
+
+void Beep(int beeps, GPIO_TypeDef* beepBlock, uint16_t beepPin)
+{
+	while(beeps>0)
+	{
+		GPIO_SetBits(beepBlock, beepPin);
+		Delay(0x5FFFFF);
+		GPIO_ResetBits(beepBlock, beepPin);
+		Delay(0x5FFFFF);
+		beeps--;
+	}
 }
 
 #ifdef  USE_FULL_ASSERT
