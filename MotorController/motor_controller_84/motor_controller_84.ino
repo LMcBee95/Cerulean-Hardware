@@ -52,7 +52,7 @@ byte usePacket(void);
 #define RESET_DELAY_TIME 10
 
 //the address of the motor controller
-#define ADDRESS 0x01                                                                                                                                                                                                                       
+#define ADDRESS 0x02                                                                                                                                                                                                                       
 
 //different commands of the motor controller
 #define CONTROL_MOTOR 0x01
@@ -140,7 +140,7 @@ byte crc8(const byte *packet, const byte pos_first_byte, const byte num_bytes_da
 
   byte crc = 0;
   for(byte len = pos_first_byte; len < (pos_first_byte + num_bytes_data); len++) {
-    uint8_t inbyte = *packet++;
+    uint8_t inbyte = packet[len];
     for (byte i = 8; i; i--) {
       byte mix = (crc ^ inbyte) & 0x01;
       crc >>= 1;

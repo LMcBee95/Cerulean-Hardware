@@ -1,16 +1,43 @@
 
-#define PACKET_SIZE 11
+
+/**********Baud Rates************/
 #define TOP_BOTTOM_BAUD 19200
 #define BOTTOM_MOTOR_BAUD 28800
 
+/**********Led Pins*************/
 #define GREED_LED GPIO_Pin_12
 #define ORANGE_LED GPIO_Pin_13
 #define RED_LED GPIO_Pin_14
 #define BLUE_LED GPIO_Pin_15
 
-#define READ_WRITE_ENABLER GPIO_Pin_1
+/************Motors*************/
+
+
+#define PULL_MOTOR_COMMAND 3
+#define RESET_MOTOR_COMMAND 4
+
+#define NUMBER_OF_MOTORS 8
+#define MOTOR_PACKET_SIZE 7
+
+#define READ_WRITE_ENABLER GPIO_Pin_8
+#define READ_WRITE_ENABLER GPIO_Pin_9
 
 #define PACKETS_SENT_BEFORE_POLLED 20
+
+/***********/
+
+
+
+
+
+#define PACKET_SIZE 11
+
+#define START_BYTE 18
+#define END_BYTE 19
+
+
+
+
 
 
 
@@ -39,10 +66,16 @@ void Delay(__IO uint32_t nCount) {
   }
 }
 
+/*
+ *	The function then converts the information received from the top packet into values
+ *  that the bottom board can use. It takes the name of the packet that the packet from 
+ *  the top board was stored in as it's argument.
+ */
+
 void convertTBtoBB(uint8_t* top)
 {
 	//Reads through the motor values from the received top packet
-	for (int i = 0; i < 8; i++) 
+	for (int i = 0; i < NUMBER_OF_MOTORS; i++) 
 	{
 		
 		// 0 for reverse, 1 for forward
@@ -52,28 +85,28 @@ void convertTBtoBB(uint8_t* top)
 		//Bit shifts the rest of the number to multiply the value by two to get the values between 0 and 254
 		uint8_t magnitude = (top[i + 1] & 127) << 1;
 		
-		// Motor controller cannot accept 18 so we round 18 down to 17
-		if (magnitude == 18)
-			magnitude = 17;
+		// Motor controller cannot accept 18, because it is used as the start byte, so we round 18 down to 17
+		if (magnitude == START_BYTE)
+			magnitude = START_BYTE - 1;  
 		
 		//Stores the correct values into the packets to be sent to the motors
-		motor[i][1] = i + 1;
-		motor[i][2] = 1;
-		motor[i][3] = direction;
-		motor[i][4] = magnitude;
+		motor[i][1] = i + 1;		//Address of the motor
+		motor[i][2] = 1;			//Command one tells the motor controllers to change their speed
+		motor[i][3] = direction;	//Tells the motor controllers what direction to go
+		motor[i][4] = magnitude;	//Speed the motors should go. The value is from 0 to 255.
 		motor[i][5] = checksum(motor[i], 4);
-		motor[i][6] = 0x13;
-		motor[i][0] = 0x12;  //This is out of place because it gives me errors if I set the start byte value first
+		motor[i][6] = END_BYTE;		//End byte of the packet
+		motor[i][0] = START_BYTE;   //Start byte of the packet. This is out of place because it gives me errors if I set the start byte value first
 	}
 }
 
 /*
  *	This function handles receiving the top packet and then sending out the commands to the motor  
- *	controllers. It takes no arguments. The function will keep cycling until it receives a 0x12. Then 
- *	function stores the top board information into an array, produces motor control commands from the 
+ *	controllers. It takes no arguments. The function will keep reading data until it receives a 0x12. Then the
+ *	function stores the information sent from the top board into an array, produces motor control commands from the 
  *	top packet,and then sends the commands to all of the motors. The function checks before it sends 
- * 	the command to make sure the check sum is correct and that the last byte is a 0x13. If this is 
- * 	true then the function returns a one and if it isn't, then the function returns a 0.
+ * 	the command to make sure the check sum from the top packet is correct and that the last byte is a 0x13. If this is 
+ * 	true,the function returns a one and if it isn't,the function returns a 0.
  */
 
 uint8_t handleTopPacket(void)
@@ -83,7 +116,7 @@ uint8_t handleTopPacket(void)
 	{
 		uint8_t received = USART_ReceiveData(USART2);
 		
-		if(0x12 == received)
+		if(START_BYTE == received)
 		{
 			uint8_t timer = 0;	//Timer used to stop the function from waiting for data if there is an error
 			GPIO_SetBits(GPIOD, GREED_LED);	//Turns on the green led 
@@ -94,7 +127,7 @@ uint8_t handleTopPacket(void)
 				if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE)) //if data is received store it in the array storage
 				{
 					received = USART_ReceiveData(USART2);
-					if(received != 0x12)
+					if(received != START_BYTE)
 					{
 						storage[counter] = received;	//Reads in the data from the buffer into an array
 						counter++;	//Increments the counter
@@ -109,7 +142,7 @@ uint8_t handleTopPacket(void)
 				GPIO_SetBits(GPIOD, ORANGE_LED);
 				timer++;
 			}	
-			if(1 || (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == 0x13))  //Checks the check sum and the end byte
+			if(1 || (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))  //Checks the check sum and the end byte
 			{	
 				GPIO_ResetBits(GPIOD, ORANGE_LED);
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
@@ -129,6 +162,25 @@ uint8_t handleTopPacket(void)
 	}
 	else
 		return(0);
+}
+
+/*
+ *	This function initializes all of the leds and the read write enabler pin.
+ *	It initializes the the clock and then sets the pins as outputs. 
+ */
+
+void init_pins(void)
+{
+	/* GPIOD Periph clock enable */
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+
+  /* Configures the leds and the read/write pin on D1 */
+  GPIO_InitStructure.GPIO_Pin = GREED_LED | ORANGE_LED| RED_LED | BLUE_LED | READ_WRITE_ENABLER;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOD, &GPIO_InitStructure); 	
 }
 
 /* This function initializes USART1 peripheral
@@ -235,16 +287,16 @@ void init_USART2(uint32_t baudrate){
 void pollMotor(uint8_t address)
 {
 	//Stores each variable into the array
-	poll[1] = address;  //The address of the motor that we are going to poll
-	poll[2] = 3;
-	poll[3] = 0;
-	poll[4] = 0;
-	poll[5] = checksum(poll,4);
-	poll[6] = 0x13;
-	poll[0] = 0x12;  //This packet is out of place because it gives errors if this value is assigned first
+	poll[1] = address;  		  //The address of the motor that we are going to poll
+	poll[2] = POLL_MOTOR_COMMAND; //This command polls the motor controllers
+	poll[3] = 0;				  //This value does nothing
+	poll[4] = 0;				  //This value does nothing
+	poll[5] = checksum(poll,4);	  //Generates a check sum
+	poll[6] = END_BYTE;			  //End byte of packet
+	poll[0] = START_BYTE;  		  //Start byte of packet
 
 	//Sends the packet to poll the motor
-	for(uint8_t i = 0; i < 7; i++)
+	for(uint8_t i = 0; i < MOTOR_PACKET_SIZE; i++)
 		USART_puts(USART1, poll[i]);
 }
 
@@ -269,12 +321,12 @@ uint8_t readSlavePacket(void)
 		{
 			received = USART_ReceiveData(USART1);
 			
-			if(received == 0x12)
+			if(received == START_BYTE)
 			{
 				uint8_t counter = 1;
-				pollReceived[0] = 0x12;
-				timer = 0;  //resets the timer after it recieves the state byte
-				while(counter < 7 && timer < 0x4FFFF)  //Cycles through the data until all 7 byte are read
+				pollReceived[0] = START_BYTE;
+				timer = 0;  //resets the timer after it receives the state byte
+				while(counter < MOTOR_PACKET_SIZE && timer < 0x4FFFF)  //Cycles through the data until all 7 byte are read
 				{
 					while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE)) //if data is received store it in the array pollReceived
 					{
@@ -283,7 +335,7 @@ uint8_t readSlavePacket(void)
 					}
 					timer++; 
 				}
-				if(checksum(pollReceived, 4) == pollReceived[5] && pollReceived[6] == 0x13)  //If the check sum and end byte are correct
+				if(checksum(pollReceived, 4) == pollReceived[5] && pollReceived[6] == END_BYTE)  //If the check sum and end byte are correct
 				{
 					GPIO_SetBits(GPIOD, BLUE_LED);	//Turns on blue led to indicate that serial is receiving data
 					
@@ -311,23 +363,23 @@ void resetMotor(uint8_t address)
 {
 	//Stores each variable into the array
 	reset[1] = address;  //The address of the motor that we are going to reset
-	reset[2] = 4;
-	reset[3] = 0;
-	reset[4] = 0;
-	reset[5] = checksum(reset, 4);
-	reset[6] = 0x13;
-	reset[0] = 0x12;
+	reset[2] = RESET_MOTOR_COMMAND;  //Command to reset the motor
+	reset[3] = 0;				     //This argument is not used
+	reset[4] = 0;					 //This argument is not used
+	reset[5] = checksum(reset, 4);   //Generates a checksum
+	reset[6] = END_BYTE;			 //End byte of packet
+	reset[0] = START_BYTE;			 //Start byte of packet
 	
 	//Sends the packet to reset the motor
-	for(uint8_t i = 0; i < 7; i++)
+	for(uint8_t i = 0; i < MOTOR_PACKET_SIZE; i++)
 		USART_puts(USART1, reset[i]);
 }
 
 //Reads through the motor commands and sends them to the motors
 void sendPackets(void){
-	for(uint8_t i = 0; i < 8; i++)  //Cycles through all of the packets
+	for(uint8_t i = 0; i < NUMBER_OF_MOTORS; i++)  //Cycles through all of the packets
 	{
-		for(uint8_t j = 0; j < 7; j++) //Cycles through all of the information in the packets
+		for(uint8_t j = 0; j < MOTOR_PACKET_SIZE; j++) //Cycles through all of the information in the packets
 		{
 			USART_puts(USART1, motor[i][j]);
 		}

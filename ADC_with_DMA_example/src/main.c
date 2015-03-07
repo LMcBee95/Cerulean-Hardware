@@ -109,7 +109,12 @@ void print16(uint16_t value)
 	
 }
 
-void initDma(void)
+/*
+ *	This function takes the name of the array to which you are storing the adc data. The next parameter is the size of the array that you are sending the data to. 
+ *
+ */
+
+void initDma(uint16_t *array, uint16_t size)
 {
 	 ADC_InitTypeDef       ADC_InitStruct;
     ADC_CommonInitTypeDef ADC_CommonInitStruct;
@@ -121,9 +126,9 @@ void initDma(void)
     /* DMA2 Stream0 channel0 configuration **************************************/
     DMA_InitStruct.DMA_Channel = DMA_Channel_2;
     DMA_InitStruct.DMA_PeripheralBaseAddr = (uint32_t)&ADC3->DR;//ADC3's data register
-    DMA_InitStruct.DMA_Memory0BaseAddr = (uint32_t)&ADC3ConvertedValue;
+    DMA_InitStruct.DMA_Memory0BaseAddr = (uint32_t)array; //specifies where the memory goes when it is received
     DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralToMemory;
-    DMA_InitStruct.DMA_BufferSize = value;
+    DMA_InitStruct.DMA_BufferSize = size;
     DMA_InitStruct.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStruct.DMA_MemoryInc = DMA_MemoryInc_Enable;
     DMA_InitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;//Reads 16 bit values
@@ -198,7 +203,7 @@ void main(void)
 	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	  GPIO_Init(GPIOD, &GPIO_InitStructure); 
 	
-	initDma();
+	initDma(ADC3ConvertedValue, 7);
 	init_USART1(9600);
 	
 	 /* GPIOD Periph clock enable */
@@ -245,7 +250,7 @@ void main(void)
 			button = GPIO_ReadInputDataBit(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN);
 		}
 		
-		USART_puts(USART1, ADC3ConvertedValue[4] >> 4);
+		
 		GPIO_ResetBits(GPIOD, GPIO_Pin_12);
 		GPIO_ResetBits(GPIOD, GPIO_Pin_13);
 		GPIO_ResetBits(GPIOD, GPIO_Pin_14);

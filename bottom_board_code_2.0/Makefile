@@ -5,7 +5,7 @@ BUILDDIR=build
 
 LIBPATH=../Libraries
 
-SRC = main.c stm32f4_discovery.c system_stm32f4xx.c
+SRC = main.c stm32f4_discovery.c system_stm32f4xx.c Bottom_Board_Functions.c
 
 ##Startup File
 STARTUP = lib/startup_stm32f4xx.s
@@ -92,7 +92,7 @@ SRC += \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_syscfg.c \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.c \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_usart.c \
-  $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_wwdg.c	
+  $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_wwdg.c
 
 
 OBJDIR = ./$(BUILDDIR)

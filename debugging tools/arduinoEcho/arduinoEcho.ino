@@ -27,7 +27,7 @@ void loop()
   }
   if(tinySerial.available())
   {
-    Serial.write(tinySerial.read());
+    Serial.print(tinySerial.read());
   }
 }
 

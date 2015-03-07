@@ -86,7 +86,7 @@ int main(void)
   GPIO_Init(USER_BUTTON_GPIO_PORT, &GPIO_InitStructure);
 
   LEDStartupRoutine();
-  command[] = { 1 };
+ 
   while (1) {
 	  Delay(0x06FFFF);
 	  uint8_t button = GPIO_ReadInputDataBit(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN);

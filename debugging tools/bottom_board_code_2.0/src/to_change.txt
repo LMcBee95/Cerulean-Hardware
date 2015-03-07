@@ -1,0 +1,2 @@
+1. #define the parts where we use pins to include the band and the pin.
+2. Abstract led initialization
