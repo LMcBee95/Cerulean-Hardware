@@ -168,6 +168,8 @@ void USART2_IRQHandler(void) {
 	{	
 		received = USART_ReceiveData(USART2);
 		
+		GPIO_SetBits(GPIOD, GPIO_Pin_13);
+		
 		if(received == 0x12)
 		{
 			storage[counter] = received;
@@ -175,7 +177,6 @@ void USART2_IRQHandler(void) {
 		}
 		else if(counter > 0 && received != 0x12)
 		{
-			GPIO_SetBits(GPIOD, GPIO_Pin_13);
 			storage[counter] = received;
 			counter++;
 			
@@ -395,6 +396,8 @@ void init_USART2(uint32_t baudrate){
 	USART_Init(USART2, &USART_InitStructure);
 
 	USART_Cmd(USART2, ENABLE); //Enable USART2
+	
+	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 
 }
 
@@ -467,6 +470,8 @@ void init_USART6(uint32_t baudrate){
 	USART_Init(USART6, &USART_InitStruct);					  // again all the properties are passed to the USART_Init function which takes care of all the bit setting
 	
 	USART_Cmd(USART6, ENABLE);	//Enables USART6
+	
+	USART_ITConfig(USART6, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 }
 
 

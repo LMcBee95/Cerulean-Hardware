@@ -12,6 +12,13 @@ volatile uint8_t twoPreviousValue = 0;  //The value from two serial readings ago
 volatile uint8_t previousValue = 0;    //The value from the last serial reading
 volatile uint8_t currentValue = 0;     //The current value from the serial
 
+void USART_puts(USART_TypeDef* USARTx, uint8_t data){
+		
+		// wait until data register is empty
+		while(!(USARTx->SR & 0x00000040)); 
+		USART_SendData(USARTx, data);
+}
+
 void Delay(__IO uint32_t nCount) {
   while(nCount--) {
   }
@@ -107,11 +114,11 @@ void USART1_IRQHandler(void) {
 			tempLaserData[laserSerialCounter] = currentValue;
 			laserSerialCounter++;
 		}
-		else if (previousValue == ','&& (twoPreviousValue >= '0' && twoPreviousValue <= '9'))
+		else if (previousValue == ',' && (twoPreviousValue >= '0' && twoPreviousValue <= '9'))
 		{
 			if(currentValue == 'c')
 			{
-				for(int i = 0; i < (laserSerialCounter - 1); i++)
+				for(int i = 0; i < (laserSerialCountera); i++)
 				{
 					if(i == 0)
 					{
@@ -123,39 +130,35 @@ void USART1_IRQHandler(void) {
 					}
 				}
 				GPIO_ResetBits(GPIOD, GPIO_Pin_12);
-				GPIO_ResetBits(GPIOD, GPIO_Pin_13);
-				GPIO_ResetBits(GPIOD, GPIO_Pin_14);
-				GPIO_ResetBits(GPIOD, GPIO_Pin_14);
 				
-				if(laserDataBuff[dataMeasurementCounter] < 50)
+				if(laserDataBuff[dataMeasurementCounter] < 200)
 				{
 					GPIO_SetBits(GPIOD, GPIO_Pin_12);
 				}
-				else if(laserDataBuff[dataMeasurementCounter] < 100)
-				{
-					GPIO_SetBits(GPIOD, GPIO_Pin_12);
-					GPIO_SetBits(GPIOD, GPIO_Pin_13);
-				}
-				else if(laserDataBuff[dataMeasurementCounter] < 150)
-				{
-					GPIO_SetBits(GPIOD, GPIO_Pin_12);
-					GPIO_SetBits(GPIOD, GPIO_Pin_13);
-					GPIO_SetBits(GPIOD, GPIO_Pin_14);
-				}
-				else if(laserDataBuff[dataMeasurementCounter] < 200)
-				{
-					GPIO_SetBits(GPIOD, GPIO_Pin_12);
-					GPIO_SetBits(GPIOD, GPIO_Pin_13);
-					GPIO_SetBits(GPIOD, GPIO_Pin_14);
-					GPIO_SetBits(GPIOD, GPIO_Pin_15);
-				}
+				
+				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
+				USART_puts(USART1, sendData);
+				
+				sendData = (laserDataBuff[dataMeasurementCounter]);
+				USART_puts(USART1, sendData);
 				
 				
 				dataMeasurementCounter++;
+				
+				//Clear tempLaserData
+				for(int i = 0; i < laserSerialCounter; i++)
+				{
+					tempLaserData[i] = 0;
+				}
 				laserSerialCounter = 0;
 			}
 			else
 			{
+				//Clear tempLaserData
+				for(int i = 0; i < laserSerialCounter; i++)
+				{
+					tempLaserData[i] = 0;
+				}
 				laserSerialCounter = 0;
 			}
 		

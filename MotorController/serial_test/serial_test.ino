@@ -62,7 +62,7 @@ void sendPacket(void)
 	void loop()
 	{
 			sendPacket();
-		        delay(500);
+		        delay(50);
 		
 	}
 
