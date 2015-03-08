@@ -15,6 +15,7 @@
  */
 
 #include "Bottom_Board_Functions.h"
+#include "Stepper.h"
 
 int main(void) {
 

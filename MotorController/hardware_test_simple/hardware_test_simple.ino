@@ -23,40 +23,20 @@ digitalWrite(FAULT2_PIN,HIGH);
 digitalWrite(RST_PIN,HIGH);
 }
 
-void check_fault(){
-    if(digitalRead(FAULT1_PIN)){
-    for(int i=0;i<5;i++){
-    digitalWrite(LED_PIN,HIGH);
-    delay(100);
-    digitalWrite(LED_PIN,LOW);
-    delay(100);
-    }
-  }
-  if(digitalRead(FAULT2_PIN)){
-    for(int i=0;i<2;i++){
-    digitalWrite(LED_PIN,HIGH);
-    delay(500);
-    digitalWrite(LED_PIN,LOW);
-    delay(500);
-    }
-  }
-}
-
 void loop(){
+
   digitalWrite(DIR_PIN,HIGH);
   analogWrite(PWM_PIN,100);
-  delay(1000);
+  delay(2000);
   analogWrite(PWM_PIN,150);
-delay(1000);
+  delay(2000);
   analogWrite(PWM_PIN,200);
-  delay(1000);
-  digitalWrite(DIR_PIN,LOW);
-  analogWrite(PWM_PIN,100);
-  delay(1000);
-  analogWrite(PWM_PIN,150);
-delay(1000);
-  analogWrite(PWM_PIN,200);
-  delay(1000);
+  delay(2000);
+  analogWrite(PWM_PIN,255);
+  delay(2000);
+
+
+
 
 
 }

@@ -72,8 +72,8 @@ int main(void)
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
   
-  //Initialize the stepper structure, with the step pin set to pin 12 and the direction
-  //pin set to pin 13
+  //Initialize the stepper structure, with the step pin set to pin 12, the direction
+  //pin set to pin 13, and the enable pin set to 14
   Stepper* stepper = Stepper_Initialize(
 	GPIOD, GPIO_Pin_12,
 	GPIOD, GPIO_Pin_13,
@@ -82,13 +82,24 @@ int main(void)
   int fun = 90;
   while (1)
   {
-	Stepper_SetStep(stepper, 80);
-	Stepper_SetStep(stepper, -80);
-	Stepper_SetStep(stepper, 1);
-	fun = Stepper_GetAngle(stepper);
+    Stepper_Step(stepper, 100);
+	Beep(3, GPIOD, GPIO_Pin_15);
+	Stepper_Step(stepper, -200);
+	Beep(3, GPIOD, GPIO_Pin_15);
+	Stepper_Step(stepper, -100);
+    Beep(3, GPIOD, GPIO_Pin_15);
+	Stepper_Step(stepper, 200);
+	
+	//Stepper_SetStep(stepper, 50);
+	//Stepper_SetStep(stepper, -50);
+	//Stepper_SetStep(stepper, 99);
+	//Stepper_SetStep(stepper, -99);
+	//Stepper_SetStep(stepper, 180);
+	//fun = Stepper_GetAngle(stepper);
 	//Beep(fun, GPIOD, GPIO_Pin_15);
-	Stepper_Reset(stepper);          //Return the stepper to its base position
+	//Stepper_Reset(stepper);          //Return the stepper to its base position
 	Stepper_Disable(stepper);
+	Beep(5, GPIOD, GPIO_Pin_15);
 	Delay(0xFFFFFF);
   }
 }
