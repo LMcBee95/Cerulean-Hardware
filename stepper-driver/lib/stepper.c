@@ -90,7 +90,7 @@ void Stepper_Calibrate(Stepper* stepper)
 
 void Stepper_Reset(Stepper* stepper)
 {
-	Stepper_SetStep(stepper, 0);
+	//Stepper_SetStep(stepper, 0);
 }
 
 void Stepper_Destroy(Stepper* stepper)
@@ -104,7 +104,10 @@ void Stepper_SetStep(Stepper* stepper, int step)
 {
 	int steps = step - stepper -> position; //Determine number of steps to take
 	
-	steps = Normalize(steps); //Only rotate 180 degrees or less to get there
+	steps = steps % NUM_STEPS; //Remove redundant rotation
+	steps += steps < 0 ? NUM_STEPS : 0; //Ensure is not negative
+	steps = steps>NUM_STEPS/2 ? NUM_STEPS/2-steps : steps;
+	//steps = Normalize(steps); //Only rotate 180 degrees or less to get there
 	Stepper_Step(stepper, steps);
 }
 
@@ -114,14 +117,14 @@ int Stepper_GetStep(Stepper* stepper)
 	return stepper -> position;
 }
 
-//Set the stepper to the given angle in degrees
+//Set the stepper to the given angle in tenths of a degree
 void Stepper_SetAngle(Stepper* stepper, int angle)
 {
 	int step = NUM_STEPS * angle / 3600;
-	Stepper_SetStep(stepper, step);
+	//Stepper_SetStep(stepper, step);
 }
 
-//Get current angle of the stepper motor in degrees
+//Get current angle of the stepper motor in tenths of a degree
 int Stepper_GetAngle(Stepper* stepper)
 {
 	return ((stepper -> position)  * 3600 /  NUM_STEPS);
@@ -138,6 +141,7 @@ static void Delay(__IO uint32_t nCount)
 static int Normalize(int steps)
 {
 	steps = steps % NUM_STEPS; //Cut out extra 360 degree rotations
+	steps += steps < 0 ? NUM_STEPS : 0; //Ensure is not negative
 	if(steps > NUM_STEPS/2)    //Turn > 180 to a negative angle
 	{
 		steps = NUM_STEPS/2 - steps;

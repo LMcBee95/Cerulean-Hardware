@@ -11,8 +11,8 @@ typedef struct Stepper_st Stepper;
 #include <stdlib.h>
 
 //CONSTANTS
-#define NUM_STEPS 200       //The number of steps in a full 360 degree rotation
-#define STEP_DELAY 0x02FFFF //The amount of time to delay between steps
+#define NUM_STEPS 400       //The number of steps in a full 360 degree rotation
+#define STEP_DELAY 0x01FFFF //The amount of time to delay between steps
 #define STEPPER_ENABLE_INVERTED 1   //Whether or not the enable pin is inverted
 
 //STRUCT DEFINITION
@@ -56,25 +56,28 @@ void Stepper_Enable(Stepper* stepper);
 void Stepper_Disable(Stepper* stepper);
 
 //Reset the stepper to its zero position
-void Stepper_Reset(Stepper* stepper);
+void Stepper_Reset(Stepper* stepper)
+__attribute((warning("Function has not been tested thoroughly, results not guaranteed.")));
 
 //Step a certain number of steps; a positive or negative
 //number indicates direction
 void Stepper_Step(Stepper* stepper, int steps);
 
 //Move the stepper to a certain position
-void Stepper_SetStep(Stepper* stepper, int step);
+void Stepper_SetStep(Stepper* stepper, int step)
+__attribute((warning("Function has not been tested thoroughly, results not guaranteed.")));
 
 //Get the current step position of the stepper
 //Will return a number between -199 and 200
 //0 steps is considered forward
 int Stepper_GetStep(Stepper* stepper);
 
-//Set the stepper to the given angle in degrees
+//Set the stepper to the given angle in tenths of a degree
 // 0 degrees is forward
-void Stepper_SetAngle(Stepper* stepper, int angle);
+void Stepper_SetAngle(Stepper* stepper, int angle)
+__attribute((warning("Function has not been tested thoroughly, results not guaranteed.")));
 
-//Get current angle of the stepper motor in degrees
+//Get current angle of the stepper motor in tenths of a degree
 int Stepper_GetAngle(Stepper* stepper);
 
 #endif /*__STEPPER_INCLUDED*/
