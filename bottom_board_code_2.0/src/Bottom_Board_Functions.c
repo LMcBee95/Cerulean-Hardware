@@ -16,7 +16,18 @@ uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since 
 uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
 uint8_t received;
 
+uint8_t tempLaserData[10];  //Stores the decimal values of the length of the measurement.
+uint16_t laserDataBuff[100];  //Stores the actual value of the length in mm from the target
+
+uint8_t laserSerialCounter = 0;  //Counter that determines where in the tempLaserData to store the next value
+uint8_t dataMeasurementCounter = 0;  //Counter that determines which element of laserDataBuff to store the next value 
+uint8_t twoPreviousValue = 0;  //The value from two serial readings ago
+uint8_t previousValue = 0;    //The value from the last serial reading
+uint8_t currentValue = 0;     //The current value from the serial
+
 GPIO_InitTypeDef  GPIO_InitStructure;
+
+
 
 uint8_t checksum(uint8_t* packet, uint8_t size) {
 	uint8_t crc = 0;
@@ -161,7 +172,75 @@ void resetMotor(uint8_t address)
 		USART_puts(USART6, reset[i]);
 }
 
-//UNDER PROGRESS
+void USART1_IRQHandler(void) {
+    //Check if interrupt was because data is received
+    if (USART_GetITStatus(USART1, USART_IT_RXNE)) 
+	{
+		uint8_t received = USART_ReceiveData(USART1);
+		
+		twoPreviousValue = previousValue;
+		previousValue = currentValue;
+		currentValue = received;
+		
+		//See if the previous value was a space or a number and if the current value is a number
+		if((previousValue == ' ' || (previousValue >= '0' && previousValue <= '9')) && (currentValue >= '0' && previousValue <= '9'))
+		{
+			tempLaserData[laserSerialCounter] = currentValue;
+			laserSerialCounter++;
+		}
+		else if (previousValue == ',' && (twoPreviousValue >= '0' && twoPreviousValue <= '9'))
+		{
+			if(currentValue == 'c')
+			{
+				for(int i = 0; i < (laserSerialCounter); i++)
+				{
+					if(i == 0)
+					{
+						laserDataBuff[dataMeasurementCounter] = (tempLaserData[i] - '0');
+					}
+					else
+					{
+						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
+					}
+				}
+				GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+				
+				if(laserDataBuff[dataMeasurementCounter] < 200)
+				{
+					GREEN_LED_ON
+				}
+				
+				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
+				USART_puts(USART1, sendData);
+				
+				sendData = (laserDataBuff[dataMeasurementCounter]);
+				USART_puts(USART1, sendData);
+				
+				dataMeasurementCounter++;
+				
+				//Clear tempLaserData
+				for(int i = 0; i < laserSerialCounter; i++)
+				{
+					tempLaserData[i] = 0;
+				}
+				laserSerialCounter = 0;
+			}
+			else
+			{
+				//Clear tempLaserData
+				for(int i = 0; i < laserSerialCounter; i++)
+				{
+					tempLaserData[i] = 0;
+				}
+				laserSerialCounter = 0;
+			}
+		}
+		
+        //Clear interrupt flag
+        USART_ClearITPendingBit(USART1, USART_IT_RXNE);
+    }
+}
+
 void USART2_IRQHandler(void) {
     //Check if interrupt was because data is received
     if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
@@ -182,7 +261,7 @@ void USART2_IRQHandler(void) {
 			
 			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == 0x13))
 			{
-				GPIO_SetBits(GPIOD, GPIO_Pin_14);
+				RED_LED_ON
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
@@ -236,15 +315,45 @@ void USART2_IRQHandler(void) {
 	USART_ClearITPendingBit(USART2, USART_IT_RXNE);
 }
 
-
 void USART6_IRQHandler(void) {
     //Check if interrupt was because data is received
     if (USART_GetITStatus(USART6, USART_IT_RXNE)) {
-        //Do your stuff here
+		received = USART_ReceiveData(USART6);
+		
+		if(received == 0x12)
+		{
+			pollStorage[pollCounter] = received;
+			pollCounter = 1;
+		}
+		else if(pollCounter > 0 && received != 0x12)
+		{
+			pollStorage[pollCounter] = received;
+			pollCounter++;
+			
+			if(pollCounter == MOTOR_PACKET_SIZE  && (checksum(pollStorage, MOTOR_PACKET_SIZE - 3) == pollStorage[MOTOR_PACKET_SIZE - 2]) && (pollStorage[MOTOR_PACKET_SIZE - 1] == 0x13))
+			{
+				//do stuff with the received data
+				
+				
+				
+				pollCounter = 0; //Reset the counter
+				
+				
+				pollingMotors = 0;  //resets the variable that will allow the board to start sending out motor commands again
+			}
+			else if(pollCounter == MOTOR_PACKET_SIZE)
+			{
+				//GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+			}
+		}
+		else
+		{
+			pollCounter = 0;
+		}
+	}
         
         //Clear interrupt flag
         USART_ClearITPendingBit(USART6, USART_IT_RXNE);
-    }
 }
 
 
@@ -258,6 +367,81 @@ void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 
 //Initializations
 
+void init_DMA(uint16_t *array, uint16_t size)
+{
+	 ADC_InitTypeDef       ADC_InitStruct;
+    ADC_CommonInitTypeDef ADC_CommonInitStruct;
+    DMA_InitTypeDef       DMA_InitStruct;
+    GPIO_InitTypeDef      GPIO_InitStruct;
+    /* Enable ADC3, DMA2 and GPIO clocks ****************************************/
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2 | RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOA, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);//ADC3 is connected to the APB2 peripheral bus
+    /* DMA2 Stream0 channel0 configuration **************************************/
+    DMA_InitStruct.DMA_Channel = DMA_Channel_2;
+    DMA_InitStruct.DMA_PeripheralBaseAddr = (uint32_t)&ADC3->DR;//ADC3's data register
+    DMA_InitStruct.DMA_Memory0BaseAddr = (uint32_t)array; //specifies where the memory goes when it is received
+    DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralToMemory;
+    DMA_InitStruct.DMA_BufferSize = size;
+    DMA_InitStruct.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    DMA_InitStruct.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    DMA_InitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;//Reads 16 bit values
+    DMA_InitStruct.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;//Stores 16 bit values
+    DMA_InitStruct.DMA_Mode = DMA_Mode_Circular;
+    DMA_InitStruct.DMA_Priority = DMA_Priority_High;
+    DMA_InitStruct.DMA_FIFOMode = DMA_FIFOMode_Disable;
+    DMA_InitStruct.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
+    DMA_InitStruct.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+    DMA_InitStruct.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+    DMA_Init(DMA2_Stream0, &DMA_InitStruct);
+    DMA_Cmd(DMA2_Stream0, ENABLE);
+    
+	/* Configure GPIO pins ******************************************************/
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;// PC0, PC1, PC2, PC3
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN;//The pins are configured in analog mode
+    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL ;//We don't need any pull up or pull down
+    GPIO_Init(GPIOC, &GPIO_InitStruct);//Initialize GPIOC pins with the configuration
+    GPIO_InitStruct.GPIO_Pin =  GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;//PA1 , PA2, PA3
+    GPIO_Init(GPIOA, &GPIO_InitStruct);//Initialize GPIOA pins with the configuration
+	
+    
+	/* ADC Common Init **********************************************************/
+    ADC_CommonInitStruct.ADC_Mode = ADC_Mode_Independent;
+    ADC_CommonInitStruct.ADC_Prescaler = ADC_Prescaler_Div2;
+    ADC_CommonInitStruct.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
+    ADC_CommonInitStruct.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
+    ADC_CommonInit(&ADC_CommonInitStruct);
+    
+	/* ADC3 Init ****************************************************************/
+    ADC_DeInit();
+    ADC_InitStruct.ADC_Resolution = ADC_Resolution_12b;//Input voltage is converted into a 12bit int (max 4095)
+    ADC_InitStruct.ADC_ScanConvMode = ENABLE;//The scan is configured in multiple channels
+    ADC_InitStruct.ADC_ContinuousConvMode = ENABLE;//Continuous conversion: input signal is sampled more than once
+    ADC_InitStruct.ADC_ExternalTrigConv = 0;
+    ADC_InitStruct.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
+    ADC_InitStruct.ADC_DataAlign = ADC_DataAlign_Right;//Data converted will be shifted to right
+    ADC_InitStruct.ADC_NbrOfConversion = size;
+    ADC_Init(ADC3, &ADC_InitStruct);//Initialize ADC with the configuration
+    
+	/* Select the channels to be read from **************************************/
+    
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_1,  1, ADC_SampleTime_144Cycles);//PA1
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_2,  2, ADC_SampleTime_144Cycles);//PA2
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_3,  3, ADC_SampleTime_144Cycles);//PA3
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_10, 4, ADC_SampleTime_144Cycles);//PC0
+    ADC_RegularChannelConfig(ADC3, ADC_Channel_11, 5, ADC_SampleTime_144Cycles);//PC1
+    ADC_RegularChannelConfig(ADC3, ADC_Channel_12, 6, ADC_SampleTime_144Cycles);//PC2
+    ADC_RegularChannelConfig(ADC3, ADC_Channel_13, 7, ADC_SampleTime_144Cycles);//PC3
+    
+    /* Enable DMA request after last transfer (Single-ADC mode) */
+    ADC_DMARequestAfterLastTransferCmd(ADC3, ENABLE);
+    /* Enable ADC3 DMA */
+    ADC_DMACmd(ADC3, ENABLE);
+    /* Enable ADC3 */
+    ADC_Cmd(ADC3, ENABLE);
+    /* Start ADC3 Software Conversion */
+    ADC_SoftwareStartConv(ADC3);
+}
+
 void init_IRQ(void)
 {
 	/*
@@ -268,18 +452,25 @@ void init_IRQ(void)
 	
 	NVIC_InitTypeDef NVIC_InitStruct;
 	
-	//Initiate Interrupt Request on USART 2
+	//Initiate Interrupt Request on USART channel 2
 	NVIC_InitStruct.NVIC_IRQChannel = USART2_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
 	NVIC_Init(&NVIC_InitStruct);
 	
-	//Initiate Interrupt Request for USART 6
+	//Initiate Interrupt Request for USART  channel 6
 	NVIC_InitStruct.NVIC_IRQChannel = USART6_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
+	NVIC_Init(&NVIC_InitStruct);
+	
+	//Initiate Interrupt Request for USART  channel 1
+	NVIC_InitStruct.NVIC_IRQChannel = USART1_IRQn;  //sets the handler for USART1
+	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;  //sub priority assignment
 	NVIC_Init(&NVIC_InitStruct);
 }
 
@@ -296,7 +487,6 @@ void init_LEDS(void)
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
-
 
 void init_USART1(uint32_t baudrate){
         
@@ -351,6 +541,8 @@ void init_USART1(uint32_t baudrate){
         USART_Init(USART1, &USART_InitStruct);                                          // again all the properties are passed to the USART_Init function which takes care of all the bit setting
         
         USART_Cmd(USART1, ENABLE);        //Enables USART1
+		
+		USART_ITConfig(USART1, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 }
 
 void init_USART2(uint32_t baudrate){

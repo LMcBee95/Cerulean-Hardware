@@ -125,15 +125,5 @@ int main(void)
 		
 		Delay(0xFFFFFF);
 		
-		
-		TIM3->CCR1 = (period + 1) * 1.5 / 20;
-		
-		Delay(0xFFFFFF);
-		
-		
-		TIM3->CCR1 = (period + 1) * 2.25 / 20;
-		
-		Delay(0xFFFFFF);
-	
 	}
 }

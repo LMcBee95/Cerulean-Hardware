@@ -19,11 +19,14 @@
 
 int main(void) {
 
+	init_DMA(ADC3ConvertedValue, NUM_DMA_CONVERSIONS);
 	init_IRQ();
 	init_LEDS();
 	
-	init_USART6(BOTTOM_MOTOR_BAUD); 	// initialize USART6 baud rate
+	
+	init_USART1(LASER_BAUD);  //initializes USART1 baud rate
 	init_USART2(TOP_BOTTOM_BAUD);	// initialize USART2 baud rate
+	init_USART6(BOTTOM_MOTOR_BAUD); 	// initialize USART6 baud rate
 	
 	GPIO_SetBits(GPIOD, GPIO_Pin_12);
 
