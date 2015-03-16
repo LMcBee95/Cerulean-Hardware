@@ -23,7 +23,7 @@
 #define TOP_BOTTOM_BAUD 			115200
 #define BOTTOM_MOTOR_BAUD 			57600
 #define LASER_BAUD 					115200
-#define POLL_MOTOR_TIME_OUT			7 
+#define POLL_MOTOR_TIME_OUT			3 
 
 #define NUM_DMA_CONVERSIONS 		7
 

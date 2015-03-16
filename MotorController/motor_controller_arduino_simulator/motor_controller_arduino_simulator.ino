@@ -52,7 +52,7 @@ byte usePacket(void);
 #define RESET_DELAY_TIME 10
 
 //the address of the motor controller
-#define ADDRESS 0x02                                                                                                                                                                                                                       
+#define ADDRESS 0x01                                                                                                                                                                                                                       
 
 //different commands of the motor controller
 #define CONTROL_MOTOR 0x01
@@ -122,7 +122,8 @@ void loop()
   
   if(received)
   {
-   killSwitch = 0;
+   digitalWrite(LED, LOW);
+    killSwitch = 0;
    usePacket(); 
   }
   
@@ -154,7 +155,6 @@ byte crc8(const byte *packet, const byte pos_first_byte, const byte num_bytes_da
 
 byte readPacket(void)
 {
-  digitalWrite(READWRITE, LOW);
   
   //storage variables for the function
   byte byteReceived = 0;
@@ -215,8 +215,7 @@ byte readPacket(void)
 
 byte usePacket(void)
 {
-  
-  
+  digitalWrite(LED, LOW);
   //Checks if this is the correct address
   //If the functions returns true then the device will do something. If it is false then the device will not do anything
  if(receivedPacket[0] == ADDRESS)
@@ -231,21 +230,23 @@ byte usePacket(void)
    }
    else if(receivedPacket[1] == CONTROL_MOTOR)
    {
+     
      //analogWrite(LED, receivedPacket[3]);
      analogWrite(SPEED, receivedPacket[3]);
      digitalWrite(DIRECTION, receivedPacket[2]);
      
-     digitalWrite(9, HIGH);
+     digitalWrite(LED, HIGH);
      
      return 1;
    }
    else if(receivedPacket[1] == REQUEST_FAULT_DATA)
    {
+     digitalWrite(LED, HIGH);
+     
      returnPacket[3] = !(digitalRead(FAULT1));
      returnPacket[4] = !(digitalRead(FAULT2));
      returnPacket[5] = crc8(returnPacket, 1, 4);
      
-     digitalWrite(LED, HIGH);
      
      //Puts the rs485 chip in write mode, sends data to the bottom board, and puts the rs485 chip in read mode
      digitalWrite(READWRITE, HIGH);

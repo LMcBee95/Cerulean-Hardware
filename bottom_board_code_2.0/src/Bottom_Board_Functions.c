@@ -105,56 +105,6 @@ void sendPackets(void){
 	
 }
 
-uint8_t readSlavePacket(void)
-{
-	uint32_t timer = 0;  //Variable to make the code break out of the next while loop if no data comes
-	uint8_t received = 0;  //Stores initial variable received
-	Delay(0x3FFF);		//Wait for the read write pin to turn low
-	GPIO_ResetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);
-	GPIO_ResetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN); 
-	
-	while(timer < 0x4FFFF)
-	{
-		if(USART_GetFlagStatus(USART6, USART_FLAG_RXNE))
-		{
-			received = USART_ReceiveData(USART6);
-			
-			if(received == 0x12)
-			{
-				uint8_t counter = 1;
-				pollReceived[0] = 0x12;
-				timer = 0;  //resets the timer after it recieves the state byte
-				while(counter < 7 && timer < 0x4FFFF)  //Cycles through the data until all 7 byte are read
-				{
-					while(USART_GetFlagStatus(USART6, USART_FLAG_RXNE)) //if data is received store it in the array pollReceived
-					{
-						pollReceived[counter] = USART_ReceiveData(USART6);	//Reads in the data from the buffer into an array
-						counter++;	//Increments the counter
-					}
-					timer++; 
-				}
-				if(checksum(pollReceived, 4) == pollReceived[5] && pollReceived[6] == 0x13)  //If the check sum and end byte are correct
-				{
-					GPIO_SetBits(GPIOD, GPIO_Pin_15);	//Turns on led to indicate that serial is receiving data
-					
-					GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //Sets the read/write pin to write mode
-					GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN); 
-					return(1); //Reading the packet was successful
-				}
-				else	
-				{
-					GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //Sets the read/write pin to write mode
-					GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN); 
-					return(0);  //Did not read the packet successfully
-				}
-			}
-		}
-		timer++;	//Increases timer until data is received or timer is greater than 0x4FFFF
-	}
-	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //Sets the read/write pin to write mode
-	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN); 
-	return(0); //No data was received
-}
 
 void resetMotor(uint8_t address)
 {
@@ -247,7 +197,6 @@ void USART2_IRQHandler(void) {
 	{	
 		received = USART_ReceiveData(USART2);
 		
-		GPIO_SetBits(GPIOD, GPIO_Pin_13);
 		
 		if(received == 0x12)
 		{
@@ -261,16 +210,20 @@ void USART2_IRQHandler(void) {
 			
 			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == 0x13))
 			{
-				RED_LED_ON
+				
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
 				{
+					RED_LED_OFF
+					ORANGE_LED_OFF
+					
 					sendPackets();	//Sends the motor controller commands produced by the convert function
 					pollCounter++;
 				
 					if(pollCounter > 20)
 					{
+						RED_LED_ON
 						pollMotor(pollAddress);
 						
 						pollingMotors = 1;
@@ -294,7 +247,10 @@ void USART2_IRQHandler(void) {
 					
 					if(notPolledCounter > POLL_MOTOR_TIME_OUT)
 					{
+						GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
+						GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
 						pollingMotors = 0;
+						notPolledCounter = 0;
 						
 						//print error message or send some message to the top board.
 					}
@@ -317,7 +273,9 @@ void USART2_IRQHandler(void) {
 
 void USART6_IRQHandler(void) {
     //Check if interrupt was because data is received
-    if (USART_GetITStatus(USART6, USART_IT_RXNE)) {
+    
+	
+	if (USART_GetITStatus(USART6, USART_IT_RXNE)) {
 		received = USART_ReceiveData(USART6);
 		
 		if(received == 0x12)
@@ -334,12 +292,16 @@ void USART6_IRQHandler(void) {
 			{
 				//do stuff with the received data
 				
-				
+				ORANGE_LED_ON
 				
 				pollCounter = 0; //Reset the counter
 				
 				
 				pollingMotors = 0;  //resets the variable that will allow the board to start sending out motor commands again
+				
+				GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
+				GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
+				
 			}
 			else if(pollCounter == MOTOR_PACKET_SIZE)
 			{
@@ -480,7 +442,7 @@ void init_LEDS(void)
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
 	/* Configures the leds and the read/write pin on D1 */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15 | USART6_ENABLE_PIN | USART6_DISABLE_PIN;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
@@ -603,8 +565,7 @@ void init_USART6(uint32_t baudrate){
 	 * the low level stuff of setting bits in the correct registers
 	 */
 	 /*Enable the read write pins*/
-	//PinOutput(USART6_ENABLE_PIN, USART6_ENABLE_PORT, USART6_ENABLE_CLK);
-    //PinOutput(USART6_DISABLE_PIN, USART6_DISABLE_PORT, USART6_DISABLE_CLK);
+	
 	
 	 RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 	 GPIO_InitTypeDef GPIO_InitStructure;
@@ -615,7 +576,7 @@ void init_USART6(uint32_t baudrate){
 	 GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	 GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	 GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	 GPIO_Init(GPIOD, &GPIO_InitStructure); 
+	 GPIO_Init(USART6_DISABLE_PORT, &GPIO_InitStructure); 
 	 
 	GPIO_InitTypeDef GPIO_InitStruct;   // this is for the GPIO pins used as TX and RX
 	USART_InitTypeDef USART_InitStruct; // this is for the USART6 initialization

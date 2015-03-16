@@ -30,8 +30,9 @@ int main(void) {
 	
 	GPIO_SetBits(GPIOD, GPIO_Pin_12);
 
+	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
+	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
 
-	//GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);	//Turns the read/write pin for rs485 to write mode
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	  
 	while (1)
@@ -43,5 +44,7 @@ int main(void) {
 		GPIO_ResetBits(GPIOD, GPIO_Pin_15);
 		
 		Delay(0x3fffff);
+		
+		
 	}
 }
