@@ -94,8 +94,11 @@ void Delay(__IO uint32_t nCount) {
  *When deciding on the prescaller, use lower numbers for when you need higher frequencies and use higher
  *numbers when you need lower frequencies.  
  */
-uint16_t initialize_timers(uint16_t frequency, uint16_t preScaler)
+uint16_t initialize_servo_timer(void)
 {
+	uint16_t frequency = 50;  //period of 20 ms
+	uint16_t preScaler = 64;
+	
 	// Enable TIM3 and GPIOC clocks
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
@@ -168,22 +171,15 @@ void anologWrite(uint32_t channel, uint32_t period, uint8_t dutyCycle)
  *  to be at 0 degrees and 180 degrees respectively. 
  */
 
-void setAngle(uint16_t channel, uint8_t angle, uint16_t period)
+void setServoAngle(uint16_t channel, uint8_t angle, uint16_t period)
 { 	
-	//uint16_t length = 1000 * angle / 135 + 100;  //1000 is the length of the max - min pulse length in u S. 180 is the full range of angles the servo motor can move. 
-	
-	TIM3->CCR1 = (((period + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
-	
-	//USART_puts(USART1, ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO) * 100);
-	USART_puts(USART1, ((period + 1) / 20) * (MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO);
-
-	//TIM3->CCR1 = (period + 1) / 20 * 1.5;  //Sets the pulse width length to be length milli Seconds
+	TIM3->CCR1 = ((period + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO );
 }
 
 
 int main(void)
 {
-	uint16_t period = initialize_timers(50, 64);
+	uint16_t period = initialize_servo_timer(50, 64);
 	
 	//setAngle(TIM3->CCR1, 90, period);  //Sets the angle of the servo attached to pin C6 to 90 degrees
 	

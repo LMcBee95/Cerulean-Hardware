@@ -19,7 +19,7 @@
  *as its input. The function will return the period of the pwm which is used to calculate the duty cycle 
  *when setting the pwm for each pin 
  */
-int32_t initialize_timers(uint32_t frequency, uint16_t preScaler)
+int32_t initialize_pwm_timers(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM3 and GPIOC clocks
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
@@ -95,7 +95,7 @@ void anologWrite(uint32_t channel, uint8_t dutyCycle, uint32_t period)
 
 int main(void)
 {
-	uint32_t period = initialize_timers(525000, 1);
+	uint32_t period = initialize_pwm_timers(525000, 1);
 	
 	while(1)
 	{

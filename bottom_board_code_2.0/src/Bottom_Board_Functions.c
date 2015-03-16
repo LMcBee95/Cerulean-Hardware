@@ -1,6 +1,8 @@
 
 #include "Bottom_Board_Functions.h"
 
+/********** Global Variables **********/
+
 uint8_t pollingMotors = 0;  //stores a 0 if we are not polling the motors and a 1 if the motors are being polled
 uint8_t notPolledCounter = 0;  //stores how many times the bottom board received a top board packet before it received the poll response from the motor controllers
 
@@ -25,9 +27,14 @@ uint8_t twoPreviousValue = 0;  //The value from two serial readings ago
 uint8_t previousValue = 0;    //The value from the last serial reading
 uint8_t currentValue = 0;     //The current value from the serial
 
-GPIO_InitTypeDef  GPIO_InitStructure;
+GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiations, must be included
 
+/********** Function Definitions **********/
 
+void anologWrite(uint32_t channel, uint8_t dutyCycle, uint32_t period)
+{
+	TIM3->CCR4 = (period + 1) * dutyCycle / 255.0;
+}
 
 uint8_t checksum(uint8_t* packet, uint8_t size) {
 	uint8_t crc = 0;
@@ -48,7 +55,7 @@ uint8_t checksum(uint8_t* packet, uint8_t size) {
 void convertTBtoBB(uint8_t* top)
 {
 	//Reads through the motor values from the received top packet
-	for (int i = 0; i < 8; i++) 
+	for (int i = 0; i < NUMBER_OF_MOTORS; i++) 
 	{
 		
 		// 0 for reverse, 1 for forward
@@ -90,21 +97,9 @@ void pollMotor(uint8_t address)
 	poll[0] = 0x12;  //This packet is out of place because it gives errors if this value is assigned first
 
 	//Sends the packet to poll the motor
-	for(uint8_t i = 0; i < 7; i++)
+	for(uint8_t i = 0; i < MOTOR_PACKET_SIZE; i++)
 		USART_puts(USART6, poll[i]);
 }
-
-void sendPackets(void){
-	for(uint8_t i = 0; i < 8; i++)  //Cycles through all of the packets
-	{
-		for(uint8_t j = 0; j < 7; j++) //Cycles through all of the information in the packets
-		{
-			USART_puts(USART6, motor[i][j]);
-		}
-	}
-	
-}
-
 
 void resetMotor(uint8_t address)
 {
@@ -118,9 +113,26 @@ void resetMotor(uint8_t address)
 	reset[0] = 0x12;
 	
 	//Sends the packet to reset the motor
-	for(uint8_t i = 0; i < 7; i++)
+	for(uint8_t i = 0; i < MOTOR_PACKET_SIZE; i++)
 		USART_puts(USART6, reset[i]);
 }
+
+void sendPackets(void){
+	for(uint8_t i = 0; i < NUMBER_OF_MOTORS; i++)  //Cycles through all of the packets
+	{
+		for(uint8_t j = 0; j < MOTOR_PACKET_SIZE; j++) //Cycles through all of the information in the packets
+		{
+			USART_puts(USART6, motor[i][j]);
+		}
+	}
+}
+
+
+void setServo1Angle(uint16_t channel, uint8_t angle)
+{ 	
+	SERVO_1_CCR = ((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO );
+}
+
 
 void USART1_IRQHandler(void) {
     //Check if interrupt was because data is received
@@ -155,16 +167,17 @@ void USART1_IRQHandler(void) {
 				}
 				GPIO_ResetBits(GPIOD, GPIO_Pin_12);
 				
+				//Used for testing purposes
 				if(laserDataBuff[dataMeasurementCounter] < 200)
 				{
 					GREEN_LED_ON
 				}
 				
 				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
-				USART_puts(USART1, sendData);
+				USART_puts(LASER_USART	, sendData);
 				
 				sendData = (laserDataBuff[dataMeasurementCounter]);
-				USART_puts(USART1, sendData);
+				USART_puts(LASER_USART	, sendData);
 				
 				dataMeasurementCounter++;
 				
@@ -187,7 +200,7 @@ void USART1_IRQHandler(void) {
 		}
 		
         //Clear interrupt flag
-        USART_ClearITPendingBit(USART1, USART_IT_RXNE);
+        USART_ClearITPendingBit(LASER_USART	, USART_IT_RXNE);
     }
 }
 
@@ -196,19 +209,18 @@ void USART2_IRQHandler(void) {
     if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
 	{	
 		received = USART_ReceiveData(USART2);
-		
-		
-		if(received == 0x12)
+	
+		if(received == START_BYTE)
 		{
 			storage[counter] = received;
 			counter = 1;
 		}
-		else if(counter > 0 && received != 0x12)
+		else if(counter > 0 && received != START_BYTE)
 		{
 			storage[counter] = received;
 			counter++;
 			
-			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == 0x13))
+			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))
 			{
 				
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
@@ -272,23 +284,22 @@ void USART2_IRQHandler(void) {
 }
 
 void USART6_IRQHandler(void) {
-    //Check if interrupt was because data is received
     
-	
+	//Check if interrupt was because data is received
 	if (USART_GetITStatus(USART6, USART_IT_RXNE)) {
 		received = USART_ReceiveData(USART6);
 		
-		if(received == 0x12)
+		if(received == START_BYTE)
 		{
 			pollStorage[pollCounter] = received;
 			pollCounter = 1;
 		}
-		else if(pollCounter > 0 && received != 0x12)
+		else if(pollCounter > 0 && received != START_BYTE)
 		{
 			pollStorage[pollCounter] = received;
 			pollCounter++;
 			
-			if(pollCounter == MOTOR_PACKET_SIZE  && (checksum(pollStorage, MOTOR_PACKET_SIZE - 3) == pollStorage[MOTOR_PACKET_SIZE - 2]) && (pollStorage[MOTOR_PACKET_SIZE - 1] == 0x13))
+			if(pollCounter == MOTOR_PACKET_SIZE  && (checksum(pollStorage, MOTOR_PACKET_SIZE - 3) == pollStorage[MOTOR_PACKET_SIZE - 2]) && (pollStorage[MOTOR_PACKET_SIZE - 1] == END_BYTE))
 			{
 				//do stuff with the received data
 				
@@ -326,12 +337,11 @@ void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 		USART_SendData(USARTx, data);
 }
 
-
-//Initializations
+/********** Initializations *********/
 
 void init_DMA(uint16_t *array, uint16_t size)
 {
-	 ADC_InitTypeDef       ADC_InitStruct;
+	ADC_InitTypeDef       ADC_InitStruct;
     ADC_CommonInitTypeDef ADC_CommonInitStruct;
     DMA_InitTypeDef       DMA_InitStruct;
     GPIO_InitTypeDef      GPIO_InitStruct;
@@ -410,6 +420,7 @@ void init_IRQ(void)
 		Interrupt Priorities
 		0 : USART 2
 		1 : USART 6	
+		2 : USART 1
 	*/
 	
 	NVIC_InitTypeDef NVIC_InitStruct;
@@ -441,13 +452,69 @@ void init_LEDS(void)
 	/* GPIOD Periph clock enable */
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
-	/* Configures the leds and the read/write pin on D1 */
+	/* Configures the LEDS*/
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(GPIOD, &GPIO_InitStructure);
+}
+
+void initialize_servo_timer(void)
+{
+	uint16_t frequency = 50;  //period of 20 ms
+	uint16_t preScaler = 64;
+	
+	// Enable TIM3 and GPIOC clocks
+	RCC_APB1PeriphClockCmd(SERVO_1_TIMER_CLOCK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SERVO_1_CLOCK_BANK, ENABLE);
+	 
+	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
+	
+	// Configure PC6-PC9 pins as AF, Pull-Down
+	GPIO_InitStructure.GPIO_Pin = SERVO_1_PIN;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(SERVO_1_BANK, &GPIO_InitStructure);	//initializes the structure
+	 
+	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
+	GPIO_PinAFConfig(SERVO_1_BANK, SERVO_1_PIN_SOURCE, GPIO_AF_TIM3);
+
+	 
+	// Compute prescaler value for timebase
+	uint16_t PrescalerValue = (uint16_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
+
+	uint16_t PreCalPeriod = ((84000000 / preScaler) / frequency) - 1; 
+
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+	
+	// Setup timebase for TIM3
+	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the pre scaler which is divided into the cpu clock to get a clock speed that is small enough to use for timers
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(SERVO_1_TIMER, &TIM_TimeBaseStructure);  //initializes this part of the code
+	 
+	// Initialize TIM3 for 4 channels
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OCInitStructure.TIM_Pulse = 0;
+	TIM_OC1Init(SERVO_1_TIMER, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
+	
+	 
+	// Enable TIM3 peripheral Preload register on CCR1 for 4 channels
+	TIM_OC1PreloadConfig(SERVO_1_TIMER, TIM_OCPreload_Enable);
+	 
+	// Enable TIM3 peripheral Preload register on ARR.
+	TIM_ARRPreloadConfig(SERVO_1_TIMER, ENABLE);
+	 
+	// Enable TIM3 counter
+	TIM_Cmd(SERVO_1_TIMER, ENABLE); 
 }
 
 void init_USART1(uint32_t baudrate){
@@ -627,4 +694,65 @@ void init_USART6(uint32_t baudrate){
 	USART_ITConfig(USART6, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 }
 
+int32_t initialize_pwm_timers(uint32_t frequency, uint16_t preScaler)
+{
+	// Enable TIM3 and GPIOC clocks
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+	 
+	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
+	
+	// Configure PC6-PC9 pins as AF, Pull-Down
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);	//initializes the structure
+	 
+	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
+	//GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_TIM3);
+	//GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_TIM3);
+	//GPIO_PinAFConfig(GPIOC, GPIO_PinSource8, GPIO_AF_TIM3);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource1, GPIO_AF_TIM3);
+	 
+	// Compute prescaler value for timebase
+	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
+	//second value in the divide is the frequency
+	uint32_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
 
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+	
+	// Setup timebase for TIM3
+	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the prescaller which is divided into the cpu clock to get a clock speed that is small enough to use for timers
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);  //initializes this part of the code
+	 
+	// Initialize TIM3 for 4 channels
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OCInitStructure.TIM_Pulse = 0;
+	
+	//TIM_OC1Init(TIM3, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
+	//TIM_OC2Init(TIM3, &TIM_OCInitStructure);
+	//TIM_OC3Init(TIM3, &TIM_OCInitStructure);
+	TIM_OC4Init(TIM3, &TIM_OCInitStructure);
+	 
+	// Enable TIM3 peripheral Preload register on CCR1 for 4 channels
+	//TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	//TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	//TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	 
+	// Enable TIM3 peripheral Preload register on ARR.
+	TIM_ARRPreloadConfig(TIM3, ENABLE);
+	 
+	// Enable TIM3 counter
+	TIM_Cmd(TIM3, ENABLE); 
+	
+	return(PreCalPeriod);
+}

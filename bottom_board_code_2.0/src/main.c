@@ -23,10 +23,12 @@ int main(void) {
 	init_IRQ();
 	init_LEDS();
 	
-	
+	//initialize_servo_timer();
 	init_USART1(LASER_BAUD);  //initializes USART1 baud rate
 	init_USART2(TOP_BOTTOM_BAUD);	// initialize USART2 baud rate
 	init_USART6(BOTTOM_MOTOR_BAUD); 	// initialize USART6 baud rate
+	
+	int32_t period = initialize_pwm_timers(525000, 1);
 	
 	GPIO_SetBits(GPIOD, GPIO_Pin_12);
 
@@ -37,13 +39,17 @@ int main(void) {
 	  
 	while (1)
 	{  
-		GPIO_SetBits(GPIOD, GPIO_Pin_15);
 		
-		Delay(0x3fffff);
+		
+		GPIO_SetBits(GPIOD, GPIO_Pin_15);
+		anologWrite(TIM3->CCR4, 255, period);
+		
+		Delay(0x1ffffff);
 		
 		GPIO_ResetBits(GPIOD, GPIO_Pin_15);
+		anologWrite(TIM3->CCR4, 125, period);
 		
-		Delay(0x3fffff);
+		Delay(0x1ffffff);
 		
 		
 	}
