@@ -31,9 +31,10 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiati
 
 /********** Function Definitions **********/
 
-void anologWrite(uint32_t channel, uint8_t dutyCycle, uint32_t period)
+void bilgePumpPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period)
 {
-	TIM3->CCR4 = (period + 1) * dutyCycle / 255.0;
+	TIM3->CCR3 = (period + 1) * dutyCycle1 / 255.0;	
+	TIM3->CCR4 = (period + 1) * dutyCycle2 / 255.0;	
 }
 
 uint8_t checksum(uint8_t* packet, uint8_t size) {
@@ -85,6 +86,14 @@ void Delay(__IO uint32_t nCount) {
   }
 }
 
+void ledPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint8_t dutyCycle3, uint32_t period)
+{
+	TIM2->CCR2 = (period + 1) * dutyCycle1 / 255.0;
+	TIM2->CCR3 = (period + 1) * dutyCycle2 / 255.0;
+	TIM2->CCR4 = (period + 1) * dutyCycle3 / 255.0;
+	
+}
+
 void pollMotor(uint8_t address)
 {
 	//Stores each variable into the array
@@ -133,6 +142,22 @@ void setServo1Angle(uint8_t angle)
 	SERVO_1_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
 }
 
+void setServo2Angle(uint8_t angle)
+{ 	
+	SERVO_2_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
+}
+
+void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period)
+{
+	TIM12->CCR1 = (period + 1) * dutyCycle1 / 255.0;	
+	TIM12->CCR2 = (period + 1) * dutyCycle2 / 255.0;	
+}
+
+void turnFootdPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period)
+{
+	TIM3->CCR1 = (period + 1) * dutyCycle1 / 255.0;	
+	TIM3->CCR2 = (period + 1) * dutyCycle2 / 255.0;	
+}
 
 void USART1_IRQHandler(void) {
     //Check if interrupt was because data is received
@@ -461,7 +486,70 @@ void init_LEDS(void)
 	GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
-uint16_t initialize_servo_timer(void)
+int32_t initialize_led_timers(uint32_t frequency, uint16_t preScaler)
+{
+	// Enable TIM2 and GPIOA clocks
+	
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+	 
+	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
+	
+	// Configure PA1 - PA3 pins as AF, Pull-Down
+	GPIO_InitStructure.GPIO_Pin = LED_PIN1 | LED_PIN2 | LED_PIN3;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(LED_1_2_3_BANK, &GPIO_InitStructure);	//initializes the structure
+	 
+	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM2 functions.
+	GPIO_PinAFConfig(LED_1_2_3_BANK, GPIO_PinSource1, LED_1_2_3_AF);
+	GPIO_PinAFConfig(LED_1_2_3_BANK, GPIO_PinSource2, LED_1_2_3_AF);
+	GPIO_PinAFConfig(LED_1_2_3_BANK, GPIO_PinSource3, LED_1_2_3_AF);
+	 
+	// Compute prescaler value for timebase
+	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
+	//second value in the divide is the frequency
+	uint32_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
+
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+	
+	// Setup timebase for TIM2
+	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the prescaller which is divided into the cpu clock to get a clock speed that is small enough to use for timers
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(LED_1_2_3_TIMER, &TIM_TimeBaseStructure);  //initializes this part of the code
+	 
+	// Initialize TIM2 for 4 channels
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OCInitStructure.TIM_Pulse = 0;
+	
+	//initiates this part of the pulse width modulation
+	TIM_OC2Init(LED_1_2_3_TIMER, &TIM_OCInitStructure);
+	TIM_OC3Init(LED_1_2_3_TIMER, &TIM_OCInitStructure);
+	TIM_OC4Init(LED_1_2_3_TIMER, &TIM_OCInitStructure);
+	 
+	// Enable TIM2 peripheral Preload register on CCR1 for 4 channels
+	
+	TIM_OC2PreloadConfig(LED_1_2_3_TIMER, TIM_OCPreload_Enable);
+	TIM_OC3PreloadConfig(LED_1_2_3_TIMER, TIM_OCPreload_Enable);
+	TIM_OC4PreloadConfig(LED_1_2_3_TIMER, TIM_OCPreload_Enable);
+	 
+	// Enable TIM2 peripheral Preload register on ARR.
+	TIM_ARRPreloadConfig(LED_1_2_3_TIMER, ENABLE);
+	 
+	// Enable TIM2 counter
+	TIM_Cmd(LED_1_2_3_TIMER, ENABLE); 
+	
+	return(PreCalPeriod);
+}
+
+void initialize_servo_timer(void)
 {
 	uint16_t frequency = 50;  //period of 20 ms
 	uint16_t preScaler = 64;
@@ -473,26 +561,21 @@ uint16_t initialize_servo_timer(void)
 	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
 	
 	// Configure PC6-PC9 pins as AF, Pull-Down
-	GPIO_InitStructure.GPIO_Pin = SERVO_1_PIN;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Pin = SERVO_1_PIN | SERVO_2_PIN;  //specifies which pins are used
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_Init(SERVO_1_BANK, &GPIO_InitStructure);	//initializes the structure
+	GPIO_Init(SERVO_BANK, &GPIO_InitStructure);	//initializes the structure
 	 
 	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
-	GPIO_PinAFConfig(SERVO_1_BANK, SERVO_1_PIN_SOURCE, SERVO_1_TIMER_PIN_AF);
-
+	GPIO_PinAFConfig(SERVO_BANK, SERVO_1_PIN_SOURCE, SERVO_TIMER_PIN_AF);
+	GPIO_PinAFConfig(SERVO_BANK, SERVO_2_PIN_SOURCE, SERVO_TIMER_PIN_AF);
 	 
 	// Compute prescaler value for timebase
 	uint16_t PrescalerValue = (uint16_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
 
 	uint16_t PreCalPeriod = ((84000000 / preScaler) / frequency) - 1; 
-
-	if(PreCalPeriod == SERVO_PERIOD)
-	{
-		GREEN_LED_ON
-	}
 	
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
     TIM_OCInitTypeDef  TIM_OCInitStructure;
@@ -502,24 +585,150 @@ uint16_t initialize_servo_timer(void)
 	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the pre scaler which is divided into the cpu clock to get a clock speed that is small enough to use for timers
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInit(SERVO_1_TIMER, &TIM_TimeBaseStructure);  //initializes this part of the code
+	TIM_TimeBaseInit(SERVO_TIMER, &TIM_TimeBaseStructure);  //initializes this part of the code
 	 
 	// Initialize TIM3 for 4 channels
 	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
 	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
 	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
 	TIM_OCInitStructure.TIM_Pulse = 0;
-	TIM_OC1Init(SERVO_1_TIMER, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
+	
+	TIM_OC1Init(SERVO_TIMER, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
+	TIM_OC2Init(SERVO_TIMER, &TIM_OCInitStructure);
+	 
+	// Enable TIM9 peripheral Preload register on CCR1 for 4 channels
+	TIM_OC1PreloadConfig(SERVO_TIMER, TIM_OCPreload_Enable);
+	TIM_OC2PreloadConfig(SERVO_TIMER, TIM_OCPreload_Enable);
+	 
+	// Enable TIM9 peripheral Preload register on ARR.
+	TIM_ARRPreloadConfig(SERVO_TIMER, ENABLE);
+	 
+	// Enable TIM9 counter
+	TIM_Cmd(SERVO_TIMER, ENABLE); 
+	
+}
+
+int32_t initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
+{
+	// Enable TIM3 and GPIOC clocks
+	RCC_APB1PeriphClockCmd(STEPPER_TIMER_CLOCK, ENABLE);
+	RCC_AHB1PeriphClockCmd(STEPPER_BANK_CLOCK, ENABLE);
+	 
+	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
+	
+	// Configure AF, Pull-Down
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14 | GPIO_Pin_15;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);	//initializes the structure
+	 
+	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM12 functions.
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource14, GPIO_AF_TIM12);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource15, GPIO_AF_TIM12);
+	 
+	// Compute prescaler value for timebase
+	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
+	//second value in the divide is the frequency
+	uint32_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
+
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+	
+	// Setup timebase for TIM12
+	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the prescaller which is divided into the cpu clock to get a clock speed that is small enough to use for timers
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM12, &TIM_TimeBaseStructure);  //initializes this part of the code
+	 
+	// Initialize TIM3 for 4 channels
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OCInitStructure.TIM_Pulse = 0;
+	
+	TIM_OC1Init(TIM12, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
+	TIM_OC2Init(TIM12, &TIM_OCInitStructure);
 	
 	 
 	// Enable TIM3 peripheral Preload register on CCR1 for 4 channels
-	TIM_OC1PreloadConfig(SERVO_1_TIMER, TIM_OCPreload_Enable);
-	 
+	TIM_OC1PreloadConfig(TIM12, TIM_OCPreload_Enable);
+	TIM_OC2PreloadConfig(TIM12, TIM_OCPreload_Enable);
+	
 	// Enable TIM3 peripheral Preload register on ARR.
-	TIM_ARRPreloadConfig(SERVO_1_TIMER, ENABLE);
+	TIM_ARRPreloadConfig(TIM12, ENABLE);
 	 
 	// Enable TIM3 counter
-	TIM_Cmd(SERVO_1_TIMER, ENABLE); 
+	TIM_Cmd(TIM12, ENABLE); 
+	
+	return(PreCalPeriod);
+}
+
+int32_t initialize_timer3(uint32_t frequency, uint16_t preScaler)
+{
+	// Enable TIM3 and GPIOC clocks
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+	RCC_AHB1PeriphClockCmd(TURN_FOOT_BANK_CLOCK, ENABLE);
+	RCC_AHB1PeriphClockCmd(BILGE_PUMP_BANK_CLOCK, ENABLE); 
+	 
+	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
+	
+	// Configure pins as AF, Pull-Down
+	GPIO_InitStructure.GPIO_Pin = TURN_FOOT_PIN1 | TURN_FOOT_PIN2;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(TURN_FOOT_BANK, &GPIO_InitStructure);	//initializes the structure
+	 
+	GPIO_InitStructure.GPIO_Pin = BILGE_PUMP_PIN1 | BILGE_PUMP_PIN2;  //specifies which pins are used
+	GPIO_Init(BILGE_PUMP_BANK, &GPIO_InitStructure);	//initializes the structure
+	
+	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
+	GPIO_PinAFConfig(TURN_FOOT_BANK, TURN_FOOT_SOURCE_PIN1, GPIO_AF_TIM3);
+	GPIO_PinAFConfig(TURN_FOOT_BANK, TURN_FOOT_SOURCE_PIN2, GPIO_AF_TIM3);
+	GPIO_PinAFConfig(BILGE_PUMP_BANK, BILGE_PUMP_SOURCE_PIN1, GPIO_AF_TIM3);
+	GPIO_PinAFConfig(BILGE_PUMP_BANK, BILGE_PUMP_SOURCE_PIN2, GPIO_AF_TIM3);
+	 
+	// Compute prescaler value for timebase
+	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
+	//second value in the divide is the frequency
+	uint32_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
+
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+	
+	// Setup timebase for TIM3
+	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the prescaller which is divided into the cpu clock to get a clock speed that is small enough to use for timers
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);  //initializes this part of the code
+	 
+	// Initialize TIM3 for 4 channels
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OCInitStructure.TIM_Pulse = 0;
+	
+	TIM_OC1Init(TIM3, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
+	TIM_OC2Init(TIM3, &TIM_OCInitStructure);
+	TIM_OC3Init(TIM3, &TIM_OCInitStructure);
+	TIM_OC4Init(TIM3, &TIM_OCInitStructure);
+	 
+	// Enable TIM3 peripheral Preload register on CCR1 for 4 channels
+	TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	 
+	// Enable TIM3 peripheral Preload register on ARR.
+	TIM_ARRPreloadConfig(TIM3, ENABLE);
+	 
+	// Enable TIM3 counter
+	TIM_Cmd(TIM3, ENABLE); 
 	
 	return(PreCalPeriod);
 }
@@ -701,65 +910,4 @@ void init_USART6(uint32_t baudrate){
 	USART_ITConfig(USART6, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 }
 
-int32_t initialize_pwm_timers(uint32_t frequency, uint16_t preScaler)
-{
-	// Enable TIM3 and GPIOC clocks
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-	 
-	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
-	
-	// Configure PC6-PC9 pins as AF, Pull-Down
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;  //specifies which pins are used
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);	//initializes the structure
-	 
-	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
-	//GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_TIM3);
-	//GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_TIM3);
-	//GPIO_PinAFConfig(GPIOC, GPIO_PinSource8, GPIO_AF_TIM3);
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource1, GPIO_AF_TIM3);
-	 
-	// Compute prescaler value for timebase
-	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
-	//second value in the divide is the frequency
-	uint32_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
 
-	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
-    TIM_OCInitTypeDef  TIM_OCInitStructure;
-	
-	// Setup timebase for TIM3
-	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
-	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the prescaller which is divided into the cpu clock to get a clock speed that is small enough to use for timers
-	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);  //initializes this part of the code
-	 
-	// Initialize TIM3 for 4 channels
-	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
-	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-	TIM_OCInitStructure.TIM_Pulse = 0;
-	
-	//TIM_OC1Init(TIM3, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
-	//TIM_OC2Init(TIM3, &TIM_OCInitStructure);
-	//TIM_OC3Init(TIM3, &TIM_OCInitStructure);
-	TIM_OC4Init(TIM3, &TIM_OCInitStructure);
-	 
-	// Enable TIM3 peripheral Preload register on CCR1 for 4 channels
-	//TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
-	//TIM_OC2PreloadConfig(TIM3, TIM_OCPreload_Enable);
-	//TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable);
-	TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
-	 
-	// Enable TIM3 peripheral Preload register on ARR.
-	TIM_ARRPreloadConfig(TIM3, ENABLE);
-	 
-	// Enable TIM3 counter
-	TIM_Cmd(TIM3, ENABLE); 
-	
-	return(PreCalPeriod);
-}

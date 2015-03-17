@@ -23,14 +23,14 @@ int main(void) {
 	init_IRQ();
 	init_LEDS();
 	
-	int16_t period = initialize_servo_timer();
+	initialize_servo_timer();
 	init_USART1(LASER_BAUD);  //initializes USART1 baud rate
 	init_USART2(TOP_BOTTOM_BAUD);	// initialize USART2 baud rate
 	init_USART6(BOTTOM_MOTOR_BAUD); 	// initialize USART6 baud rate
 	
-	int32_t timer = initialize_pwm_timers(525000, 1);
-	
-	
+	int32_t timer = initialize_led_timers(PWM_FREQUENCY, 1);
+	int32_t turning_period = initialize_timer3(100000, 1);
+	int32_t stepper_period = initialize_stepper_timer(100000, 1);
 
 	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
 	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
@@ -40,15 +40,17 @@ int main(void) {
 	while (1)
 	{  
 		
-		setServo1Angle(130);
+		setServo2Angle(130);
 		GPIO_SetBits(GPIOD, GPIO_Pin_15);
-		//anologWrite(TIM3->CCR4, 255, timer);
+		bilgePumpPwm(255, 255, turning_period);
+		stepperPwm(255, 0, stepper_period);
 		
 		Delay(0x1ffffff);
 		
-		setServo1Angle(0);
+		setServo2Angle(0);
 		GPIO_ResetBits(GPIOD, GPIO_Pin_15);
-		//anologWrite(TIM3->CCR4, 125, timer;
+		bilgePumpPwm(125,125,  turning_period);
+		stepperPwm(0, 255, stepper_period);
 		
 		Delay(0x1ffffff);
 		

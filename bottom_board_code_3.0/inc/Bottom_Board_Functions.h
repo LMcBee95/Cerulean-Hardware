@@ -65,13 +65,65 @@
 /*** servo 1 init ***/
 
 #define SERVO_1_TIMER_CLOCK			RCC_APB2Periph_TIM9
-#define SERVO_1_TIMER_PIN_AF		GPIO_AF_TIM9
-#define SERVO_1_TIMER				TIM9
+#define SERVO_TIMER_PIN_AF			GPIO_AF_TIM9
+#define SERVO_TIMER					TIM9
 #define SERVO_1_CLOCK_BANK			RCC_AHB1Periph_GPIOE
-#define SERVO_1_BANK   				GPIOE
+#define SERVO_BANK   				GPIOE
 #define SERVO_1_PIN					GPIO_Pin_5
 #define SERVO_1_PIN_SOURCE			GPIO_PinSource5
 #define SERVO_1_CCR					TIM9->CCR1
+
+/*** servo 2 init ***/
+
+#define	SERVO_2_PIN 				GPIO_Pin_6
+#define SERVO_2_PIN_SOURCE			GPIO_PinSource6
+#define SERVO_2_CCR					TIM9->CCR2
+
+/*** leds ***/
+
+#define PWM_FREQUENCY				525000
+
+#define LED_1_2_3_TIMER				TIM2
+#define LED_1_2_3_AF				GPIO_AF_TIM2
+#define LED_1_2_3_BANK				GPIOA
+
+#define LED_PIN1					GPIO_Pin_3
+#define LED_PIN2					GPIO_Pin_2
+#define LED_PIN3					GPIO_Pin_1
+
+/*** Setting Servo Angle ***/
+
+#define TURN_FOOT_BANK_CLOCK		RCC_AHB1Periph_GPIOA
+#define BILGE_PUMP_BANK_CLOCK		RCC_AHB1Periph_GPIOB
+#define TURN_FOOT_BANK				GPIOA
+#define BILGE_PUMP_BANK				GPIOB	
+
+
+#define TURN_FOOT_PIN1				GPIO_Pin_6
+#define TURN_FOOT_PIN2				GPIO_Pin_7
+#define BILGE_PUMP_PIN1 			GPIO_Pin_0
+#define BILGE_PUMP_PIN2 			GPIO_Pin_1
+
+#define TURN_FOOT_SOURCE_PIN1		GPIO_PinSource6
+#define TURN_FOOT_SOURCE_PIN2		GPIO_PinSource7
+#define BILGE_PUMP_SOURCE_PIN1 		GPIO_PinSource0
+#define BILGE_PUMP_SOURCE_PIN2 		GPIO_PinSource1
+
+/*** servo 1 init ***/
+
+#define STEPPER_BANK_CLOCK			RCC_AHB1Periph_GPIOB
+#define STEPPER_PUMP_BANK				GPIOB	
+
+
+#define TURN_FOOT_PIN1				GPIO_Pin_6
+#define TURN_FOOT_PIN2				GPIO_Pin_7
+#define BILGE_PUMP_PIN1 			GPIO_Pin_0
+#define BILGE_PUMP_PIN2 			GPIO_Pin_1
+
+#define TURN_FOOT_SOURCE_PIN1		GPIO_PinSource6
+#define TURN_FOOT_SOURCE_PIN2		GPIO_PinSource7
+#define BILGE_PUMP_SOURCE_PIN1 		GPIO_PinSource0
+#define BILGE_PUMP_SOURCE_PIN2 		GPIO_PinSource1
 
 /*** Setting Servo Angle ***/
 
@@ -84,7 +136,7 @@ uint16_t ADC3ConvertedValue[NUM_DMA_CONVERSIONS]; //Array that stores all of the
 
 /********* FUNCTION DECLARATIONS *********/
 
-void anologWrite(uint32_t channel, uint8_t dutyCycle, uint32_t period);
+void bilgePumpPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period);
 
 uint8_t checksum(uint8_t* packet, uint8_t size);
 
@@ -92,7 +144,7 @@ void convertTBtoBB(uint8_t* top);
 
 void Delay(__IO uint32_t nCount);
 
-uint8_t handleTopPacket(void);
+void ledPwm(uint8_t dutyCycle,uint8_t dutyCycle2, uint8_t dutyCycle3, uint32_t period);
 
 void pollMotor(uint8_t address);
 
@@ -101,6 +153,12 @@ void resetMotor(uint8_t address);
 void sendPackets(void);
 
 void setServo1Angle(uint8_t angle);
+
+void setServo2Angle(uint8_t angle);
+
+void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period);
+
+void turnFootdPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period);
 
 void USART2_IRQHandler(void);
 
@@ -116,7 +174,11 @@ void init_IRQ(void);
 
 void init_LEDS(void);
 
-uint16_t initialize_servo_timer(void);
+void initialize_servo_timer(void);
+
+int32_t initialize_stepper_timer(uint32_t frequency, uint16_t preScaler);
+
+int32_t initialize_timer3(uint32_t frequency, uint16_t preScaler);
 
 void init_USART1(uint32_t baudrate);
 
@@ -124,6 +186,6 @@ void init_USART2(uint32_t baudrate);
 
 void init_USART6(uint32_t baudrate);
 
-int32_t initialize_pwm_timers(uint32_t frequency, uint16_t preScaler);
+int32_t initialize_led_timers(uint32_t frequency, uint16_t preScaler);
 
 #endif
