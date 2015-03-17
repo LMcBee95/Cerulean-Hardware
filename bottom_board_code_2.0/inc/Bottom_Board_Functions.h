@@ -49,7 +49,7 @@
 
 /***  Direct Memory Access ***/
 
-#define NUM_DMA_CONVERSIONS 		7
+#define NUM_DMA_2_CONVERSIONS 		8
 
 /*** Led Pins ***/
 

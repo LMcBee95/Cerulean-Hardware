@@ -19,7 +19,7 @@
 
 int main(void) {
 
-	init_DMA(ADC3ConvertedValue, NUM_DMA_CONVERSIONS);
+	init_DMA(ADC1ConvertedValue, NUM_DMA_2_CONVERSIONS);
 	init_IRQ();
 	init_LEDS();
 	
