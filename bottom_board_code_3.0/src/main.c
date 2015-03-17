@@ -21,7 +21,8 @@ int main(void) {
 
 	init_DMA(ADC3ConvertedValue, NUM_DMA_CONVERSIONS);
 	init_IRQ();
-	init_LEDS();
+	//init_LEDS();
+	int32_t RGB_period = init_RGB_led_timers(100000, 1);
 	
 	initialize_servo_timer();
 	init_USART1(LASER_BAUD);  //initializes USART1 baud rate
@@ -39,20 +40,20 @@ int main(void) {
 	  
 	while (1)
 	{  
+
 		
-		setServo2Angle(130);
-		GPIO_SetBits(GPIOD, GPIO_Pin_15);
-		bilgePumpPwm(255, 255, turning_period);
-		stepperPwm(255, 0, stepper_period);
+		for(int i = 0; i < 255; i ++)
+		{
+			RGBLedPwm(i, i, i, RGB_period);
+			Delay(0xffff);
+		}
 		
-		Delay(0x1ffffff);
-		
-		setServo2Angle(0);
-		GPIO_ResetBits(GPIOD, GPIO_Pin_15);
-		bilgePumpPwm(125,125,  turning_period);
-		stepperPwm(0, 255, stepper_period);
-		
-		Delay(0x1ffffff);
+		for(int i = 255; i > 0; i --)
+		{
+			RGBLedPwm(i, i, i, RGB_period);
+			Delay(0xffff);
+		}
+
 		
 		
 	}

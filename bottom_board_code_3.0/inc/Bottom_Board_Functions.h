@@ -1,7 +1,7 @@
 #ifndef BOTTOM_BOARD_FUNCTIONS_H_
 #define BOTTOM_BOARD_FUNCTIONS_H_
 
-/********* LIBRARIES *********/
+/***************** LIBRARIES *****************/
 
 #include "stm32f4xx.h"
 #include "stm32f4_discovery.h"
@@ -20,7 +20,7 @@
 
 #include "Bottom_Board_Functions.h"
 
-/********* CONSTANTS *********/
+/***************** CONSTANTS *****************/
 
 /***  Serial Communication ***/
 #define PACKET_SIZE 				16
@@ -51,7 +51,7 @@
 
 #define NUM_DMA_CONVERSIONS 		7
 
-/*** Led Pins ***/
+/*** Discovery Board Debugging Led Pins ***/
 
 #define GREEN_LED_ON				GPIO_SetBits(GPIOD, GPIO_Pin_12);
 #define GREEN_LED_OFF				GPIO_ResetBits(GPIOD, GPIO_Pin_12);
@@ -62,7 +62,7 @@
 #define BLUE_LED_ON					GPIO_SetBits(GPIOD, GPIO_Pin_15);
 #define BLUE_LED_OFF				GPIO_ResetBits(GPIOD, GPIO_Pin_15);
 
-/*** servo 1 init ***/
+/*** Servo 1 Init ***/
 
 #define SERVO_1_TIMER_CLOCK			RCC_APB2Periph_TIM9
 #define SERVO_TIMER_PIN_AF			GPIO_AF_TIM9
@@ -73,57 +73,15 @@
 #define SERVO_1_PIN_SOURCE			GPIO_PinSource5
 #define SERVO_1_CCR					TIM9->CCR1
 
-/*** servo 2 init ***/
+/*** Servo 2 Init ***/
 
 #define	SERVO_2_PIN 				GPIO_Pin_6
 #define SERVO_2_PIN_SOURCE			GPIO_PinSource6
 #define SERVO_2_CCR					TIM9->CCR2
 
-/*** leds ***/
-
-#define PWM_FREQUENCY				525000
-
-#define LED_1_2_3_TIMER				TIM2
-#define LED_1_2_3_AF				GPIO_AF_TIM2
-#define LED_1_2_3_BANK				GPIOA
-
 #define LED_PIN1					GPIO_Pin_3
 #define LED_PIN2					GPIO_Pin_2
 #define LED_PIN3					GPIO_Pin_1
-
-/*** Setting Servo Angle ***/
-
-#define TURN_FOOT_BANK_CLOCK		RCC_AHB1Periph_GPIOA
-#define BILGE_PUMP_BANK_CLOCK		RCC_AHB1Periph_GPIOB
-#define TURN_FOOT_BANK				GPIOA
-#define BILGE_PUMP_BANK				GPIOB	
-
-
-#define TURN_FOOT_PIN1				GPIO_Pin_6
-#define TURN_FOOT_PIN2				GPIO_Pin_7
-#define BILGE_PUMP_PIN1 			GPIO_Pin_0
-#define BILGE_PUMP_PIN2 			GPIO_Pin_1
-
-#define TURN_FOOT_SOURCE_PIN1		GPIO_PinSource6
-#define TURN_FOOT_SOURCE_PIN2		GPIO_PinSource7
-#define BILGE_PUMP_SOURCE_PIN1 		GPIO_PinSource0
-#define BILGE_PUMP_SOURCE_PIN2 		GPIO_PinSource1
-
-/*** servo 1 init ***/
-
-#define STEPPER_BANK_CLOCK			RCC_AHB1Periph_GPIOB
-#define STEPPER_PUMP_BANK				GPIOB	
-
-
-#define TURN_FOOT_PIN1				GPIO_Pin_6
-#define TURN_FOOT_PIN2				GPIO_Pin_7
-#define BILGE_PUMP_PIN1 			GPIO_Pin_0
-#define BILGE_PUMP_PIN2 			GPIO_Pin_1
-
-#define TURN_FOOT_SOURCE_PIN1		GPIO_PinSource6
-#define TURN_FOOT_SOURCE_PIN2		GPIO_PinSource7
-#define BILGE_PUMP_SOURCE_PIN1 		GPIO_PinSource0
-#define BILGE_PUMP_SOURCE_PIN2 		GPIO_PinSource1
 
 /*** Setting Servo Angle ***/
 
@@ -132,11 +90,67 @@
 #define MINSERVO 					0.8
 #define MAXSERVOANGLE 				135.0
 
+/*** Camera Leds ***/
+
+#define PWM_FREQUENCY				525000
+
+#define LED_1_2_3_TIMER				TIM2
+#define LED_1_2_3_AF				GPIO_AF_TIM2
+#define LED_1_2_3_BANK				GPIOA
+
+/*** Turning Foot and Bilge Pump ***/
+#define TURN_FOOT_BANK_CLOCK		RCC_AHB1Periph_GPIOA
+#define BILGE_PUMP_BANK_CLOCK		RCC_AHB1Periph_GPIOB
+#define TURN_FOOT_BANK				GPIOA
+#define BILGE_PUMP_BANK				GPIOB	
+
+#define TURN_FOOT_PIN1				GPIO_Pin_6
+#define TURN_FOOT_PIN2				GPIO_Pin_7
+#define BILGE_PUMP_PIN1 			GPIO_Pin_0
+#define BILGE_PUMP_PIN2 			GPIO_Pin_1
+
+#define TURN_FOOT_SOURCE_PIN1		GPIO_PinSource6
+#define TURN_FOOT_SOURCE_PIN2		GPIO_PinSource7
+#define BILGE_PUMP_SOURCE_PIN1 		GPIO_PinSource0
+#define BILGE_PUMP_SOURCE_PIN2 		GPIO_PinSource1
+
+/*** Stepper Motor Init***/
+
+#define STEPPER_TIMER_CLOCK			RCC_APB1Periph_TIM12
+#define STEPPER_BANK_CLOCK			RCC_AHB1Periph_GPIOB
+#define STEPPER_BANK				GPIOB	
+#define STEPPER_TIMER				TIM12
+
+#define STEPPER_PIN1				GPIO_Pin_14
+#define STEPPER_PIN2				GPIO_Pin_15
+
+#define STEPPER_SOURCE_PIN1			GPIO_PinSource14
+#define STEPPER_SOURCE_PIN2			GPIO_PinSource15
+
+/*** RGB Led Init ***/
+
+#define RGB_TIMER_CLOCK				RCC_APB1Periph_TIM4
+#define RGB_BANK_CLOCK				RCC_AHB1Periph_GPIOD	
+#define RGB_BANK					GPIOD			
+#define RGB_TIMER 					TIM4
+
+#define RED_LED_PIN					GPIO_Pin_14
+#define GREEN_LED_PIN				GPIO_Pin_13
+#define BLUE_LED_PIN				GPIO_Pin_12
+
+#define RED_LED_SOURCE_PIN			GPIO_PinSource14
+#define GREEN_LED_SOURCE_PIN		GPIO_PinSource13
+#define BLUE_LED_SOURCE_PIN			GPIO_PinSource12
+
+#define RGB_AF						GPIO_AF_TIM4
+
 uint16_t ADC3ConvertedValue[NUM_DMA_CONVERSIONS]; //Array that stores all of the values for the DMA ADC
 
-/********* FUNCTION DECLARATIONS *********/
+/***************** FUNCTION DECLARATIONS *****************/
 
 void bilgePumpPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period);
+
+void cameraLedPwm(uint8_t dutyCycle,uint8_t dutyCycle2, uint8_t dutyCycle3, uint32_t period);
 
 uint8_t checksum(uint8_t* packet, uint8_t size);
 
@@ -144,11 +158,11 @@ void convertTBtoBB(uint8_t* top);
 
 void Delay(__IO uint32_t nCount);
 
-void ledPwm(uint8_t dutyCycle,uint8_t dutyCycle2, uint8_t dutyCycle3, uint32_t period);
-
 void pollMotor(uint8_t address);
 
 void resetMotor(uint8_t address);
+
+void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBlue, uint32_t period);
 
 void sendPackets(void);
 
@@ -173,6 +187,8 @@ void init_DMA(uint16_t *storage_array, uint16_t size_of_array);
 void init_IRQ(void);
 
 void init_LEDS(void);
+
+int32_t init_RGB_led_timers(uint32_t frequency, uint16_t preScaler);
 
 void initialize_servo_timer(void);
 

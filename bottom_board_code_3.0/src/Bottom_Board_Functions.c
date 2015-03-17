@@ -37,6 +37,14 @@ void bilgePumpPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period)
 	TIM3->CCR4 = (period + 1) * dutyCycle2 / 255.0;	
 }
 
+void cameraLedPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint8_t dutyCycle3, uint32_t period)
+{
+	TIM2->CCR2 = (period + 1) * dutyCycle1 / 255.0;
+	TIM2->CCR3 = (period + 1) * dutyCycle2 / 255.0;
+	TIM2->CCR4 = (period + 1) * dutyCycle3 / 255.0;
+	
+}
+
 uint8_t checksum(uint8_t* packet, uint8_t size) {
 	uint8_t crc = 0;
 	
@@ -86,14 +94,6 @@ void Delay(__IO uint32_t nCount) {
   }
 }
 
-void ledPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint8_t dutyCycle3, uint32_t period)
-{
-	TIM2->CCR2 = (period + 1) * dutyCycle1 / 255.0;
-	TIM2->CCR3 = (period + 1) * dutyCycle2 / 255.0;
-	TIM2->CCR4 = (period + 1) * dutyCycle3 / 255.0;
-	
-}
-
 void pollMotor(uint8_t address)
 {
 	//Stores each variable into the array
@@ -124,6 +124,14 @@ void resetMotor(uint8_t address)
 	//Sends the packet to reset the motor
 	for(uint8_t i = 0; i < MOTOR_PACKET_SIZE; i++)
 		USART_puts(USART6, reset[i]);
+}
+
+void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBlue, uint32_t period)
+{
+	TIM4->CCR1 = (period + 1) * dutyCycleBlue / 255.0;
+	TIM4->CCR2 = (period + 1) * dutyCycleGreen / 255.0;
+	TIM4->CCR3 = (period + 1) * dutyCycleRed / 255.0;
+	
 }
 
 void sendPackets(void){
@@ -549,6 +557,66 @@ int32_t initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 	return(PreCalPeriod);
 }
 
+int32_t init_RGB_led_timers(uint32_t frequency, uint16_t preScaler)
+{
+	// Enable TIM4 and GPIOC clocks
+	RCC_APB1PeriphClockCmd(RGB_TIMER_CLOCK, ENABLE);
+	RCC_AHB1PeriphClockCmd(RGB_BANK_CLOCK, ENABLE);
+	 
+	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
+	
+	// Configure PD12 - PD14 pins as AF, Pull-Down
+	GPIO_InitStructure.GPIO_Pin = RED_LED_PIN | GREEN_LED_PIN | BLUE_LED_PIN;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(RGB_BANK, &GPIO_InitStructure);	//initializes the structure
+	 
+	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
+	GPIO_PinAFConfig(RGB_BANK, BLUE_LED_SOURCE_PIN, RGB_AF);
+	GPIO_PinAFConfig(RGB_BANK, GREEN_LED_SOURCE_PIN, RGB_AF);
+	GPIO_PinAFConfig(RGB_BANK, RED_LED_SOURCE_PIN, RGB_AF);
+	 
+	// Compute prescaler value for timebase
+	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
+	//second value in the divide is the frequency
+	uint32_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
+
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+	
+	// Setup timebase for TIM4
+	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the prescaller which is divided into the cpu clock to get a clock speed that is small enough to use for timers
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(RGB_TIMER, &TIM_TimeBaseStructure);  //initializes this part of the code
+	 
+	// Initialize TIM4 for 4 channels
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OCInitStructure.TIM_Pulse = 0;
+	
+	TIM_OC1Init(RGB_TIMER , &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
+	TIM_OC2Init(RGB_TIMER , &TIM_OCInitStructure);
+	TIM_OC3Init(RGB_TIMER , &TIM_OCInitStructure);
+	 
+	// Enable TIM4 peripheral Preload register on CCR1 for 4 channels
+	TIM_OC1PreloadConfig(RGB_TIMER , TIM_OCPreload_Enable);
+	TIM_OC2PreloadConfig(RGB_TIMER , TIM_OCPreload_Enable);
+	TIM_OC3PreloadConfig(RGB_TIMER , TIM_OCPreload_Enable);
+	 
+	// Enable TIM4 peripheral Preload register on ARR.
+	TIM_ARRPreloadConfig(RGB_TIMER , ENABLE);
+	 
+	// Enable TIM4 counter
+	TIM_Cmd(RGB_TIMER , ENABLE); 
+	
+	return(PreCalPeriod);
+}
+
 void initialize_servo_timer(void)
 {
 	uint16_t frequency = 50;  //period of 20 ms
@@ -610,23 +678,23 @@ void initialize_servo_timer(void)
 
 int32_t initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 {
-	// Enable TIM3 and GPIOC clocks
+	// Enable TIM12 and GPIOC clocks
 	RCC_APB1PeriphClockCmd(STEPPER_TIMER_CLOCK, ENABLE);
 	RCC_AHB1PeriphClockCmd(STEPPER_BANK_CLOCK, ENABLE);
 	 
 	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
 	
 	// Configure AF, Pull-Down
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_14 | GPIO_Pin_15;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Pin = STEPPER_PIN1 | STEPPER_PIN2;  //specifies which pins are used
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);	//initializes the structure
+	GPIO_Init(STEPPER_BANK, &GPIO_InitStructure);	//initializes the structure
 	 
 	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM12 functions.
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource14, GPIO_AF_TIM12);
-	GPIO_PinAFConfig(GPIOB, GPIO_PinSource15, GPIO_AF_TIM12);
+	GPIO_PinAFConfig(STEPPER_BANK, STEPPER_SOURCE_PIN1, GPIO_AF_TIM12);
+	GPIO_PinAFConfig(STEPPER_BANK, STEPPER_SOURCE_PIN2, GPIO_AF_TIM12);
 	 
 	// Compute prescaler value for timebase
 	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
@@ -641,27 +709,27 @@ int32_t initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the prescaller which is divided into the cpu clock to get a clock speed that is small enough to use for timers
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInit(TIM12, &TIM_TimeBaseStructure);  //initializes this part of the code
+	TIM_TimeBaseInit(STEPPER_TIMER, &TIM_TimeBaseStructure);  //initializes this part of the code
 	 
-	// Initialize TIM3 for 4 channels
+	// Initialize TIM12 for 4 channels
 	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
 	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
 	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
 	TIM_OCInitStructure.TIM_Pulse = 0;
 	
-	TIM_OC1Init(TIM12, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
-	TIM_OC2Init(TIM12, &TIM_OCInitStructure);
+	TIM_OC1Init(STEPPER_TIMER, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
+	TIM_OC2Init(STEPPER_TIMER, &TIM_OCInitStructure);
 	
 	 
-	// Enable TIM3 peripheral Preload register on CCR1 for 4 channels
-	TIM_OC1PreloadConfig(TIM12, TIM_OCPreload_Enable);
-	TIM_OC2PreloadConfig(TIM12, TIM_OCPreload_Enable);
+	// Enable TIM12 peripheral Preload register on CCR1 for 4 channels
+	TIM_OC1PreloadConfig(STEPPER_TIMER, TIM_OCPreload_Enable);
+	TIM_OC2PreloadConfig(STEPPER_TIMER, TIM_OCPreload_Enable);
 	
-	// Enable TIM3 peripheral Preload register on ARR.
-	TIM_ARRPreloadConfig(TIM12, ENABLE);
+	// Enable TIM12 peripheral Preload register on ARR.
+	TIM_ARRPreloadConfig(STEPPER_TIMER, ENABLE);
 	 
-	// Enable TIM3 counter
-	TIM_Cmd(TIM12, ENABLE); 
+	// Enable TIM12 counter
+	TIM_Cmd(STEPPER_TIMER, ENABLE); 
 	
 	return(PreCalPeriod);
 }
