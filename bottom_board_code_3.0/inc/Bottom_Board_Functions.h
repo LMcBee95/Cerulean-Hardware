@@ -49,7 +49,9 @@
 
 /***  Direct Memory Access ***/
 
-#define NUM_DMA_CONVERSIONS 		7
+#define NUM_DMA_2_CONVERSIONS 		8
+
+uint16_t ADC1ConvertedValue[NUM_DMA_2_CONVERSIONS];
 
 /*** Discovery Board Debugging Led Pins ***/
 
@@ -144,7 +146,6 @@
 
 #define RGB_AF						GPIO_AF_TIM4
 
-uint16_t ADC3ConvertedValue[NUM_DMA_CONVERSIONS]; //Array that stores all of the values for the DMA ADC
 
 /***************** FUNCTION DECLARATIONS *****************/
 

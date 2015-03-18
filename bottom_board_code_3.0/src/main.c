@@ -19,7 +19,7 @@
 
 int main(void) {
 
-	init_DMA(ADC3ConvertedValue, NUM_DMA_CONVERSIONS);
+	init_DMA(ADC1ConvertedValue, NUM_DMA_2_CONVERSIONS); 
 	init_IRQ();
 	//init_LEDS();
 	int32_t RGB_period = init_RGB_led_timers(100000, 1);
@@ -40,21 +40,8 @@ int main(void) {
 	  
 	while (1)
 	{  
+		uint16_t j = ADC1ConvertedValue[7] >> 4;
+		RGBLedPwm(j, j, j, RGB_period);
 
-		
-		for(int i = 0; i < 255; i ++)
-		{
-			RGBLedPwm(i, i, i, RGB_period);
-			Delay(0xffff);
-		}
-		
-		for(int i = 255; i > 0; i --)
-		{
-			RGBLedPwm(i, i, i, RGB_period);
-			Delay(0xffff);
-		}
-
-		
-		
 	}
 }

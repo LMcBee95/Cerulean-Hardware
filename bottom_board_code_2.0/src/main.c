@@ -40,17 +40,27 @@ int main(void) {
 	while (1)
 	{  
 		
-		setServo1Angle(130);
-		GPIO_SetBits(GPIOD, GPIO_Pin_15);
+		//setServo1Angle(130);
+		
+		for(int i = 0; i < 8; i++)
+		{
+			if(ADC1ConvertedValue[i] > 3000)
+			{
+				
+			}
+		}
+		
+		
+		//GPIO_SetBits(GPIOD, GPIO_Pin_15);
 		//anologWrite(TIM3->CCR4, 255, timer);
 		
-		Delay(0x1ffffff);
+		//Delay(0x1ffffff);
 		
 		setServo1Angle(0);
 		GPIO_ResetBits(GPIOD, GPIO_Pin_15);
 		//anologWrite(TIM3->CCR4, 125, timer;
 		
-		Delay(0x1ffffff);
+		//Delay(0x1ffffff);
 		
 		
 	}
