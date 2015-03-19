@@ -1,7 +1,9 @@
 
 #include "Bottom_Board_Functions.h"
 
-/********** Global Variables **********/
+/******************** Global Variables ********************/
+
+/*** Serial Communication ***/
 
 uint8_t pollingMotors = 0;  //stores a 0 if we are not polling the motors and a 1 if the motors are being polled
 uint8_t notPolledCounter = 0;  //stores how many times the bottom board received a top board packet before it received the poll response from the motor controllers
@@ -16,7 +18,11 @@ uint8_t reset[7];		 //An array to send a reset command if one of the motors has 
 uint8_t counter = 0;
 uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since we last polled a motor
 uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
-uint8_t received;
+uint8_t received;  //Variable to store in incoming serial data
+
+uint8_t sendData[SENT_PACKET_SIZE];
+
+/*** Variables for Laser Tool ***/
 
 uint8_t tempLaserData[10];  //Stores the decimal values of the length of the measurement.
 uint16_t laserDataBuff[100];  //Stores the actual value of the length in mm from the target
@@ -30,12 +36,12 @@ uint8_t currentValue = 0;     //The current value from the serial
 
 GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiations, must be included
 
-/********** Function Definitions **********/
+/******************** Function Definitions ********************/
 
 void bilgePumpPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period)
 {
-	TIM3->CCR3 = (period + 1) * dutyCycle1 / 255.0;	
-	TIM3->CCR4 = (period + 1) * dutyCycle2 / 255.0;	
+	TIM3->CCR3 = (GENERAL_PWM_PERIOD) * dutyCycle1 / 255.0;	
+	TIM3->CCR4 = (GENERAL_PWM_PERIOD) * dutyCycle2 / 255.0;	
 }
 
 void cameraLedPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint8_t dutyCycle3, uint32_t period)
@@ -127,11 +133,11 @@ void resetMotor(uint8_t address)
 		USART_puts(USART6, reset[i]);
 }
 
-void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBlue, uint32_t period)
+void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBlue)
 {
-	TIM4->CCR1 = (period + 1) * dutyCycleBlue / 255.0;
-	TIM4->CCR2 = (period + 1) * dutyCycleGreen / 255.0;
-	TIM4->CCR3 = (period + 1) * dutyCycleRed / 255.0;
+	TIM4->CCR1 = (GENERAL_PWM_PERIOD) * dutyCycleBlue / 255.0;
+	TIM4->CCR2 = (GENERAL_PWM_PERIOD) * dutyCycleGreen / 255.0;
+	TIM4->CCR3 = (GENERAL_PWM_PERIOD) * dutyCycleRed / 255.0;
 	
 }
 
@@ -156,16 +162,16 @@ void setServo2Angle(uint8_t angle)
 	SERVO_2_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
 }
 
-void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period)
+void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2)
 {
-	TIM12->CCR1 = (period + 1) * dutyCycle1 / 255.0;	
-	TIM12->CCR2 = (period + 1) * dutyCycle2 / 255.0;	
+	TIM12->CCR1 = (GENERAL_PWM_PERIOD) * dutyCycle1 / 255.0;	
+	TIM12->CCR2 = (GENERAL_PWM_PERIOD) * dutyCycle2 / 255.0;	
 }
 
-void turnFootdPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period)
+void turnFootdPwm(uint8_t dutyCycle1, uint8_t dutyCycle2)
 {
-	TIM3->CCR1 = (period + 1) * dutyCycle1 / 255.0;	
-	TIM3->CCR2 = (period + 1) * dutyCycle2 / 255.0;	
+	TIM3->CCR1 = (GENERAL_PWM_PERIOD) * dutyCycle1 / 255.0;	
+	TIM3->CCR2 = (GENERAL_PWM_PERIOD) * dutyCycle2 / 255.0;	
 }
 
 void USART1_IRQHandler(void) {
@@ -998,5 +1004,4 @@ void init_USART6(uint32_t baudrate){
 	
 	USART_ITConfig(USART6, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 }
-
 

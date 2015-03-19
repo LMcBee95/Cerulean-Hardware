@@ -24,6 +24,7 @@
 
 /***  Serial Communication ***/
 #define PACKET_SIZE 				16
+#define SENT_PACKET_SIZE			12
 #define MOTOR_PACKET_SIZE			7
 #define NUMBER_OF_MOTORS			8
 #define TOP_BOTTOM_BAUD 			115200
@@ -94,13 +95,14 @@ uint16_t ADC1ConvertedValue[NUM_DMA_2_CONVERSIONS];
 
 /*** Camera Leds ***/
 
-#define PWM_FREQUENCY				525000
+#define LED_PWM_FREQUENCY			525000
 
 #define LED_1_2_3_TIMER				TIM2
 #define LED_1_2_3_AF				GPIO_AF_TIM2
 #define LED_1_2_3_BANK				GPIOA
 
 /*** Turning Foot and Bilge Pump ***/
+
 #define TURN_FOOT_BANK_CLOCK		RCC_AHB1Periph_GPIOA
 #define BILGE_PUMP_BANK_CLOCK		RCC_AHB1Periph_GPIOB
 #define TURN_FOOT_BANK				GPIOA
@@ -146,6 +148,12 @@ uint16_t ADC1ConvertedValue[NUM_DMA_2_CONVERSIONS];
 
 #define RGB_AF						GPIO_AF_TIM4
 
+/*** General PWM Information ***/
+
+#define GENERAL_PWM_FREQUENCY		100000
+#define GENERAL_PWM_PRESCALER		1
+#define GENERAL_PWM_PERIOD			((84000000 * GENERAL_PWM_PRESCALER) / GENERAL_PWM_FREQUENCY)	
+
 
 /***************** FUNCTION DECLARATIONS *****************/
 
@@ -163,7 +171,7 @@ void pollMotor(uint8_t address);
 
 void resetMotor(uint8_t address);
 
-void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBlue, uint32_t period);
+void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBlue);
 
 void sendPackets(void);
 
@@ -171,9 +179,9 @@ void setServo1Angle(uint8_t angle);
 
 void setServo2Angle(uint8_t angle);
 
-void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period);
+void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2);
 
-void turnFootdPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period);
+void turnFootdPwm(uint8_t dutyCycle1, uint8_t dutyCycle2);
 
 void USART2_IRQHandler(void);
 

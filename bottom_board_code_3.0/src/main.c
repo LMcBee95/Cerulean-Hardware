@@ -29,7 +29,7 @@ int main(void) {
 	init_USART2(TOP_BOTTOM_BAUD);	// initialize USART2 baud rate
 	init_USART6(BOTTOM_MOTOR_BAUD); 	// initialize USART6 baud rate
 	
-	int32_t timer = initialize_led_timers(PWM_FREQUENCY, 1);
+	int32_t timer = initialize_led_timers(LED_PWM_FREQUENCY, 1);
 	int32_t turning_period = initialize_timer3(100000, 1);
 	int32_t stepper_period = initialize_stepper_timer(100000, 1);
 
@@ -41,7 +41,7 @@ int main(void) {
 	while (1)
 	{  
 		uint16_t j = ADC1ConvertedValue[7] >> 4;
-		RGBLedPwm(j, j, j, RGB_period);
+		RGBLedPwm(j, j, j);
 
 	}
 }
