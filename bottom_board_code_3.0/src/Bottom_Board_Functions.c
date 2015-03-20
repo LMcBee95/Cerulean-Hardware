@@ -389,7 +389,7 @@ void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 
 /********** Initializations *********/
 
-void init_DMA(uint16_t *array, uint16_t size)
+void init_DMA_ADC1(uint16_t *array, uint16_t size)
 {
   GPIO_InitTypeDef      GPIO_InitStructure;
   ADC_InitTypeDef       ADC_InitStructure;
@@ -408,12 +408,9 @@ void init_DMA(uint16_t *array, uint16_t size)
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2,ENABLE);
+
  
-  /**
-    Initialization of the GPIO Pins [OK]
-  */
- 
-  /* Analog channel configuration : PC.01, 02*/
+  /* Analog channel configuration */
   GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
   GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -484,6 +481,89 @@ void init_DMA(uint16_t *array, uint16_t size)
    ADC_SoftwareStartConv(ADC1); // Start ADC1 conversion
 }
 
+void init_DMA_ADC3(uint16_t *array, uint16_t size)
+{
+  GPIO_InitTypeDef      GPIO_InitStructure;
+  ADC_InitTypeDef       ADC_InitStructure;
+  ADC_CommonInitTypeDef ADC_CommonInitStructure;
+  DMA_InitTypeDef       DMA_InitStructure;
+ 
+  GPIO_StructInit(&GPIO_InitStructure);
+  ADC_StructInit(&ADC_InitStructure);
+  ADC_CommonStructInit(&ADC_CommonInitStructure);
+  DMA_StructInit(&DMA_InitStructure);
+ 
+  /**
+    Set up the clocks are needed for the ADC
+  */
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2,ENABLE);
+ 
+ 
+  /* Analog channel configuration : PF3, 4, 5, 10*/
+  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOF, &GPIO_InitStructure);
+  
+  
+ 
+  /**
+    Configure the DMA
+  */
+  //==Configure DMA2 - Stream 4
+  DMA_DeInit(DMA2_Stream0);  //Set DMA registers to default values
+  DMA_InitStructure.DMA_Channel = DMA_Channel_0;									//POSIBLE SOURCE OF ERROR
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC3->DR; //Source address
+  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)ADC3ConvertedValue; //Destination address
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
+  DMA_InitStructure.DMA_BufferSize = size; //Buffer size
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord; //source size - 16bit
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord; // destination size = 16b
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+  DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
+  DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
+  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+  DMA_Init(DMA2_Stream0, &DMA_InitStructure); //Initialize the DMA
+  DMA_Cmd(DMA2_Stream0, ENABLE); //Enable the DMA2 - Stream 0
+ 
+   /**
+     Config the ADC3
+   */
+   ADC_DeInit();
+   ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+   ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
+   ADC_InitStructure.ADC_ContinuousConvMode = ENABLE; //continuous conversion
+   ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConvEdge_None;
+   ADC_InitStructure.ADC_NbrOfConversion = size;
+   ADC_InitStructure.ADC_ScanConvMode = ENABLE; // 1=scan more that one channel in group
+   ADC_Init(ADC3,&ADC_InitStructure);
+ 
+   ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
+   ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div2;
+   ADC_CommonInitStructure.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
+   ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
+   ADC_CommonInit(&ADC_CommonInitStructure);
+ 
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_3,  1, ADC_SampleTime_144Cycles);//PF3
+	ADC_RegularChannelConfig(ADC1, ADC_Channel_4,  2, ADC_SampleTime_144Cycles);//PF4
+	ADC_RegularChannelConfig(ADC1, ADC_Channel_5,  3, ADC_SampleTime_144Cycles);//PF5
+	ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 4, ADC_SampleTime_144Cycles);//PF10
+    
+ 
+   ADC_DMARequestAfterLastTransferCmd(ADC3, ENABLE);
+ 
+   ADC_DMACmd(ADC3, ENABLE); //Enable ADC1 DMA
+ 
+   ADC_Cmd(ADC3, ENABLE);   // Enable ADC1
+ 
+   ADC_SoftwareStartConv(ADC3); // Start ADC1 conversion
+}
 void init_IRQ(void)
 {
 	/*
@@ -531,12 +611,16 @@ void init_LEDS(void)
 	GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
-int32_t initialize_led_timers(uint32_t frequency, uint16_t preScaler)
+void initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM2 and GPIOA clocks
 	
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);	//inititalizes the timers for 
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM12, ENABLE);//NOT TESTED
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14, ENABLE);//NOT TESTED
+	
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);//NOT TESTED
 	 
 	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
 	
@@ -547,12 +631,25 @@ int32_t initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_Init(LED_1_2_3_BANK, &GPIO_InitStructure);	//initializes the structure
-	 
+	
+	
+	//NOT TESTED
+	GPIO_InitStructure.GPIO_Pin = LED_PIN4;
+	GPIO_Init(LED_4_BANK, &GPIO_InitStructure);	//initializes led4 structure
+	
+	//NOT TESTED
+	GPIO_InitStructure.GPIO_Pin = LED_PIN5;
+	GPIO_Init(LED_5_BANK, &GPIO_InitStructure);	//initializes led4 structure
+	
 	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM2 functions.
-	GPIO_PinAFConfig(LED_1_2_3_BANK, GPIO_PinSource1, LED_1_2_3_AF);
-	GPIO_PinAFConfig(LED_1_2_3_BANK, GPIO_PinSource2, LED_1_2_3_AF);
-	GPIO_PinAFConfig(LED_1_2_3_BANK, GPIO_PinSource3, LED_1_2_3_AF);
-	 
+	GPIO_PinAFConfig(LED_1_2_3_BANK, LED_SOURCE_PIN1, LED_1_2_3_AF);
+	GPIO_PinAFConfig(LED_1_2_3_BANK, LED_SOURCE_PIN2, LED_1_2_3_AF);
+	GPIO_PinAFConfig(LED_1_2_3_BANK, LED_SOURCE_PIN3, LED_1_2_3_AF);
+	
+	//NOT TESTED
+	GPIO_PinAFConfig(LED_4_BANK, LED_SOURCE_PIN4, LED_4_AF);
+	GPIO_PinAFConfig(LED_5_BANK, LED_SOURCE_PIN4, LED_5_AF);
+	
 	// Compute prescaler value for timebase
 	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
 	//second value in the divide is the frequency
@@ -567,7 +664,11 @@ int32_t initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseInit(LED_1_2_3_TIMER, &TIM_TimeBaseStructure);  //initializes this part of the code
-	 
+	
+	//NOT TESTED
+	TIM_TimeBaseInit(LED_4_TIMER, &TIM_TimeBaseStructure);  //initializes led 4
+	TIM_TimeBaseInit(LED_5_TIMER, &TIM_TimeBaseStructure);  //initializes led 5
+	
 	// Initialize TIM2 for 4 channels
 	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
 	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
@@ -578,23 +679,40 @@ int32_t initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 	TIM_OC2Init(LED_1_2_3_TIMER, &TIM_OCInitStructure);
 	TIM_OC3Init(LED_1_2_3_TIMER, &TIM_OCInitStructure);
 	TIM_OC4Init(LED_1_2_3_TIMER, &TIM_OCInitStructure);
+	
+	//NOT TESTED
+	TIM_OC1Init(LED_4_TIMER, &TIM_OCInitStructure);
+	TIM_OC1Init(LED_5_TIMER, &TIM_OCInitStructure);
+	
 	 
 	// Enable TIM2 peripheral Preload register on CCR1 for 4 channels
 	
 	TIM_OC2PreloadConfig(LED_1_2_3_TIMER, TIM_OCPreload_Enable);
 	TIM_OC3PreloadConfig(LED_1_2_3_TIMER, TIM_OCPreload_Enable);
 	TIM_OC4PreloadConfig(LED_1_2_3_TIMER, TIM_OCPreload_Enable);
+	
+	//NOT TESTED
+	TIM_OC1PreloadConfig(LED_4_TIMER, TIM_OCPreload_Enable);  //sets up led4 for pwm
+	TIM_OC1PreloadConfig(LED_5_TIMER, TIM_OCPreload_Enable);  //sets up led5 for pwm
 	 
 	// Enable TIM2 peripheral Preload register on ARR.
 	TIM_ARRPreloadConfig(LED_1_2_3_TIMER, ENABLE);
+	
+	//NOT TESTED
+	TIM_ARRPreloadConfig(LED_4_TIMER, ENABLE);
+	TIM_ARRPreloadConfig(LED_5_TIMER, ENABLE);
 	 
 	// Enable TIM2 counter
 	TIM_Cmd(LED_1_2_3_TIMER, ENABLE); 
 	
-	return(PreCalPeriod);
+	//NOT TESTED
+	TIM_Cmd(LED_4_TIMER, ENABLE);	//enables TIM14
+	TIM_Cmd(LED_5_TIMER, ENABLE);	//enables TIM13
+	
+	//return(PreCalPeriod);
 }
 
-int32_t init_RGB_led_timers(uint32_t frequency, uint16_t preScaler)
+void init_RGB_led_timers(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM4 and GPIOC clocks
 	RCC_APB1PeriphClockCmd(RGB_TIMER_CLOCK, ENABLE);
@@ -651,7 +769,7 @@ int32_t init_RGB_led_timers(uint32_t frequency, uint16_t preScaler)
 	// Enable TIM4 counter
 	TIM_Cmd(RGB_TIMER , ENABLE); 
 	
-	return(PreCalPeriod);
+	//return(PreCalPeriod);
 }
 
 void initialize_servo_timer(void)
@@ -713,7 +831,7 @@ void initialize_servo_timer(void)
 	
 }
 
-int32_t initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
+void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM12 and GPIOC clocks
 	RCC_APB1PeriphClockCmd(STEPPER_TIMER_CLOCK, ENABLE);
@@ -768,10 +886,10 @@ int32_t initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 	// Enable TIM12 counter
 	TIM_Cmd(STEPPER_TIMER, ENABLE); 
 	
-	return(PreCalPeriod);
+	//return(PreCalPeriod);
 }
 
-int32_t initialize_timer3(uint32_t frequency, uint16_t preScaler)
+void initialize_timer3(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM3 and GPIOC clocks
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
@@ -835,7 +953,7 @@ int32_t initialize_timer3(uint32_t frequency, uint16_t preScaler)
 	// Enable TIM3 counter
 	TIM_Cmd(TIM3, ENABLE); 
 	
-	return(PreCalPeriod);
+	//return(PreCalPeriod);
 }
 
 void init_USART1(uint32_t baudrate){
