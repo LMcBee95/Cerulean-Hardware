@@ -12,6 +12,7 @@ uint8_t motor[8][7];	 //A multidimensional array to store all of the motor comma
 uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
 uint8_t storage[PACKET_SIZE];  //stores the message the packet that is sent from the top board
 uint8_t pollStorage[MOTOR_PACKET_SIZE];
+uint8_t dataGoingUp[SENT_PACKET_SIZE] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}; //Storage for the data that is going to be sent up to the base-station
 
 uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
 uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
@@ -19,8 +20,6 @@ uint8_t counter = 0;
 uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since we last polled a motor
 uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
 uint8_t received;  //Variable to store in incoming serial data
-
-uint8_t sendData[SENT_PACKET_SIZE];
 
 /*** Variables for Laser Tool ***/
 
@@ -141,6 +140,19 @@ void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBl
 	
 }
 
+void sendDataUp(void)
+{
+	RGBLedPwm(255, 255, 255);
+	dataGoingUp[0] = START_BYTE;
+	dataGoingUp[SENT_PACKET_SIZE - 1] = END_BYTE;
+	dataGoingUp[SENT_PACKET_SIZE - 2] = checksum(dataGoingUp, SENT_PACKET_SIZE - 3);
+	
+	for(uint8_t i = 0; i < SENT_PACKET_SIZE; i++)
+	{
+		USART_puts(USART2, dataGoingUp[i]);
+	}
+}
+
 void sendPackets(void){
 	for(uint8_t i = 0; i < NUMBER_OF_MOTORS; i++)  //Cycles through all of the packets
 	{
@@ -150,7 +162,6 @@ void sendPackets(void){
 		}
 	}
 }
-
 
 void setServo1Angle(uint8_t angle)
 { 	
@@ -262,7 +273,7 @@ void USART2_IRQHandler(void) {
 			
 			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))
 			{
-				
+				sendDataUp();
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
@@ -368,7 +379,6 @@ void USART6_IRQHandler(void) {
         //Clear interrupt flag
         USART_ClearITPendingBit(USART6, USART_IT_RXNE);
 }
-
 
 void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 		
@@ -895,18 +905,10 @@ void init_USART2(uint32_t baudrate){
 
 
 	/* GPIOA clock enable */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA|RCC_AHB1Periph_GPIOD, ENABLE);
-
-	//Initialized A2 as Tx and D6 as Rx
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP ;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 	
-	//Initializes the D6 pin
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_6;
+	//Initialized D5 as Tx and D6 as Rx
+	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_5 | GPIO_Pin_6;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -914,7 +916,7 @@ void init_USART2(uint32_t baudrate){
 	GPIO_Init(GPIOD, &GPIO_InitStructure);
 
 	/* Connect USART2 pins to AF2 */
-	GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_USART2);
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource5, GPIO_AF_USART2);
 	GPIO_PinAFConfig(GPIOD, GPIO_PinSource6, GPIO_AF_USART2);
 
 	USART_InitStructure.USART_BaudRate = baudrate;
@@ -923,7 +925,7 @@ void init_USART2(uint32_t baudrate){
 	USART_InitStructure.USART_Parity = USART_Parity_No;
 	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	
-	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
 	
 	USART_Init(USART2, &USART_InitStructure);
 

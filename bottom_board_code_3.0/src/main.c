@@ -40,8 +40,7 @@ int main(void) {
 	  
 	while (1)
 	{  
-		uint16_t j = ADC1ConvertedValue[7] >> 4;
-		RGBLedPwm(j, j, j);
-
+		RGBLedPwm(0, 0, 0);
+		
 	}
 }
