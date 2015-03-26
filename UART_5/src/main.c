@@ -50,7 +50,7 @@ void init_USART5(uint32_t baudrate){
 	 * note that only USART6 and USART6 are connected to APB2
 	 * the other USARTs are connected to APB1
 	 */
-	RCC_APB2PeriphClockCmd(RCC_APB1Periph_UART5, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, ENABLE);
 	
 	/* enable the peripheral clock for the pins used by 
 	 * USART5, PC12 for Tx and PD2 for Rx
@@ -93,12 +93,13 @@ void init_USART5(uint32_t baudrate){
 	
 	USART_Cmd(UART5, ENABLE);	//Enables USART6
 	
-	//USART_ITConfig(UART5, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
+	USART_ITConfig(UART5, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 }
 
 void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 		
 		// wait until data register is empty
+		//Delay(0xffff);
 		while(!(USARTx->SR & 0x00000040)); 
 		USART_SendData(USARTx, data);
 }
@@ -125,9 +126,12 @@ int main(void)
 
   while (1)
   {
-    /* PD12 to be toggled */
+    while(!USART_IT_RXNE);
+		
+	
+	/* PD12 to be toggled */
     GPIO_SetBits(GPIOD, GPIO_Pin_12);
-    USART_puts(USART6, 1);
+    USART_puts(UART5, 1);
 		
     
     
@@ -135,6 +139,7 @@ int main(void)
     Delay(0x7FFFFF);
     
     GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+	USART_puts(UART5, 255);
     
     /* Insert delay */
     Delay(0xFFFFFF);

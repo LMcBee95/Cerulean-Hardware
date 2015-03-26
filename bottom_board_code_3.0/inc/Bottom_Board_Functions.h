@@ -233,6 +233,8 @@ void init_USART1(uint32_t baudrate);
 
 void init_USART2(uint32_t baudrate);
 
+void init_UART5(uint32_t baudrate);
+
 void init_USART6(uint32_t baudrate);
 
 void initialize_led_timers(uint32_t frequency, uint16_t preScaler);
