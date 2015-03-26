@@ -72,34 +72,41 @@ int main(void)
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
   
-  //Initialize the stepper structure, with the step pin set to pin 12, the direction
+  //Initialize a stepper structure, with the step pin set to pin 12, the direction
   //pin set to pin 13, and the enable pin set to 14
-  Stepper* stepper = Stepper_Initialize(
+  Stepper* verticalStepper = Stepper_Initialize(
 	GPIOD, GPIO_Pin_12,
 	GPIOD, GPIO_Pin_13,
 	GPIOD, GPIO_Pin_14, 1);
+	
+  //Initialize another stepper structure, with the step pin set to pin 4, the direction
+  //pin set to pin 5, and the enable pin set to 6
+  Stepper* horizontalStepper = Stepper_Initialize(
+    GPIOD, GPIO_Pin_4,
+	GPIOD, GPIO_Pin_5,
+	GPIOD, GPIO_Pin_6, 1);
 
-  int fun = 90;
   while (1)
   {
-    Stepper_Step(stepper, 100);
-	Beep(3, GPIOD, GPIO_Pin_15);
-	Stepper_Step(stepper, -200);
-	Beep(3, GPIOD, GPIO_Pin_15);
-	Stepper_Step(stepper, -100);
-    Beep(3, GPIOD, GPIO_Pin_15);
-	Stepper_Step(stepper, 200);
+    //Step the vertical and vertical stepper 100 steps forward (90 degrees)
+    Stepper_Step(verticalStepper, 100);
+	Stepper_Step(horizontalStepper, 100);
 	
-	//Stepper_SetStep(stepper, 50);
-	//Stepper_SetStep(stepper, -50);
-	//Stepper_SetStep(stepper, 99);
-	//Stepper_SetStep(stepper, -99);
-	//Stepper_SetStep(stepper, 180);
-	//fun = Stepper_GetAngle(stepper);
-	//Beep(fun, GPIOD, GPIO_Pin_15);
-	//Stepper_Reset(stepper);          //Return the stepper to its base position
-	Stepper_Disable(stepper);
-	Beep(5, GPIOD, GPIO_Pin_15);
+	//Step the vertical and vertical stepper 200 steps backwards (-180 degrees)
+	Stepper_Step(verticalStepper, -200);
+	Stepper_Step(horizontalStepper, -200);
+	
+	//Reset both of the steppers to their initial position
+	Stepper_Reset(verticalStepper);
+	Stepper_Reset(horizontalStepper);
+    
+	//Disable the steppers to conserve power.  They will stop resisting motion and can be
+	//freely turned by external forces.  The steppers will be automatically enabled again
+	//The next time a function that moves them is called (such as Stepper_Reset or Stepper_Step)
+	Stepper_Disable(verticalStepper);
+	Stepper_Disable(horizontalStepper);
+	
+    //Wait some time before repeating
 	Delay(0xFFFFFF);
   }
 }

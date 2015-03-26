@@ -52,12 +52,13 @@ void Stepper_Calibrate(Stepper* stepper);
 //Turn on the stepper and allow it to hold its position
 void Stepper_Enable(Stepper* stepper);
 
-//Disable the stepper so it stops holding its position
+//Disable the stepper so it stops holding its position. This means
+//that it can be freely turned by external forces.
 void Stepper_Disable(Stepper* stepper);
 
-//Reset the stepper to its zero position
+//Move the stepper back to its zero position
 void Stepper_Reset(Stepper* stepper)
-__attribute((warning("Function has not been tested thoroughly, results not guaranteed.")));
+__attribute__((warning("Function has not been tested thoroughly, results not guaranteed.")));
 
 //Step a certain number of steps; a positive or negative
 //number indicates direction
@@ -65,7 +66,7 @@ void Stepper_Step(Stepper* stepper, int steps);
 
 //Move the stepper to a certain position
 void Stepper_SetStep(Stepper* stepper, int step)
-__attribute((warning("Function has not been tested thoroughly, results not guaranteed.")));
+__attribute__((warning("Function has not been tested thoroughly, results not guaranteed.")));
 
 //Get the current step position of the stepper
 //Will return a number between -199 and 200
@@ -75,7 +76,7 @@ int Stepper_GetStep(Stepper* stepper);
 //Set the stepper to the given angle in tenths of a degree
 // 0 degrees is forward
 void Stepper_SetAngle(Stepper* stepper, int angle)
-__attribute((warning("Function has not been tested thoroughly, results not guaranteed.")));
+__attribute__((warning("Function has not been tested thoroughly, results not guaranteed.")));
 
 //Get current angle of the stepper motor in tenths of a degree
 int Stepper_GetAngle(Stepper* stepper);
