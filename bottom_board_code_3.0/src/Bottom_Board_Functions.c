@@ -180,7 +180,9 @@ void setServo2Angle(uint8_t angle)
 
 void setSteppers(void)
 {
-
+  uint8_t  byte = storage[STEPPER_DOWN_BYTE]; //Get surface packet
+  uint32_t angles = Stepper_UseByte(byte, horizontalStepper, verticalStepper); //Move steppers and get angles
+  dataGoingUp[STEPPER_UP_BYTE] = angles;      //Write angle data to upgoing packet
 }
 
 void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2)
@@ -955,15 +957,15 @@ void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 void initialize_stepper_objects(void)
 {
   horizontalStepper = Stepper_Initialize(
-	STEPPER_HORIZONTAL_BANK, STEPPER_HORIZONTAL_STEP_PIN,
-	STEPPER_HORIZONTAL_BANK, STEPPER_HORIZONTAL_DIR_PIN,
-	STEPPER_HORIZONTAL_BANK, STEPPER_HORIZONTAL_ENABLE_PIN,
+	STEPPER_HORIZONTAL_STEP_BANK, STEPPER_HORIZONTAL_STEP_PIN,
+	STEPPER_HORIZONTAL_DIR_BANK, STEPPER_HORIZONTAL_DIR_PIN,
+	STEPPER_HORIZONTAL_ENABLE_BANK, STEPPER_HORIZONTAL_ENABLE_PIN,
 	STEPPER_HORIZONTAL_POLARITY);
   
   verticalStepper = Stepper_Initialize(
-	STEPPER_VERTICAL_BANK, STEPPER_VERTICAL_STEP_PIN,
-	STEPPER_VERTICAL_BANK, STEPPER_VERTICAL_DIR_PIN,
-	STEPPER_VERTICAL_BANK, STEPPER_VERTICAL_ENABLE_PIN,
+	STEPPER_VERTICAL_STEP_BANK, STEPPER_VERTICAL_STEP_PIN,
+	STEPPER_VERTICAL_DIR_BANK, STEPPER_VERTICAL_DIR_PIN,
+	STEPPER_VERTICAL_ENABLE_BANK, STEPPER_VERTICAL_ENABLE_PIN,
 	STEPPER_VERTICAL_POLARITY);
 }
 
