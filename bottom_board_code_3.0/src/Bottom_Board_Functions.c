@@ -147,7 +147,7 @@ void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBl
 
 void sendDataUp(void)
 {
-	RGBLedPwm(255, 255, 255);
+	//RGBLedPwm(255, 255, 255);
 	dataGoingUp[0] = START_BYTE;
 	dataGoingUp[SENT_PACKET_SIZE - 1] = END_BYTE;
 	dataGoingUp[SENT_PACKET_SIZE - 2] = checksum(dataGoingUp, SENT_PACKET_SIZE - 3);
@@ -163,7 +163,7 @@ void sendPackets(void){
 	{
 		for(uint8_t j = 0; j < MOTOR_PACKET_SIZE; j++) //Cycles through all of the information in the packets
 		{
-			USART_puts(USART6, motor[i][j]);
+			USART_puts(UART5, motor[i][j]);
 		}
 	}
 }
@@ -268,10 +268,61 @@ void USART1_IRQHandler(void) {
 }
 
 void USART2_IRQHandler(void) {
-    //Check if interrupt was because data is received
-    if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
+    
+}
+
+void UART5_IRQHandler(void) {
+    
+	//Check if interrupt was because data is received
+	if (USART_GetITStatus(UART5, USART_IT_RXNE)) {
+		received = USART_ReceiveData(UART5);
+		
+		if(received == START_BYTE)
+		{
+			//RGBLedPwm(255, 255, 255);
+			pollStorage[pollCounter] = received;
+			pollCounter = 1;
+		}
+		else if(pollCounter > 0 && received != START_BYTE)
+		{
+			pollStorage[pollCounter] = received;
+			pollCounter++;
+			
+			if(pollCounter == MOTOR_PACKET_SIZE  && (checksum(pollStorage, MOTOR_PACKET_SIZE - 3) == pollStorage[MOTOR_PACKET_SIZE - 2]) && (pollStorage[MOTOR_PACKET_SIZE - 1] == END_BYTE))
+			{
+				//do stuff with the received data
+				
+				ORANGE_LED_ON
+				
+				pollCounter = 0; //Reset the counter
+				
+				
+				pollingMotors = 0;  //resets the variable that will allow the board to start sending out motor commands again
+				
+				GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
+				GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
+				
+			}
+			else if(pollCounter == MOTOR_PACKET_SIZE)
+			{
+				//GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+			}
+		}
+		else
+		{
+			pollCounter = 0;//Clear interrupt flag
+			USART_ClearITPendingBit(UART5, USART_IT_RXNE);
+		}
+	}
+        
+}
+
+void USART6_IRQHandler(void) {
+    
+	 //Check if interrupt was because data is received
+    if (USART_GetITStatus(USART6, USART_IT_RXNE)) 
 	{	
-		received = USART_ReceiveData(USART2);
+		received = USART_ReceiveData(USART6);
 	
 		if(received == START_BYTE)
 		{
@@ -290,8 +341,8 @@ void USART2_IRQHandler(void) {
 				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
 				{
-					RED_LED_OFF
-					ORANGE_LED_OFF
+					//RED_LED_OFF
+					//ORANGE_LED_OFF
 					
 					sendPackets();	//Sends the motor controller commands produced by the convert function
 					pollCounter++;
@@ -343,99 +394,7 @@ void USART2_IRQHandler(void) {
 			counter = 0;
 		}
 	}
-	USART_ClearITPendingBit(USART2, USART_IT_RXNE);
-}
-
-void UART5_IRQHandler(void) {
-    
-	//Check if interrupt was because data is received
-	if (USART_GetITStatus(USART6, USART_IT_RXNE)) {
-		received = USART_ReceiveData(USART6);
-		
-		if(received == START_BYTE)
-		{
-			pollStorage[pollCounter] = received;
-			pollCounter = 1;
-		}
-		else if(pollCounter > 0 && received != START_BYTE)
-		{
-			pollStorage[pollCounter] = received;
-			pollCounter++;
-			
-			if(pollCounter == MOTOR_PACKET_SIZE  && (checksum(pollStorage, MOTOR_PACKET_SIZE - 3) == pollStorage[MOTOR_PACKET_SIZE - 2]) && (pollStorage[MOTOR_PACKET_SIZE - 1] == END_BYTE))
-			{
-				//do stuff with the received data
-				
-				ORANGE_LED_ON
-				
-				pollCounter = 0; //Reset the counter
-				
-				
-				pollingMotors = 0;  //resets the variable that will allow the board to start sending out motor commands again
-				
-				GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
-				GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
-				
-			}
-			else if(pollCounter == MOTOR_PACKET_SIZE)
-			{
-				//GPIO_ResetBits(GPIOD, GPIO_Pin_12);
-			}
-		}
-		else
-		{
-			pollCounter = 0;
-		}
-	}
-        
-        //Clear interrupt flag
-        USART_ClearITPendingBit(USART6, USART_IT_RXNE);
-}
-
-void USART6_IRQHandler(void) {
-    
-	//Check if interrupt was because data is received
-	if (USART_GetITStatus(USART6, USART_IT_RXNE)) {
-		received = USART_ReceiveData(USART6);
-		
-		if(received == START_BYTE)
-		{
-			pollStorage[pollCounter] = received;
-			pollCounter = 1;
-		}
-		else if(pollCounter > 0 && received != START_BYTE)
-		{
-			pollStorage[pollCounter] = received;
-			pollCounter++;
-			
-			if(pollCounter == MOTOR_PACKET_SIZE  && (checksum(pollStorage, MOTOR_PACKET_SIZE - 3) == pollStorage[MOTOR_PACKET_SIZE - 2]) && (pollStorage[MOTOR_PACKET_SIZE - 1] == END_BYTE))
-			{
-				//do stuff with the received data
-				
-				ORANGE_LED_ON
-				
-				pollCounter = 0; //Reset the counter
-				
-				
-				pollingMotors = 0;  //resets the variable that will allow the board to start sending out motor commands again
-				
-				GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
-				GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
-				
-			}
-			else if(pollCounter == MOTOR_PACKET_SIZE)
-			{
-				//GPIO_ResetBits(GPIOD, GPIO_Pin_12);
-			}
-		}
-		else
-		{
-			pollCounter = 0;
-		}
-	}
-        
-        //Clear interrupt flag
-        USART_ClearITPendingBit(USART6, USART_IT_RXNE);
+	USART_ClearITPendingBit(USART6, USART_IT_RXNE);
 }
 
 void USART_puts(USART_TypeDef* USARTx, uint8_t data){
@@ -1138,8 +1097,8 @@ void init_UART5(uint32_t baudrate)
 	GPIO_InitTypeDef GPIO_InitStruct;   // this is for the GPIO pins used as TX and RX
 	USART_InitTypeDef USART_InitStruct; // this is for the USART6 initialization
 	
-	/* enable APB2 peripheral clock for USART6 
-	 * note that only USART6 and USART6 are connected to APB2
+	/* enable APB2 peripheral clock for USART5 
+	 * note that only USART5 and USART6 are connected to APB1
 	 * the other USARTs are connected to APB1
 	 */
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, ENABLE);
@@ -1151,7 +1110,7 @@ void init_UART5(uint32_t baudrate)
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 	
 	/* This sequence sets up the TX and RX pins 
-	 * so they work correctly with the USART6 peripheral
+	 * so they work correctly with the USART5 peripheral
 	 */
 	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12; 			// PC 12 (TX) 
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF; 			// the pins are configured as alternate function so the USART peripheral has access to them
@@ -1161,7 +1120,7 @@ void init_UART5(uint32_t baudrate)
 	GPIO_Init(GPIOC, &GPIO_InitStruct);					// now all the values are passed to the GPIO_Init() function which sets the GPIO registers
 	
 	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_2; 				// PD2 (RX)
-	GPIO_Init(GPIOA, &GPIO_InitStruct);
+	GPIO_Init(GPIOD, &GPIO_InitStruct);
 	
 	/* The RX and TX pins are now connected to their AF
 	 * so that the USART6 can take over control of the 
@@ -1171,7 +1130,7 @@ void init_UART5(uint32_t baudrate)
 	GPIO_PinAFConfig(GPIOD, GPIO_PinSource2, GPIO_AF_UART5);
 	
 	/* Now the USART_InitStruct is used to define the 
-	 * properties of USART6 
+	 * properties of USART5 
 	 */
 	USART_InitStruct.USART_BaudRate = baudrate;				  // the baud rate is set to the value we passed into this function
 	USART_InitStruct.USART_WordLength = USART_WordLength_8b;  // we want the data frame size to be 8 bits (standard)
