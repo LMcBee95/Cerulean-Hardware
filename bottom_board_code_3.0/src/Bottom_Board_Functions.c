@@ -1,5 +1,6 @@
 
 #include "Bottom_Board_Functions.h"
+#include "Stepper.h"
 
 /******************** Global Variables ********************/
 
@@ -20,6 +21,10 @@ uint8_t counter = 0;
 uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since we last polled a motor
 uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
 uint8_t received;  //Variable to store in incoming serial data
+
+/*** Variables for Stepper Motors ***/
+Stepper* horizontalStepper;  //Structure to store horizontal stepper data
+Stepper* verticalStepper;    //Structure to store vertical stepper data
 
 /*** Variables for Laser Tool ***/
 
@@ -171,6 +176,11 @@ void setServo1Angle(uint8_t angle)
 void setServo2Angle(uint8_t angle)
 { 	
 	SERVO_2_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
+}
+
+void setSteppers(void)
+{
+
 }
 
 void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2)
@@ -940,6 +950,21 @@ void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 	TIM_Cmd(STEPPER_TIMER, ENABLE); 
 	
 	//return(PreCalPeriod);
+}
+
+void initialize_stepper_objects(void)
+{
+  horizontalStepper = Stepper_Initialize(
+	STEPPER_HORIZONTAL_BANK, STEPPER_HORIZONTAL_STEP_PIN,
+	STEPPER_HORIZONTAL_BANK, STEPPER_HORIZONTAL_DIR_PIN,
+	STEPPER_HORIZONTAL_BANK, STEPPER_HORIZONTAL_ENABLE_PIN,
+	STEPPER_HORIZONTAL_POLARITY);
+  
+  verticalStepper = Stepper_Initialize(
+	STEPPER_VERTICAL_BANK, STEPPER_VERTICAL_STEP_PIN,
+	STEPPER_VERTICAL_BANK, STEPPER_VERTICAL_DIR_PIN,
+	STEPPER_VERTICAL_BANK, STEPPER_VERTICAL_ENABLE_PIN,
+	STEPPER_VERTICAL_POLARITY);
 }
 
 void initialize_timer3(uint32_t frequency, uint16_t preScaler)
