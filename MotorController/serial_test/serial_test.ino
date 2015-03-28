@@ -67,8 +67,13 @@ void sendPacket(void)
 	
 	void loop()
 	{
+<<<<<<< HEAD
 	  sendPacket();
 	  delay(1000);
+=======
+			sendPacket();
+		        delay(200);
+>>>>>>> origin/master
 		
 	}
 

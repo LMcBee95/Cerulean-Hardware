@@ -36,6 +36,8 @@ Stepper* Stepper_Initialize(
 	return stepper;
 }
 
+
+
 //Step a certain number of steps; can be positive or negative
 void Stepper_Step(Stepper* stepper, int steps)
 {
@@ -63,6 +65,35 @@ void Stepper_Step(Stepper* stepper, int steps)
 		GPIO_ResetBits(stepper->stepBlock, stepper->stepPin);
 		Delay(STEP_DELAY);
 	}
+}
+
+//Use byte to control horizontal and vertical steppers
+uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
+{
+  //Declare return int
+  uint32_t position;
+  uint16_t horzPos;
+  uint16_t vertPos;
+
+  //Split up that byte
+  uint8_t horzDir = byte>>7;          //Horizontal direction
+  uint8_t vertDir = (byte>>3)&0x01;   //Vertical direction
+  uint8_t horzSteps = (byte>>4)&0x07; //Horizontal steps
+  uint8_t vertSteps = byte & 0x07;    //Vertical steps
+  
+  //Convert steps to be positive or negative based on direction
+  horzSteps *= (-1 + 2*horzDir);  //0 is negative 1 is positive
+  vertSteps *= (-1 + 2*vertDir);
+  
+  //Move stepper motors
+  Stepper_Step(horizontal, horzSteps);
+  Stepper_Step(vertical, vertSteps);
+  
+  //Return position of stepper motors
+  horzPos = Stepper_GetStep(horizontal);
+  vertPos = Stepper_GetStep(vertical);
+  position = horzPos<<16 + vertPos;
+  return position;  
 }
 
 //Turn on the stepper and allow it to hold its position

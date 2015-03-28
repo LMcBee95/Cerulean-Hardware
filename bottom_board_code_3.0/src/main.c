@@ -28,7 +28,8 @@ int main(void) {
 	initialize_servo_timer();
 	init_USART1(LASER_BAUD);  //initializes USART1 baud rate
 	init_USART2(TOP_BOTTOM_BAUD);	// initialize USART2 baud rate
-	init_USART6(BOTTOM_MOTOR_BAUD); 	// initialize USART6 baud rate
+	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize USART2 baud rate
+	init_USART6(TOP_BOTTOM_BAUD); 	// initialize USART6 baud rate
 	
 	initialize_led_timers(LED_PWM_FREQUENCY, 1);
 	initialize_timer3(100000, 1);
@@ -40,9 +41,22 @@ int main(void) {
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
 	RGBLedPwm(0, 0, 0);
+<<<<<<< HEAD
 	
 	while (1)
 	{
+=======
+	  
+	while (1)
+	{  
+		setServo1Angle(125);
+		
+		Delay(0xffffff);
+		
+		setServo1Angle(0);
+		
+		Delay(0xffffff);
+>>>>>>> origin/master
 
 	}
 }

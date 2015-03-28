@@ -19,6 +19,7 @@
 #include <stm32f4xx_usart.h>
 
 #include "Bottom_Board_Functions.h"
+#include "Stepper.h"
 
 /***************** CONSTANTS *****************/
 
@@ -170,6 +171,29 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define STEPPER_SOURCE_PIN1			GPIO_PinSource14
 #define STEPPER_SOURCE_PIN2			GPIO_PinSource15
 
+/*** Stepper Motor Pins ***/
+#define STEPPER_HORIZONTAL_DIR_BANK           GPIOC
+#define STEPPER_HORIZONTAL_ENABLE_BANK        GPIOC
+#define STEPPER_HORIZONTAL_STEP_BANK          GPIOB
+
+#define STEPPER_VERTICAL_DIR_BANK             GPIOC
+#define STEPPER_VERTICAL_ENABLE_BANK          GPIOC
+#define STEPPER_VERTICAL_STEP_BANK            GPIOB
+
+#define STEPPER_HORIZONTAL_DIR_PIN        GPIO_Pin_15
+#define STEPPER_HORIZONTAL_ENABLE_PIN     GPIO_Pin_13
+#define STEPPER_HORIZONTAL_STEP_PIN       GPIO_Pin_15
+
+#define STEPPER_VERTICAL_DIR_PIN          GPIO_Pin_14
+#define STEPPER_VERTICAL_ENABLE_PIN       GPIO_Pin_13
+#define STEPPER_VERTICAL_STEP_PIN         GPIO_Pin_14
+
+#define STEPPER_VERTICAL_POLARITY    1  //If the stepper turns the wrong way, just
+#define STEPPER_HORIZONTAL_POLARITY  1  //change the polarity from 1 to 0 or from 0 to 1.
+
+#define STEPPER_UP_BYTE 4               //Write 4 bytes to the upgoing packet, starting at this one
+#define STEPPER_DOWN_BYTE 11            //Read this byte from the packet from the surface to control steppers
+
 /*** RGB Led Init ***/
 
 #define RGB_TIMER_CLOCK				RCC_APB1Periph_TIM4
@@ -218,6 +242,9 @@ void setServo1Angle(uint8_t angle);
 
 void setServo2Angle(uint8_t angle);
 
+//Use storage packet to set stepper values and write the new stepper positions to the dataUpPacket
+void setSteppers(void);
+
 void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2);
 
 void turnFootdPwm(uint8_t PWM_IN1, uint8_t PWM_IN2);
@@ -244,11 +271,15 @@ void initialize_servo_timer(void);
 
 void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler);
 
+void initialize_stepper_objects(void);
+
 void initialize_timer3(uint32_t frequency, uint16_t preScaler);
 
 void init_USART1(uint32_t baudrate);
 
 void init_USART2(uint32_t baudrate);
+
+void init_UART5(uint32_t baudrate);
 
 void init_USART6(uint32_t baudrate);
 

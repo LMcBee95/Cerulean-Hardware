@@ -1,5 +1,6 @@
 
 #include "Bottom_Board_Functions.h"
+#include "Stepper.h"
 
 /******************** Global Variables ********************/
 
@@ -20,6 +21,10 @@ uint8_t counter = 0;
 uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since we last polled a motor
 uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
 uint8_t received;  //Variable to store in incoming serial data
+
+/*** Variables for Stepper Motors ***/
+Stepper* horizontalStepper;  //Structure to store horizontal stepper data
+Stepper* verticalStepper;    //Structure to store vertical stepper data
 
 /*** Variables for Laser Tool ***/
 
@@ -144,6 +149,10 @@ void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBl
 
 void sendDataUp(void)
 {
+<<<<<<< HEAD
+=======
+	//RGBLedPwm(255, 255, 255);
+>>>>>>> origin/master
 	dataGoingUp[0] = START_BYTE;
 	dataGoingUp[SENT_PACKET_SIZE - 1] = END_BYTE;
 	dataGoingUp[SENT_PACKET_SIZE - 2] = checksum(dataGoingUp, SENT_PACKET_SIZE - 3);
@@ -159,7 +168,7 @@ void sendPackets(void){
 	{
 		for(uint8_t j = 0; j < MOTOR_PACKET_SIZE; j++) //Cycles through all of the information in the packets
 		{
-			USART_puts(USART6, motor[i][j]);
+			USART_puts(UART5, motor[i][j]);
 		}
 	}
 }
@@ -172,6 +181,13 @@ void setServo1Angle(uint8_t angle)
 void setServo2Angle(uint8_t angle)
 { 	
 	SERVO_2_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
+}
+
+void setSteppers(void)
+{
+  uint8_t  byte = storage[STEPPER_DOWN_BYTE]; //Get surface packet
+  uint32_t angles = Stepper_UseByte(byte, horizontalStepper, verticalStepper); //Move steppers and get angles
+  dataGoingUp[STEPPER_UP_BYTE] = angles;      //Write angle data to upgoing packet
 }
 
 void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2)
@@ -257,10 +273,66 @@ void USART1_IRQHandler(void) {
 }
 
 void USART2_IRQHandler(void) {
-    //Check if interrupt was because data is received
-    if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
+    
+}
+
+void UART5_IRQHandler(void) {
+    
+	//Check if interrupt was because data is received
+	if (USART_GetITStatus(UART5, USART_IT_RXNE)) {
+		received = USART_ReceiveData(UART5);
+		
+		if(received == START_BYTE)
+		{
+			//RGBLedPwm(255, 255, 255);
+			pollStorage[pollCounter] = received;
+			pollCounter = 1;
+		}
+		else if(pollCounter > 0 && received != START_BYTE)
+		{
+			pollStorage[pollCounter] = received;
+			pollCounter++;
+			
+			if(pollCounter == MOTOR_PACKET_SIZE  && (checksum(pollStorage, MOTOR_PACKET_SIZE - 3) == pollStorage[MOTOR_PACKET_SIZE - 2]) && (pollStorage[MOTOR_PACKET_SIZE - 1] == END_BYTE))
+			{
+				//do stuff with the received data
+				
+				ORANGE_LED_ON
+				
+				pollCounter = 0; //Reset the counter
+				
+				
+				pollingMotors = 0;  //resets the variable that will allow the board to start sending out motor commands again
+				
+				GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
+				GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
+				
+			}
+			else if(pollCounter == MOTOR_PACKET_SIZE)
+			{
+				//GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+			}
+		}
+		else
+		{
+			pollCounter = 0;//Clear interrupt flag
+			USART_ClearITPendingBit(UART5, USART_IT_RXNE);
+		}
+	}
+        
+}
+
+void USART6_IRQHandler(void) {
+    
+	 //Check if interrupt was because data is received
+    if (USART_GetITStatus(USART6, USART_IT_RXNE)) 
 	{	
+<<<<<<< HEAD
 		received = USART_ReceiveData(USART2);
+=======
+		received = USART_ReceiveData(USART6);
+	
+>>>>>>> origin/master
 		if(received == START_BYTE)
 		{
 			storage[counter] = received;
@@ -317,7 +389,12 @@ void USART2_IRQHandler(void) {
 				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
 				{
+<<<<<<< HEAD
 					
+=======
+					//RED_LED_OFF
+					//ORANGE_LED_OFF
+>>>>>>> origin/master
 					
 					sendPackets();	//Sends the motor controller commands produced by the convert function
 					pollCounter++;
@@ -369,53 +446,7 @@ void USART2_IRQHandler(void) {
 			counter = 0;
 		}
 	}
-	USART_ClearITPendingBit(USART2, USART_IT_RXNE);
-}
-
-void USART6_IRQHandler(void) {
-    
-	//Check if interrupt was because data is received
-	if (USART_GetITStatus(USART6, USART_IT_RXNE)) {
-		received = USART_ReceiveData(USART6);
-		
-		if(received == START_BYTE)
-		{
-			pollStorage[pollCounter] = received;
-			pollCounter = 1;
-		}
-		else if(pollCounter > 0 && received != START_BYTE)
-		{
-			pollStorage[pollCounter] = received;
-			pollCounter++;
-			
-			if(pollCounter == MOTOR_PACKET_SIZE  && (checksum(pollStorage, MOTOR_PACKET_SIZE - 3) == pollStorage[MOTOR_PACKET_SIZE - 2]) && (pollStorage[MOTOR_PACKET_SIZE - 1] == END_BYTE))
-			{
-				//do stuff with the received data
-				
-				ORANGE_LED_ON
-				
-				pollCounter = 0; //Reset the counter
-				
-				
-				pollingMotors = 0;  //resets the variable that will allow the board to start sending out motor commands again
-				
-				GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
-				GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
-				
-			}
-			else if(pollCounter == MOTOR_PACKET_SIZE)
-			{
-				//GPIO_ResetBits(GPIOD, GPIO_Pin_12);
-			}
-		}
-		else
-		{
-			pollCounter = 0;
-		}
-	}
-        
-        //Clear interrupt flag
-        USART_ClearITPendingBit(USART6, USART_IT_RXNE);
+	USART_ClearITPendingBit(USART6, USART_IT_RXNE);
 }
 
 void USART_puts(USART_TypeDef* USARTx, uint8_t data){
@@ -741,6 +772,13 @@ void init_IRQ(void)
 	NVIC_InitStruct.NVIC_IRQChannel = USART1_IRQn;  //sets the handler for USART1
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 3;  //sub priority assignment
+	NVIC_Init(&NVIC_InitStruct);
+	
+	//Initiate Interrupt Request for USART  channel 1
+	NVIC_InitStruct.NVIC_IRQChannel = UART5_IRQn;  //sets the handler for USART1
+	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;  //sub priority assignment
 	NVIC_Init(&NVIC_InitStruct);
 }
@@ -1037,6 +1075,21 @@ void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 	//return(PreCalPeriod);
 }
 
+void initialize_stepper_objects(void)
+{
+  horizontalStepper = Stepper_Initialize(
+	STEPPER_HORIZONTAL_STEP_BANK, STEPPER_HORIZONTAL_STEP_PIN,
+	STEPPER_HORIZONTAL_DIR_BANK, STEPPER_HORIZONTAL_DIR_PIN,
+	STEPPER_HORIZONTAL_ENABLE_BANK, STEPPER_HORIZONTAL_ENABLE_PIN,
+	STEPPER_HORIZONTAL_POLARITY);
+  
+  verticalStepper = Stepper_Initialize(
+	STEPPER_VERTICAL_STEP_BANK, STEPPER_VERTICAL_STEP_PIN,
+	STEPPER_VERTICAL_DIR_BANK, STEPPER_VERTICAL_DIR_PIN,
+	STEPPER_VERTICAL_ENABLE_BANK, STEPPER_VERTICAL_ENABLE_PIN,
+	STEPPER_VERTICAL_POLARITY);
+}
+
 void initialize_timer3(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM3 and GPIOC clocks
@@ -1199,6 +1252,62 @@ void init_USART2(uint32_t baudrate){
 	
 	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 
+}
+
+void init_UART5(uint32_t baudrate)
+{
+	GPIO_InitTypeDef GPIO_InitStruct;   // this is for the GPIO pins used as TX and RX
+	USART_InitTypeDef USART_InitStruct; // this is for the USART6 initialization
+	
+	/* enable APB2 peripheral clock for USART5 
+	 * note that only USART5 and USART6 are connected to APB1
+	 * the other USARTs are connected to APB1
+	 */
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, ENABLE);
+	
+	/* enable the peripheral clock for the pins used by 
+	 * USART5, PC12 for Tx and PD2 for Rx
+	 */
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+	
+	/* This sequence sets up the TX and RX pins 
+	 * so they work correctly with the USART5 peripheral
+	 */
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12; 			// PC 12 (TX) 
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF; 			// the pins are configured as alternate function so the USART peripheral has access to them
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;		// this defines the IO speed and has nothing to do with the baud rate!
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;			// this defines the output type as push pull mode (as opposed to open drain)
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;			// this activates the pull up resistors on the IO pins
+	GPIO_Init(GPIOC, &GPIO_InitStruct);					// now all the values are passed to the GPIO_Init() function which sets the GPIO registers
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_2; 				// PD2 (RX)
+	GPIO_Init(GPIOD, &GPIO_InitStruct);
+	
+	/* The RX and TX pins are now connected to their AF
+	 * so that the USART6 can take over control of the 
+	 * pins
+	 */
+	GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_UART5); 
+	GPIO_PinAFConfig(GPIOD, GPIO_PinSource2, GPIO_AF_UART5);
+	
+	/* Now the USART_InitStruct is used to define the 
+	 * properties of USART5 
+	 */
+	USART_InitStruct.USART_BaudRate = baudrate;				  // the baud rate is set to the value we passed into this function
+	USART_InitStruct.USART_WordLength = USART_WordLength_8b;  // we want the data frame size to be 8 bits (standard)
+	USART_InitStruct.USART_StopBits = USART_StopBits_1;		  // we want 1 stop bit (standard)
+	USART_InitStruct.USART_Parity = USART_Parity_No;		  // we don't want a parity bit (standard)
+	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None; // we don't want flow control (standard)
+	
+	USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx; // we want to enable the transmitter and the receiver
+	
+	USART_Init(UART5, &USART_InitStruct);					  // again all the properties are passed to the USART_Init function which takes care of all the bit setting
+	
+	USART_Cmd(UART5, ENABLE);	//Enables USART6
+	
+	USART_ITConfig(UART5, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
+	
 }
 
 void init_USART6(uint32_t baudrate){

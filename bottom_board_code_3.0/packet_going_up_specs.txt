@@ -1,0 +1,9 @@
+
+2 byte - vertical stepper angle
+2 byte - horrizontal stepper angle
+1 byte - all fuses
+2 bytes - all faults from the motor controllers
+2 bytes - lazer measurement tool
+1 byte - voltage sensor(3 bits) ; motor state (2 bits) ; turning foot current (1 bit)
+6 bytes - 3 3-D angles
+
