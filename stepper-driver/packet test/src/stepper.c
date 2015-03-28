@@ -129,8 +129,7 @@ uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
   vertSteps *= (-1 + 2*vertDir);
   
   //Move stepper motors
-  Stepper_Step(horizontal, horzSteps);
-  Stepper_Step(vertical, vertSteps);
+  Stepper_StepTogether(horizontal, vertical, horzSteps, vertSteps);
   
   //Return position of stepper motors
   horzPos = Stepper_GetStep(horizontal);

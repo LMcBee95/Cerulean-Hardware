@@ -65,7 +65,7 @@ int main(void)
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
   /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6 | GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
@@ -89,16 +89,22 @@ int main(void)
   while (1)
   {
     //Step the vertical and vertical stepper 100 steps forward (90 degrees)
-    Stepper_Step(verticalStepper, 100);
-	Stepper_Step(horizontalStepper, 100);
+    //Stepper_Step(verticalStepper, 100);
+	//Stepper_Step(horizontalStepper, 100);
+	Stepper_StepTogether(horizontalStepper, verticalStepper, 100, 50);
 	
 	//Step the vertical and vertical stepper 200 steps backwards (-180 degrees)
-	Stepper_Step(verticalStepper, -200);
-	Stepper_Step(horizontalStepper, -200);
+	//Stepper_Step(verticalStepper, -200);
+	//Stepper_Step(horizontalStepper, -200);
+	Stepper_StepTogether(horizontalStepper, verticalStepper, -200, -100);
 	
-	//Reset both of the steppers to their initial position
-	Stepper_Reset(verticalStepper);
-	Stepper_Reset(horizontalStepper);
+    //Step Back to original Positions
+	//Stepper_Step(verticalStepper, 100);
+	//Stepper_Step(horizontalStepper, 100);
+	Stepper_StepTogether(horizontalStepper, verticalStepper, 100, 50);
+	//Stepper_Enable(horizontalStepper);
+	//Stepper_Enable(verticalStepper);
+	//Stepper_DoubleStep(horizontalStepper, verticalStepper, 100);
     
 	//Disable the steppers to conserve power.  They will stop resisting motion and can be
 	//freely turned by external forces.  The steppers will be automatically enabled again
@@ -108,6 +114,7 @@ int main(void)
 	
     //Wait some time before repeating
 	Delay(0xFFFFFF);
+	Beep(5, GPIOD, GPIO_Pin_15);
   }
 }
 
