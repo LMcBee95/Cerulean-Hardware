@@ -1,6 +1,7 @@
 /****************************************************************************************************************************************
  * Motor Controller Sketch
  * Purdue IEEE ROV 2014
+ * Luke and Ryan McBee
  * 
  * This sketch is used to control a attiny 84 microcontroller used to control a motor.
  * This sketch also dictates how information is sent and received from the motor controllers.
@@ -25,11 +26,11 @@
  *   usePacket -  Uses the array created within readPacket in order to tell the microcontroller a specific task to do
  *
  * Commands:
- *   Control Motor - Sets the speed and direction of the motors spin
- *   STOP - Instantly stops the motor
- *   Request Fault Data - Determines the condition of the motor through two fault sensors and send the data back to the bottom board
- *   Reset H-Bridge - Resets the h-bridge
- *   Send Back Fault Data - The command given to the packet sent back to the bottom board
+ *   Control Motor - 0x01 - Sets the speed and direction of the motors spin
+ *   STOP - 0x02 - Instantly stops the motor
+ *   Request - 0x03 - Fault Data - Determines the condition of the motor through two fault sensors and send the data back to the bottom board
+ *   Reset H-Bridge - 0x04 - Resets the h-bridge
+ *   Send Fault Data - 0x05 - The command given to the packet sent back to the bottom board
  *
  ***************************************************************************************************************************************/
 
@@ -45,7 +46,7 @@ byte usePacket(void);
 
 //Time to allow for read write pin on RS485 to switch states (ms)
 //We chose this value based upon testing delay values between 
-//250 us and 10 s
+//1ms and 3ms
 #define RS485_DELAY_TIME 2
 
 //Time we chose to set the reset pin high (ms)
@@ -59,6 +60,7 @@ byte usePacket(void);
 #define STOP 0x02
 #define REQUEST_FAULT_DATA 0x03
 #define RESET_HBRIDGE 0x04
+#define SEND_FAULT_DATA 0x05
 
 //Pin Numbers
 #define TX 0
@@ -81,7 +83,7 @@ byte receivedPacket[] = {0, 0, 0, 0, 0};
 
 //Serial Protocol from bottom board
 //[start byte, address, command, argument 1, argument 2, check sum, end byte]
-byte returnPacket[] = {0x12, 0x00, 0x05, 0, 0, 0, 0x13};
+byte returnPacket[] = {0x12, 0x00, SEND_FAULT_DATA, 0, 0, 0, 0x13};
 
 //delay to kill if nothing sent in that time
 //40000 is ~1 seconds

@@ -38,16 +38,11 @@ int main(void) {
 	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
 
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
-	  
+	
+	RGBLedPwm(0, 0, 0);
+	
 	while (1)
-	{  
-<<<<<<< HEAD
-		RGBLedPwm(0, 0, 0);
-		
-=======
-		uint16_t j = 10;
-		RGBLedPwm(j, j, j);
+	{
 
->>>>>>> origin/master
 	}
 }
