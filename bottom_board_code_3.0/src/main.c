@@ -41,6 +41,11 @@ int main(void) {
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
 	RGBLedPwm(0, 0, 0);
+<<<<<<< HEAD
+	
+	while (1)
+	{
+=======
 	  
 	while (1)
 	{  
@@ -51,6 +56,7 @@ int main(void) {
 		setServo1Angle(0);
 		
 		Delay(0xffffff);
+>>>>>>> origin/master
 
 	}
 }

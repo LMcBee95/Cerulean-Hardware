@@ -24,7 +24,7 @@
 /***************** CONSTANTS *****************/
 
 /***  Serial Communication ***/
-#define PACKET_SIZE 				16
+#define PACKET_SIZE 				20
 #define SENT_PACKET_SIZE			12
 #define MOTOR_PACKET_SIZE			7
 #define NUMBER_OF_MOTORS			8
@@ -47,7 +47,9 @@
 /*** Laser Measurement Tool ***/
 
 #define LASER_BAUD 					115200
-#define LASER_USART					USART1
+#define LASER_USART					USART1	
+
+#define READ_LASER					(storage[10]) & 0x10
 
 /***  Direct Memory Access ***/
 
@@ -124,6 +126,12 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define LED_5_AF					GPIO_AF_TIM13
 #define LED_5_BANK					GPIOF
 
+#define LED1_VALUE					storage[12]
+#define LED2_VALUE					storage[13]
+#define LED3_VALUE					storage[14]
+#define LED4_VALUE					storage[15]
+#define LED5_VALUE					storage[16]
+
 /*** Turning Foot and Bilge Pump ***/
 
 #define TURN_FOOT_BANK_CLOCK		RCC_AHB1Periph_GPIOA
@@ -140,6 +148,15 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define TURN_FOOT_SOURCE_PIN2		GPIO_PinSource7
 #define BILGE_PUMP_SOURCE_PIN1 		GPIO_PinSource0
 #define BILGE_PUMP_SOURCE_PIN2 		GPIO_PinSource1
+
+#define MAX_BILGE_PUMP_VALUE		155
+#define BILGE_PUMP_VALUE			(storage[10] & 0x04)
+
+#define FOOT_TURNER_VALUE 			storage[9]
+
+/*** Voltage Sesnors ***/
+
+#define READ_VOLTAGES				(storage[10] & 0x08)
 
 /*** Stepper Motor Init***/
 
@@ -203,15 +220,15 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 
 /***************** FUNCTION DECLARATIONS *****************/
 
-void bilgePumpPwm(uint8_t dutyCycle1, uint8_t dutyCycle2, uint32_t period);
+void bilgePumpPwm(uint8_t bilgePumpOn);
 
-void cameraLedPwm(uint8_t dutyCycle,uint8_t dutyCycle2, uint8_t dutyCycle3, uint32_t period);
+void cameraLedPwm(uint8_t led1DutyCycle, uint8_t led2DutyCycle, uint8_t led3DutyCycle, uint8_t led4DutyCycle, uint8_t led5DutyCycle);
 
 uint8_t checksum(uint8_t* packet, uint8_t size);
 
 void convertTBtoBB(uint8_t* top);
 
-void Delay(__IO uint32_t nCount);
+void Delay(__IO uint32_t nCount); 	
 
 void pollMotor(uint8_t address);
 
@@ -230,7 +247,7 @@ void setSteppers(void);
 
 void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2);
 
-void turnFootdPwm(uint8_t dutyCycle1, uint8_t dutyCycle2);
+void turnFootdPwm(uint8_t PWM_IN1, uint8_t PWM_IN2);
 
 void USART2_IRQHandler(void);
 
