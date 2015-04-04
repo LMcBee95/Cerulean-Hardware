@@ -382,7 +382,7 @@ uint8_t handleTopPacket(void) {
                         storage[counter] = received;
                         counter++;
                     } else {
-                        GPIO_ResestBits(GPIOD, GPIO_Pin_12); 
+                        GPIO_ResetBits(GPIOD, GPIO_Pin_12); 
                         return(0);
                     }
                 }
