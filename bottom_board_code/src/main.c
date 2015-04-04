@@ -360,56 +360,49 @@ void resetMotor(uint8_t address)
 
 uint8_t handleTopPacket(void)
 {
-	
-	if((USART2, USART_FLAG_RXNE))
-	{
-		uint8_t received = USART_ReceiveData(USART2);
-		
-		if(0x12 == received )
-		{
-			uint8_t timer = 0;	//Timer used to stop the function from waiting for data if there is an error
-			GPIO_SetBits(GPIOD, GPIO_Pin_12);	//Turns on the green led 
-			uint8_t counter = 1;	//Counter used to count how many bytes we have read in from the top borad
-			while(counter < PACKET_SIZE && timer < 0xFFFF)  //Waits until all 16 bytes are read in. If no data comes then the function will break 
-			//out after a short period of time
-			{
-				if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE)) //if data is received store it in the array storage
-				{
-					received = USART_ReceiveData(USART2);
-					if(received != 0x12)
-					{
-						storage[counter] = received;	//Reads in the data from the buffer into an array
-						counter++;	//Increments the counter
-					}
-					else
-					{
-						return(0);
-					}
-					
-					
-				}
-				GPIO_SetBits(GPIOD, GPIO_Pin_13);
-				timer++;
-			}	
-			if((checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == 0x13))  //Checks the check sum and the end byte
-			{	
-				GPIO_ResetBits(GPIOD, GPIO_Pin_13);
-				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
-				sendPackets();	//Sends the motor controller commands produced by the convert function
-				return(1); //Reading the packet was successful!
-			}
-			else	
-			{
-				
-				return(0);  //Returns 0 if the check sum or end byte were incorrect
-			}
-			
-		}
-		else
-			return(0); 
-	}
-	else
-		return(0);
+
+    if((USART2, USART_FLAG_RXNE)){
+        uint8_t received = USART_ReceiveData(USART2);
+
+        if(0x12 == received ){
+            uint8_t timer = 0;	//Timer used to stop the function from waiting for data if there is an error
+            GPIO_SetBits(GPIOD, GPIO_Pin_12);	//Turns on the green led 
+            uint8_t counter = 1;	//Counter used to count how many bytes we have read in from the top borad
+            while(counter < PACKET_SIZE && timer < 0xFFFF){  //Waits until all 16 bytes are read in. If no data comes then the function will break 
+                //out after a short period of time
+
+                if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE)){ //if data is received store it in the array storage
+
+                    received = USART_ReceiveData(USART2);
+                    if(received != 0x12){
+
+                        storage[counter] = received;	//Reads in the data from the buffer into an array
+                        counter++;	//Increments the counter
+                    }else{
+                        return(0);
+                    }
+                }
+                //				GPIO_SetBits(GPIOD, GPIO_Pin_13);
+                timer++;
+            }	
+            if((checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == 0x13)){  //Checks the check sum and the end byte	
+                GPIO_SetBits(GPIOD, GPIO_Pin_13);
+                convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
+                sendPackets();	//Sends the motor controller commands produced by the convert function
+                return(1); //Reading the packet was successful!
+            }else{
+                GPIO_ResetBits(GPIOD, GPIO_Pin_13);
+                return(0);  //Returns 0 if the check sum or end byte were incorrect
+            }
+
+        }else{
+            GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+            return(0); 
+        }
+    }else{
+        GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+        return(0);
+    }
 }
  
 /*
@@ -529,6 +522,7 @@ int main(void) {
 		}	
 	  
 		GPIO_ResetBits(GPIOD, GPIO_Pin_12);	//Turns off the led 
+        GPIO_ResetBits(GPIOD, GPIO_Pin_12);
 		GPIO_ResetBits(GPIOD, GPIO_Pin_14);		
     }
 	
