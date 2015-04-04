@@ -361,7 +361,7 @@ void resetMotor(uint8_t address)
 uint8_t handleTopPacket(void)
 {
 
-    if((USART2, USART_FLAG_RXNE)){
+    if(USART_GetFlagStatus(USART2, USART_FLAG_RXNE)){
         uint8_t received = USART_ReceiveData(USART2);
 
         if(0x12 == received ){
@@ -522,7 +522,7 @@ int main(void) {
 		}	
 	  
 		GPIO_ResetBits(GPIOD, GPIO_Pin_12);	//Turns off the led 
-        GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+        GPIO_ResetBits(GPIOD, GPIO_Pin_13);
 		GPIO_ResetBits(GPIOD, GPIO_Pin_14);		
     }
 	
