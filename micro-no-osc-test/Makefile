@@ -26,7 +26,7 @@ vpath %.c lib
 
 ##Dependancies and include paths
 
-DEFS = -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx -DHSI_VALUE=16000000  
+DEFS = -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx -DHSE_VALUE=8000000  
 
 MCU = cortex-m4
 MCFLAGS = -mcpu=$(MCU) -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork -std=c99

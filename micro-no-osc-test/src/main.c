@@ -67,30 +67,30 @@ int main(void)
     GPIO_SetBits(GPIOD, GPIO_Pin_13);
     
     /* Insert delay */
-    Delay(0x0FFFFF);
+    Delay(0x7FFFFF);
 
      /* PD12 to be toggled */
     GPIO_SetBits(GPIOD, GPIO_Pin_12);
     
     /* Insert delay */
-    Delay(0x0FFFFF);
+    Delay(0x7FFFFF);
 
      /* PD12 to be toggled */
     GPIO_SetBits(GPIOD, GPIO_Pin_11);
     
     /* Insert delay */
-    Delay(0x0FFFFF);
+    Delay(0x7FFFFF);
  
      /* PD12 to be toggled */
     GPIO_SetBits(GPIOD, GPIO_Pin_10);
     
     /* Insert delay */
-    Delay(0x0FFFFF);
+    Delay(0x7FFFFF);
    
     GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10);
     
     /* Insert delay */
-    Delay(0x0FFFFF);
+    Delay(0x7FFFFF);
   }
 }
 
