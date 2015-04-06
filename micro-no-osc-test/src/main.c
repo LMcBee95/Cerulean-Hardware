@@ -64,25 +64,27 @@ int main(void)
   while (1)
   {
     /* PD12 to be toggled */
-    GPIO_SetBits(GPIOD, GPIO_Pin_13);
+   GPIO_SetBits(GPIOD, GPIO_Pin_10);
     
     /* Insert delay */
     Delay(0x7FFFFF);
 
      /* PD12 to be toggled */
+     GPIO_SetBits(GPIOD, GPIO_Pin_11);
+    
+    /* Insert delay */
+    Delay(0x7FFFFF);
+
+     /* PD12 to be toggled */
+   
     GPIO_SetBits(GPIOD, GPIO_Pin_12);
-    
-    /* Insert delay */
-    Delay(0x7FFFFF);
-
-     /* PD12 to be toggled */
-    GPIO_SetBits(GPIOD, GPIO_Pin_11);
     
     /* Insert delay */
     Delay(0x7FFFFF);
  
      /* PD12 to be toggled */
-    GPIO_SetBits(GPIOD, GPIO_Pin_10);
+   
+      GPIO_SetBits(GPIOD, GPIO_Pin_13);
     
     /* Insert delay */
     Delay(0x7FFFFF);
