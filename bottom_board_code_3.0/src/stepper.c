@@ -36,7 +36,57 @@ Stepper* Stepper_Initialize(
 	return stepper;
 }
 
+void Stepper_Calibrate(Stepper* stepper)
+{
+	stepper -> position = 0;
+}
 
+void Stepper_Destroy(Stepper* stepper)
+{
+	Stepper_Disable(stepper);
+	free(stepper);
+}
+
+//Disable the stepper so it stops holding its position
+void Stepper_Disable(Stepper* stepper)
+{
+	if(STEPPER_ENABLE_INVERTED)
+		GPIO_SetBits(stepper->enableBlock, stepper->enablePin);
+	else
+		GPIO_ResetBits(stepper->enableBlock, stepper->enablePin);
+}
+
+//Turn on the stepper and allow it to hold its position
+void Stepper_Enable(Stepper* stepper)
+{
+	if(STEPPER_ENABLE_INVERTED)
+		GPIO_ResetBits(stepper->enableBlock, stepper->enablePin);
+	else
+		GPIO_SetBits(stepper->enableBlock, stepper->enablePin);
+}
+
+//Get the current step of the stepper
+int Stepper_GetStep(Stepper* stepper)
+{
+	return stepper -> position;
+}
+
+void Stepper_Reset(Stepper* stepper)
+{
+	//Stepper_SetStep(stepper, 0);
+}
+
+//Move the stepper to a certain step
+void Stepper_SetStep(Stepper* stepper, int step)
+{
+	int steps = step - stepper -> position; //Determine number of steps to take
+	
+	steps = steps % NUM_STEPS; //Remove redundant rotation
+	steps += steps < 0 ? NUM_STEPS : 0; //Ensure is not negative
+	steps = steps>NUM_STEPS/2 ? NUM_STEPS/2-steps : steps;
+	//steps = Normalize(steps); //Only rotate 180 degrees or less to get there
+	Stepper_Step(stepper, steps);
+}
 
 //Step a certain number of steps; can be positive or negative
 void Stepper_Step(Stepper* stepper, int steps)
@@ -96,71 +146,7 @@ uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
   return position;  
 }
 
-//Turn on the stepper and allow it to hold its position
-void Stepper_Enable(Stepper* stepper)
-{
-	if(STEPPER_ENABLE_INVERTED)
-		GPIO_ResetBits(stepper->enableBlock, stepper->enablePin);
-	else
-		GPIO_SetBits(stepper->enableBlock, stepper->enablePin);
-}
-
-//Disable the stepper so it stops holding its position
-void Stepper_Disable(Stepper* stepper)
-{
-	if(STEPPER_ENABLE_INVERTED)
-		GPIO_SetBits(stepper->enableBlock, stepper->enablePin);
-	else
-		GPIO_ResetBits(stepper->enableBlock, stepper->enablePin);
-}
-
-void Stepper_Calibrate(Stepper* stepper)
-{
-	stepper -> position = 0;
-}
-
-void Stepper_Reset(Stepper* stepper)
-{
-	//Stepper_SetStep(stepper, 0);
-}
-
-void Stepper_Destroy(Stepper* stepper)
-{
-	Stepper_Disable(stepper);
-	free(stepper);
-}
-
-//Move the stepper to a certain step
-void Stepper_SetStep(Stepper* stepper, int step)
-{
-	int steps = step - stepper -> position; //Determine number of steps to take
-	
-	steps = steps % NUM_STEPS; //Remove redundant rotation
-	steps += steps < 0 ? NUM_STEPS : 0; //Ensure is not negative
-	steps = steps>NUM_STEPS/2 ? NUM_STEPS/2-steps : steps;
-	//steps = Normalize(steps); //Only rotate 180 degrees or less to get there
-	Stepper_Step(stepper, steps);
-}
-
-//Get the current step of the stepper
-int Stepper_GetStep(Stepper* stepper)
-{
-	return stepper -> position;
-}
-
-//Set the stepper to the given angle in tenths of a degree
-void Stepper_SetAngle(Stepper* stepper, int angle)
-{
-	int step = NUM_STEPS * angle / 3600;
-	//Stepper_SetStep(stepper, step);
-}
-
-//Get current angle of the stepper motor in tenths of a degree
-int Stepper_GetAngle(Stepper* stepper)
-{
-	return ((stepper -> position)  * 3600 /  NUM_STEPS);
-}
-
+//STATIC FUNCTION DEFINITIONS
 
 static void Delay(__IO uint32_t nCount)
 {
