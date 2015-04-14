@@ -172,13 +172,16 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define STEPPER_SOURCE_PIN2			GPIO_PinSource15
 
 /*** Stepper Motor Pins ***/
-#define STEPPER_HORIZONTAL_DIR_BANK           GPIOC
+#define STEPPER_STEP_BANK					GPIOB
+#define STEPPER_DIR_ENABLE_BANK					GPIOC
+
+/*#define STEPPER_HORIZONTAL_DIR_BANK           GPIOC
 #define STEPPER_HORIZONTAL_ENABLE_BANK        GPIOC
 #define STEPPER_HORIZONTAL_STEP_BANK          GPIOB
 
 #define STEPPER_VERTICAL_DIR_BANK             GPIOC
 #define STEPPER_VERTICAL_ENABLE_BANK          GPIOC
-#define STEPPER_VERTICAL_STEP_BANK            GPIOB
+#define STEPPER_VERTICAL_STEP_BANK            GPIOB*/
 
 #define STEPPER_HORIZONTAL_DIR_PIN        GPIO_Pin_15
 #define STEPPER_HORIZONTAL_ENABLE_PIN     GPIO_Pin_13
@@ -272,6 +275,8 @@ void init_LEDS(void);
 void init_RGB_led_timers(uint32_t frequency, uint16_t preScaler);
 
 void initialize_servo_timer(void);
+
+void initialize_stepper_pins();
 
 void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler);
 

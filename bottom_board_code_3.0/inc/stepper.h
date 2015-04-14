@@ -12,7 +12,7 @@ typedef struct Stepper_st Stepper;
 
 //CONSTANTS
 #define NUM_STEPS 400       //The number of steps in a full 360 degree rotation
-#define STEP_DELAY 0x01FFFF //The amount of time to delay between steps
+#define STEP_DELAY 0x0FFFFF//0x01FFFF //The amount of time to delay between steps
 #define STEPPER_ENABLE_INVERTED 1   //Whether or not the enable pin is inverted
 
 //STRUCT DEFINITION
@@ -53,6 +53,9 @@ void Stepper_Destroy(Stepper* stepper);
 //that it can be freely turned by external forces.
 void Stepper_Disable(Stepper* stepper);
 
+//Step both of the steppers the given amount of steps, assuming their directions have been set
+void Stepper_DoubleStep(Stepper* stepper1, Stepper* stepper2, int steps);
+
 //Turn on the stepper and allow it to hold its position
 void Stepper_Enable(Stepper* stepper);
 
@@ -65,6 +68,9 @@ int Stepper_GetStep(Stepper* stepper);
 void Stepper_Reset(Stepper* stepper)
 __attribute__((warning("Function has not been tested thoroughly, results not guaranteed.")));
 
+//Set the direction of the stepper based on its polarity and return a positive number of steps
+int Stepper_SetDirection(Stepper* stepper, int steps);
+
 //Move the stepper to a certain position
 void Stepper_SetStep(Stepper* stepper, int step)
 __attribute__((warning("Function has not been tested thoroughly, results not guaranteed.")));
@@ -72,6 +78,9 @@ __attribute__((warning("Function has not been tested thoroughly, results not gua
 //Step a certain number of steps; a positive or negative
 //number indicates direction
 void Stepper_Step(Stepper* stepper, int steps);
+
+//Steps two steppers simultaneously to save time real good
+void Stepper_StepTogether(Stepper* stepper1, Stepper* stepper2, int steps1, int steps2);
 
 //Use byte to control horizontal and vertical steppers, return a uint32_t with
 //   first 16 bytes: horizontal position
