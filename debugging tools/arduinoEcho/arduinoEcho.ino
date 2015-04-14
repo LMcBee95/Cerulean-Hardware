@@ -14,8 +14,8 @@ void setup()
 {
   pinMode(RX,INPUT);
   pinMode(TX,OUTPUT);
-  tinySerial.begin(9600);
-  Serial.begin(9600);     //To communicate with user
+  tinySerial.begin(57600);
+  Serial.begin(57600);     //To communicate with user
 }
 
 void loop()
@@ -23,11 +23,12 @@ void loop()
   char inByte;
   if(Serial.available())
   {
-    tinySerial.write(Serial.read());
+    tinySerial.write((int) Serial.read());
   }
   if(tinySerial.available())
   {
     Serial.print(tinySerial.read());
+    Serial.print('\n');
   }
 }
 
