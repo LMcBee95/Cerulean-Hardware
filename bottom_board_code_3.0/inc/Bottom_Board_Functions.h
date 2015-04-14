@@ -172,10 +172,10 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define STEPPER_SOURCE_PIN2			GPIO_PinSource15
 
 /*** Stepper Motor Pins ***/
-#define STEPPER_STEP_BANK					GPIOB
+#define STEPPER_STEP_BANK						GPIOB
 #define STEPPER_DIR_ENABLE_BANK					GPIOC
 
-/*#define STEPPER_HORIZONTAL_DIR_BANK           GPIOC
+/*#define STEPPER_HORIZONTAL_DIR_BANK         GPIOC
 #define STEPPER_HORIZONTAL_ENABLE_BANK        GPIOC
 #define STEPPER_HORIZONTAL_STEP_BANK          GPIOB
 
@@ -249,6 +249,8 @@ void setServo2Angle(uint8_t angle);
 
 //Use storage packet to set stepper values and write the new stepper positions to the dataUpPacket
 void setSteppers(void);
+
+void setSteppersDebugByte(uint8_t byte);
 
 void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2);
 
