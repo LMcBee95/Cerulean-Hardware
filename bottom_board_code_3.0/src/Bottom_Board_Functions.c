@@ -1007,6 +1007,26 @@ void initialize_servo_timer(void)
 	
 }
 
+void initialize_stepper_pins()
+{
+	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
+
+	GPIO_InitStructure.GPIO_Pin = STEPPER_HORIZONTAL_STEP_PIN | STEPPER_VERTICAL_STEP_PIN;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(STEPPER_STEP_BANK, &GPIO_InitStructure);	//initializes the structure
+	
+	GPIO_InitStructure.GPIO_Pin = STEPPER_HORIZONTAL_DIR_PIN | STEPPER_HORIZONTAL_ENABLE_PIN |
+								  STEPPER_VERTICAL_DIR_PIN | STEPPER_VERTICAL_ENABLE_PIN;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(STEPPER_DIR_ENABLE_BANK, &GPIO_InitStructure);	//initializes the structure
+}
+
 void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM12 and GPIOC clocks
@@ -1068,15 +1088,15 @@ void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 void initialize_stepper_objects(void)
 {
   horizontalStepper = Stepper_Initialize(
-	STEPPER_HORIZONTAL_STEP_BANK, STEPPER_HORIZONTAL_STEP_PIN,
-	STEPPER_HORIZONTAL_DIR_BANK, STEPPER_HORIZONTAL_DIR_PIN,
-	STEPPER_HORIZONTAL_ENABLE_BANK, STEPPER_HORIZONTAL_ENABLE_PIN,
+	STEPPER_STEP_BANK, STEPPER_HORIZONTAL_STEP_PIN,
+	STEPPER_DIR_ENABLE_BANK, STEPPER_HORIZONTAL_DIR_PIN,
+	STEPPER_DIR_ENABLE_BANK, STEPPER_HORIZONTAL_ENABLE_PIN,
 	STEPPER_HORIZONTAL_POLARITY);
   
   verticalStepper = Stepper_Initialize(
-	STEPPER_VERTICAL_STEP_BANK, STEPPER_VERTICAL_STEP_PIN,
-	STEPPER_VERTICAL_DIR_BANK, STEPPER_VERTICAL_DIR_PIN,
-	STEPPER_VERTICAL_ENABLE_BANK, STEPPER_VERTICAL_ENABLE_PIN,
+	STEPPER_STEP_BANK, STEPPER_VERTICAL_STEP_PIN,
+	STEPPER_DIR_ENABLE_BANK, STEPPER_VERTICAL_DIR_PIN,
+	STEPPER_DIR_ENABLE_BANK, STEPPER_VERTICAL_ENABLE_PIN,
 	STEPPER_VERTICAL_POLARITY);
 }
 

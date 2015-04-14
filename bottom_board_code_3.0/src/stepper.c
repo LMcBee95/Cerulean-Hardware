@@ -47,7 +47,6 @@ void Stepper_Destroy(Stepper* stepper)
 	free(stepper);
 }
 
-//Disable the stepper so it stops holding its position
 void Stepper_Disable(Stepper* stepper)
 {
 	if(STEPPER_ENABLE_INVERTED)
@@ -56,7 +55,19 @@ void Stepper_Disable(Stepper* stepper)
 		GPIO_ResetBits(stepper->enableBlock, stepper->enablePin);
 }
 
-//Turn on the stepper and allow it to hold its position
+void Stepper_DoubleStep(Stepper* stepper1, Stepper* stepper2, int steps)
+{
+	int i; //For iteration
+	
+	for(i=0; i<steps; i++) //Assumes that the steppers use the same block
+	{
+		GPIO_SetBits(stepper1->stepBlock, stepper1->stepPin | stepper2->stepPin);
+		Delay(STEP_DELAY);
+		GPIO_ResetBits(stepper1->stepBlock, stepper1->stepPin | stepper2->stepPin);
+		Delay(STEP_DELAY);
+	}
+}
+
 void Stepper_Enable(Stepper* stepper)
 {
 	if(STEPPER_ENABLE_INVERTED)
@@ -65,7 +76,6 @@ void Stepper_Enable(Stepper* stepper)
 		GPIO_SetBits(stepper->enableBlock, stepper->enablePin);
 }
 
-//Get the current step of the stepper
 int Stepper_GetStep(Stepper* stepper)
 {
 	return stepper -> position;
@@ -76,25 +86,9 @@ void Stepper_Reset(Stepper* stepper)
 	//Stepper_SetStep(stepper, 0);
 }
 
-//Move the stepper to a certain step
-void Stepper_SetStep(Stepper* stepper, int step)
+int Stepper_SetDirection(Stepper* stepper, int steps)
 {
-	int steps = step - stepper -> position; //Determine number of steps to take
-	
-	steps = steps % NUM_STEPS; //Remove redundant rotation
-	steps += steps < 0 ? NUM_STEPS : 0; //Ensure is not negative
-	steps = steps>NUM_STEPS/2 ? NUM_STEPS/2-steps : steps;
-	//steps = Normalize(steps); //Only rotate 180 degrees or less to get there
-	Stepper_Step(stepper, steps);
-}
-
-//Step a certain number of steps; can be positive or negative
-void Stepper_Step(Stepper* stepper, int steps)
-{
-	int i; //For iteration
-	Stepper_Enable(stepper);
-	
-	steps *= stepper -> polarity;
+  	steps *= stepper -> polarity;
 	stepper -> position += steps;
 	stepper -> position = Normalize(stepper -> position);
 	
@@ -107,6 +101,26 @@ void Stepper_Step(Stepper* stepper, int steps)
 		GPIO_ResetBits(stepper->dirBlock, stepper->dirPin);
 		steps *= -1;
 	}
+	return steps;
+}
+
+void Stepper_SetStep(Stepper* stepper, int step)
+{
+	int steps = step - stepper -> position; //Determine number of steps to take
+	
+	steps = steps % NUM_STEPS; //Remove redundant rotation
+	steps += steps < 0 ? NUM_STEPS : 0; //Ensure is not negative
+	steps = steps>NUM_STEPS/2 ? NUM_STEPS/2-steps : steps;
+	//steps = Normalize(steps); //Only rotate 180 degrees or less to get there
+	Stepper_Step(stepper, steps);
+}
+
+void Stepper_Step(Stepper* stepper, int steps)
+{
+	int i; //For iteration
+	Stepper_Enable(stepper);
+	
+	steps = Stepper_SetDirection(stepper, steps);
 	
 	for(i=0; i<steps; i++)
 	{
@@ -117,7 +131,29 @@ void Stepper_Step(Stepper* stepper, int steps)
 	}
 }
 
-//Use byte to control horizontal and vertical steppers
+void Stepper_StepTogether(Stepper* stepper1, Stepper* stepper2, int steps1, int steps2)
+{
+  int min;
+  
+  int absSteps1;
+  int absSteps2; //absolute values of the number of steps
+  
+  Stepper_Enable(stepper1);
+  Stepper_Enable(stepper2);
+  
+  absSteps1 = Stepper_SetDirection(stepper1, steps1);
+  absSteps2 = Stepper_SetDirection(stepper2, steps2);
+  
+  steps1 = steps1<0? steps1 + min : steps1 - min;
+  steps2 = steps2<0? steps2 + min : steps2 - min;
+  
+  min = absSteps1<absSteps2 ? absSteps1 : absSteps2; //Find the minimum number of steps
+  Stepper_DoubleStep(stepper1, stepper2, min);
+  if(absSteps1-min>0){Stepper_Step(stepper1, steps1);}
+  if(absSteps2-min>0){Stepper_Step(stepper2, steps2);}
+  
+}
+
 uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
 {
   //Declare return int
@@ -126,18 +162,19 @@ uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
   uint16_t vertPos;
 
   //Split up that byte
-  uint8_t horzDir = byte>>7;          //Horizontal direction
+  uint8_t horzDir = byte>>7&0x01;          //Horizontal direction
   uint8_t vertDir = (byte>>3)&0x01;   //Vertical direction
   uint8_t horzSteps = (byte>>4)&0x07; //Horizontal steps
   uint8_t vertSteps = byte & 0x07;    //Vertical steps
   
   //Convert steps to be positive or negative based on direction
-  horzSteps *= (-1 + 2*horzDir);  //0 is negative 1 is positive
-  vertSteps *= (-1 + 2*vertDir);
+  //horzSteps *= (-1 + 2*horzDir);  //0 is negative 1 is positive
+  //vertSteps *= (-1 + 2*vertDir);
+  int correctedHorzSteps = horzDir==1 ? horzSteps : -horzSteps;
+  int correctedVertSteps = vertDir==1 ? vertSteps : -vertSteps;
   
   //Move stepper motors
-  Stepper_Step(horizontal, horzSteps);
-  Stepper_Step(vertical, vertSteps);
+  Stepper_StepTogether(horizontal, vertical, correctedHorzSteps, correctedVertSteps);
   
   //Return position of stepper motors
   horzPos = Stepper_GetStep(horizontal);
@@ -146,7 +183,7 @@ uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
   return position;  
 }
 
-//STATIC FUNCTION DEFINITIONS
+//Define static functions
 
 static void Delay(__IO uint32_t nCount)
 {
