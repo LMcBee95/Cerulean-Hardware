@@ -80,6 +80,7 @@ void setup()
   
   //Begin serial communication
   mySerial.begin(BAUD_RATE);
+  Serial.begin(BAUD_RATE);
   digitalWrite(LED, HIGH); 
 
 }
@@ -112,7 +113,7 @@ byte sendPacket(void) {
        sendPacket[5] = crc8(sendPacket, 1, 5);
        delay(RS485_DELAY_TIME);
        for(int i = 0; i < 7; i++) {
-         mySerial.write(returnPacket[i]);
+         Serial.write(returnPacket[i]);
        }
     
        return 1;
