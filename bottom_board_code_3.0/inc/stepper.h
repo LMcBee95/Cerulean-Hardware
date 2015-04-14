@@ -56,9 +56,6 @@ void Stepper_Disable(Stepper* stepper);
 //Turn on the stepper and allow it to hold its position
 void Stepper_Enable(Stepper* stepper);
 
-//Get current angle of the stepper motor in tenths of a degree
-int Stepper_GetAngle(Stepper* stepper);
-
 //Get the current step position of the stepper
 //Will return a number between -199 and 200
 //0 steps is considered forward
@@ -66,11 +63,6 @@ int Stepper_GetStep(Stepper* stepper);
 
 //Move the stepper back to its zero position
 void Stepper_Reset(Stepper* stepper)
-__attribute__((warning("Function has not been tested thoroughly, results not guaranteed.")));
-
-//Set the stepper to the given angle in tenths of a degree
-// 0 degrees is forward
-void Stepper_SetAngle(Stepper* stepper, int angle)
 __attribute__((warning("Function has not been tested thoroughly, results not guaranteed.")));
 
 //Move the stepper to a certain position
