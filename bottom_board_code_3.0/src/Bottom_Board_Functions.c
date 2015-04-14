@@ -151,6 +151,8 @@ void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBl
 
 void sendDataUp(void)
 {
+
+	//RGBLedPwm(255, 255, 255);
 	dataGoingUp[0] = START_BYTE;
 	dataGoingUp[SENT_PACKET_SIZE - 1] = END_BYTE;
 	dataGoingUp[SENT_PACKET_SIZE - 2] = checksum(dataGoingUp, SENT_PACKET_SIZE - 3);
@@ -452,6 +454,7 @@ void USART6_IRQHandler(void) {
 	 //Check if interrupt was because data is received
     if (USART_GetITStatus(USART6, USART_IT_RXNE)) 
 	{	
+
 		received = USART_ReceiveData(USART6);
 	
 		if(received == START_BYTE)
@@ -891,7 +894,7 @@ void init_IRQ(void)
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 3;  //sub priority assignment
 	NVIC_Init(&NVIC_InitStruct);
 	
-	//Initiate Interrupt Request for UART  channel 5
+	//Initiate Interrupt Request for USART  channel 1
 	NVIC_InitStruct.NVIC_IRQChannel = UART5_IRQn;  //sets the handler for USART1
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
@@ -1544,3 +1547,4 @@ void init_USART6(uint32_t baudrate){
 	
 	USART_ITConfig(USART6, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 }
+
