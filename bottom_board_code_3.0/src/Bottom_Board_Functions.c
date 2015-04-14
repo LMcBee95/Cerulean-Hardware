@@ -188,6 +188,11 @@ void setSteppers(void)
   dataGoingUp[STEPPER_UP_BYTE] = angles;      //Write angle data to upgoing packet
 }
 
+void setSteppersDebugByte(uint8_t byte)
+{
+	storage[STEPPER_DOWN_BYTE] = byte;
+}
+
 void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2)
 {
 	TIM12->CCR1 = (GENERAL_PWM_PERIOD) * dutyCycle1 / 255.0;	

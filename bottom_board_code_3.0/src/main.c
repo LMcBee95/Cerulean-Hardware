@@ -33,7 +33,9 @@ int main(void) {
 	
 	initialize_led_timers(LED_PWM_FREQUENCY, 1);
 	initialize_timer3(100000, 1);
-	initialize_stepper_timer(100000, 1);
+	//initialize_stepper_timer(100000, 1);
+	initialize_stepper_objects();
+	initialize_stepper_pins();
 
 	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
 	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
@@ -41,20 +43,12 @@ int main(void) {
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
 	RGBLedPwm(0, 0, 0);
-	
-	while (1)
-	{
-	  
+	 
 	while (1)
 	{  
-		GPIO_SetBits(GPIOD, GPIO_Pin_10);
-		
-		Delay(0xffffff);
-		
-		GPIO_ResetBits(GPIOD, GPIO_Pin_10);
-		
-		Delay(0xffffff);
-
+		setSteppersDebugByte(0xF0);
+		setSteppers();
+		setSteppersDebugByte(0x70);
+		setSteppers();
 	}
-}
 }
