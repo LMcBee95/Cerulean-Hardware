@@ -5,7 +5,7 @@ int VSENSE3 = 1;
 int CURR_OUT = 4;
 
 int WATER_CONTROL = 0;
-int PWM1 = 7;
+int PWM1 = 5;
 int PWM2 = 6;
 int LED_PIN = 8;
 
@@ -27,25 +27,25 @@ void update_led(){
 }
 
 void loop(){
-//  analogWrite(PWM1,0);
-//  for(int i=0;i<255;i++){
-//    analogWrite(PWM2,i);
-//    update_led();
-//    delay(20);
-//}
-//  delay(2000);
-//  analogWrite(PWM2,0);
-//
-//  for(int i=0;i<255;i++){
-//    analogWrite(PWM1,i);
-//    update_led();
-//    delay(20);
-//}
-//  delay(1000);
-//
+  analogWrite(PWM1,0);
+  for(int i=0;i<255;i++){
+    analogWrite(PWM2,i);
+    update_led();
+   delay(20);
+}
+  delay(2000);
+  analogWrite(PWM2,0);
 
-digitalWrite(WATER_CONTROL,HIGH);
-delay(1000);
-digitalWrite(WATER_CONTROL,LOW);
-delay(1000);
+  for(int i=0;i<255;i++){
+    analogWrite(PWM1,i);
+    update_led();
+    delay(20);
+}
+  delay(1000);
+
+
+//digitalWrite(WATER_CONTROL,HIGH);
+//delay(1000);
+//digitalWrite(WATER_CONTROL,LOW);
+//delay(1000);
 }

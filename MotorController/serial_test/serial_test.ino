@@ -27,8 +27,6 @@ void setup()
 	
 	//Puts mock data into the packet
 	
-        topPacket[16] = 1;
-	topPacket[17] = 1;
 	topPacket[1] = 10;
 	topPacket[2] = 20;
 	topPacket[3] = 30; 
@@ -67,13 +65,8 @@ void sendPacket(void)
 	
 	void loop()
 	{
-<<<<<<< HEAD
 	  sendPacket();
-	  delay(1000);
-=======
-			sendPacket();
-		        delay(200);
->>>>>>> origin/master
+	  delay(500);
 		
 	}
 
