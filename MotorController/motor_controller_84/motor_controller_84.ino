@@ -31,6 +31,7 @@
  *   Request - 0x03 - Fault Data - Determines the condition of the motor through two fault sensors and send the data back to the bottom board
  *   Reset H-Bridge - 0x04 - Resets the h-bridge
  *   Send Fault Data - 0x05 - The command given to the packet sent back to the bottom board
+ *   Blink LED - 0x06 - This command makes the led of the motorcontroller turn on
  *
  ***************************************************************************************************************************************/
 
@@ -61,6 +62,7 @@ byte usePacket(void);
 #define REQUEST_FAULT_DATA 0x03
 #define RESET_HBRIDGE 0x04
 #define SEND_FAULT_DATA 0x05
+#define LED_ON 0x06
 
 //Pin Numbers
 #define TX 0
@@ -260,6 +262,22 @@ byte usePacket(void)
     delay(RESET_DELAY_TIME);
     digitalWrite(RESET, LOW);
     return 1;
+   }
+   else if(receivedPacket[1] == LED_ON)
+   {
+     
+     digitalWrite(LED, HIGH);
+     delay(250);
+     digitalWrite(LED, LOW);
+     delay(250);
+     digitalWrite(LED, HIGH);
+     delay(250);
+     digitalWrite(LED, LOW);
+     delay(250);
+     digitalWrite(LED, HIGH);
+     delay(250);
+     digitalWrite(LED, LOW);
+     delay(250);
    }
    else 
      return 0; //Undefined Motor Command
