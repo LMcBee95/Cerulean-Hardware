@@ -2,7 +2,7 @@
 
 //function declarations
 byte crc8(const byte *packet);
-void sendPackets();
+void sendPackets(int command);
 
 byte readPacket(void);
 byte usePacket(void);
@@ -57,6 +57,8 @@ byte motor8[] = {0x12, 0x08, CONTROL_MOTOR, 1, 127, 0, 0x013};
 
 SoftwareSerial mySerial(RX, TX);
 
+int command = 0x01;
+
 void setup()
 {
   //Pin Definitions
@@ -84,8 +86,10 @@ void setup()
 
 void loop()
 { 
-  
-  sendPackets();
+  command = 0x01;
+  sendPackets(command);
+  command = 0x06;
+  sendPackets(command);
   
 }
 
@@ -106,13 +110,13 @@ byte crc8(const byte *packet, const byte pos_first_byte, const byte num_bytes_da
   return crc;
 }
 
-void sendPackets()
+void sendPackets(int command)
 {
   
  motor1[5] = crc8(motor1, 1, 4);
  mySerial.write(motor1[0]);
  mySerial.write(motor1[1]);
- mySerial.write(motor1[2]);
+ mySerial.write(command);
  mySerial.write(motor1[3]);
  mySerial.write(motor1[4]);
  mySerial.write(motor1[5]);
@@ -123,7 +127,7 @@ void sendPackets()
  motor2[5] = crc8(motor2, 1, 4);
  mySerial.write(motor2[0]);
  mySerial.write(motor2[1]);
- mySerial.write(motor2[2]);
+ mySerial.write(command);
  mySerial.write(motor2[3]);
  mySerial.write(motor2[4]);
  mySerial.write(motor2[5]);
@@ -134,7 +138,7 @@ void sendPackets()
  motor3[5] = crc8(motor3, 1, 4);
  mySerial.write(motor3[0]);
  mySerial.write(motor3[1]);
- mySerial.write(motor3[2]);
+ mySerial.write(command);
  mySerial.write(motor3[3]);
  mySerial.write(motor3[4]);
  mySerial.write(motor3[5]);
@@ -145,7 +149,7 @@ void sendPackets()
  motor4[5] = crc8(motor4, 1, 4);
  mySerial.write(motor4[0]);
  mySerial.write(motor4[1]);
- mySerial.write(motor4[2]);
+ mySerial.write(command);
  mySerial.write(motor4[3]);
  mySerial.write(motor4[4]);
  mySerial.write(motor4[5]);
@@ -156,7 +160,7 @@ void sendPackets()
  motor5[5] = crc8(motor5, 1, 4);
  mySerial.write(motor5[0]);
  mySerial.write(motor5[1]);
- mySerial.write(motor5[2]);
+ mySerial.write(command);
  mySerial.write(motor5[3]);
  mySerial.write(motor5[4]);
  mySerial.write(motor5[5]);
@@ -167,7 +171,7 @@ void sendPackets()
  motor6[5] = crc8(motor6, 1, 4);
  mySerial.write(motor6[0]);
  mySerial.write(motor6[1]);
- mySerial.write(motor6[2]);
+ mySerial.write(command);
  mySerial.write(motor6[3]);
  mySerial.write(motor6[4]);
  mySerial.write(motor6[5]);
@@ -178,7 +182,7 @@ void sendPackets()
  motor7[5] = crc8(motor7, 1, 4);
  mySerial.write(motor7[0]);
  mySerial.write(motor7[1]);
- mySerial.write(motor7[2]);
+ mySerial.write(command);
  mySerial.write(motor7[3]);
  mySerial.write(motor7[4]);
  mySerial.write(motor7[5]);
@@ -189,7 +193,7 @@ void sendPackets()
  motor8[5] = crc8(motor8, 1, 4);
  mySerial.write(motor8[0]);
  mySerial.write(motor8[1]);
- mySerial.write(motor8[2]);
+ mySerial.write(command);
  mySerial.write(motor8[3]);
  mySerial.write(motor8[4]);
  mySerial.write(motor8[5]);
