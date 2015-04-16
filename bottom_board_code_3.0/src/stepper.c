@@ -31,6 +31,10 @@ Stepper* Stepper_Initialize(
 	stepper -> polarity = polarity;
 	stepper -> position = 0;
 	
+	stepper -> ticksSinceLastChange = 0;
+	stepper -> stepPinPolarity = 0;
+	stepper -> stepBuffer = 0;
+	
 	Stepper_Disable(stepper);
 	
 	return stepper;
@@ -119,16 +123,17 @@ void Stepper_Step(Stepper* stepper, int steps)
 {
 	int i; //For iteration
 	Stepper_Enable(stepper);
+	stepper->stepBuffer += steps;
 	
-	steps = Stepper_SetDirection(stepper, steps);
+	Stepper_SetDirection(stepper, stepper->stepBuffer);
 	
-	for(i=0; i<steps; i++)
+	/*for(i=0; i<steps; i++)
 	{
 		GPIO_SetBits(stepper->stepBlock, stepper->stepPin);
 		Delay(STEP_DELAY);
 		GPIO_ResetBits(stepper->stepBlock, stepper->stepPin);
 		Delay(STEP_DELAY);
-	}
+	}*/
 }
 
 void Stepper_StepTogether(Stepper* stepper1, Stepper* stepper2, int steps1, int steps2)
@@ -174,13 +179,41 @@ uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
   int correctedVertSteps = vertDir==1 ? vertSteps : -vertSteps;
   
   //Move stepper motors
-  Stepper_StepTogether(horizontal, vertical, correctedHorzSteps, correctedVertSteps);
+  //Stepper_StepTogether(horizontal, vertical, correctedHorzSteps, correctedVertSteps);
+  Stepper_Step(horizontal, correctedHorzSteps);
+  Stepper_Step(vertical, correctedVertSteps);
   
   //Return position of stepper motors
   horzPos = Stepper_GetStep(horizontal);
   vertPos = Stepper_GetStep(vertical);
   position = horzPos<<16 + vertPos;
   return position;  
+}
+
+void Stepper_Update(Stepper* stepper)
+{
+	if(stepper->ticksSinceLastChange >= TICKS_PER_STEP)
+	{
+		stepper->ticksSinceLastChange=0;
+		if(stepper->stepBuffer!=0)
+		{
+			if(stepper->stepPinPolarity==1)
+			{
+				stepper->stepPinPolarity=0;
+				if (stepper->stepBuffer < 0)
+					stepper->stepBuffer++;
+				else
+					stepper->stepBuffer--;
+				GPIO_ResetBits(stepper->stepBlock,stepper->stepPin);
+			}
+			else
+			{
+				stepper->stepPinPolarity=1;
+				GPIO_SetBits(stepper->stepBlock,stepper->stepPin);
+			}
+		}
+	}
+	stepper->ticksSinceLastChange++;
 }
 
 //Define static functions
@@ -191,6 +224,7 @@ static void Delay(__IO uint32_t nCount)
   {
   }
 }
+
 
 static int Normalize(int steps)
 {

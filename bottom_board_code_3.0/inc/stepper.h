@@ -12,14 +12,18 @@ typedef struct Stepper_st Stepper;
 
 //CONSTANTS
 #define NUM_STEPS 400       //The number of steps in a full 360 degree rotation
+#define TICKS_PER_STEP 30 //The number of milliseconds to elapse before changing the state of the stepper
 #define STEP_DELAY 0x0FFFFF//0x01FFFF //The amount of time to delay between steps
 #define STEPPER_ENABLE_INVERTED 1   //Whether or not the enable pin is inverted
 
 //STRUCT DEFINITION
 struct Stepper_st{
-	int polarity; //The polarity of the stepper
-	int position; //The current position
-	int angle;
+	int polarity;   //The polarity of the stepper
+	int position;   //The current position
+	int stepBuffer; //Steps that need to happen but have not yet occurred
+	int ticksSinceLastChange; //The number of ticks since the last change
+	int stepPinPolarity;      //Whether or not the step pin is high or low
+	
 	GPIO_TypeDef* stepBlock;
 	uint16_t stepPin;
 	
@@ -81,6 +85,9 @@ void Stepper_Step(Stepper* stepper, int steps);
 
 //Steps two steppers simultaneously to save time real good
 void Stepper_StepTogether(Stepper* stepper1, Stepper* stepper2, int steps1, int steps2);
+
+//Update the stepper, step any pending steps that need to occur
+void Stepper_Update(Stepper* stepper);
 
 //Use byte to control horizontal and vertical steppers, return a uint32_t with
 //   first 16 bytes: horizontal position

@@ -5,6 +5,9 @@
 /******************** Global Variables ********************/
 
 /*** Serial Communication ***/
+int deleteMe=0;
+int ledPower=0;
+
 
 uint8_t pollingMotors = 0;  //stores a 0 if we are not polling the motors and a 1 if the motors are being polled
 uint8_t notPolledCounter = 0;  //stores how many times the bottom board received a top board packet before it received the poll response from the motor controllers
@@ -207,7 +210,15 @@ void TIM5_IRQHandler(void)
  {
 	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	time++; //Updates the current time that the program has been running
+
+	if(verticalStepper->stepBuffer==0 && horizontalStepper->stepBuffer==0)
+	{
+		setSteppers();
+	}
+	Stepper_Update(verticalStepper);
+	Stepper_Update(horizontalStepper);
  }
+
 }
 
 void turnFootdPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
