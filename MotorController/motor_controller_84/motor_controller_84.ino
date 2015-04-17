@@ -1,5 +1,5 @@
-/****************************************************************************************************************************************
- * Motor Controller Sketch
+
+tor Controller Sketch
  * Purdue IEEE ROV 2014
  * Luke and Ryan McBee
  * 
@@ -31,7 +31,6 @@
  *   Request - 0x03 - Fault Data - Determines the condition of the motor through two fault sensors and send the data back to the bottom board
  *   Reset H-Bridge - 0x04 - Resets the h-bridge
  *   Send Fault Data - 0x05 - The command given to the packet sent back to the bottom board
- *   Blink LED - 0x06 - This command makes the led of the motorcontroller turn on
  *
  ***************************************************************************************************************************************/
 
@@ -41,7 +40,6 @@
 byte crc8(const byte *packet);
 byte readPacket(void);
 byte usePacket(void);
-void blinkLED(void);
 
 //Sets what baud rate we are opperating at
 #define BAUD_RATE 57600
@@ -55,7 +53,7 @@ void blinkLED(void);
 #define RESET_DELAY_TIME 10
 
 //the address of the motor controller
-#define ADDRESS 0x02                                                                                                                                                                                                                       
+#define ADDRESS 0x01                                                                                                                                                                                                                      
 
 //different commands of the motor controller
 #define CONTROL_MOTOR 0x01
@@ -63,7 +61,6 @@ void blinkLED(void);
 #define REQUEST_FAULT_DATA 0x03
 #define RESET_HBRIDGE 0x04
 #define SEND_FAULT_DATA 0x05
-#define LED_ON 0x06
 
 //Pin Numbers
 #define TX 0
@@ -115,10 +112,6 @@ void setup()
   
   //Begin serial communication
   mySerial.begin(BAUD_RATE);
-
-  //Thruster initialization blink
-  blinkLED();
-
  
   digitalWrite(LED, LOW); 
 
@@ -268,25 +261,9 @@ byte usePacket(void)
     digitalWrite(RESET, LOW);
     return 1;
    }
-   else if(receivedPacket[1] == LED_ON)
-   {
-
-     
-   }
    else 
      return 0; //Undefined Motor Command
  } 
  else
    return 0; //Motor Address Was Incorrectu
-}
-
-void blinkLED(void){
-
-	   for(int i=0;i<5;i++){
-		   digitalWrite(LED,HIGH);
-		   delay(100);
-		   digitalWrite(LED,LOW);
-		   delay(100)
-	   }
-
 }
