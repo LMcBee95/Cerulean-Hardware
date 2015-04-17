@@ -5,7 +5,7 @@ BUILDDIR=build
 
 LIBPATH=../Libraries
 
-SRC = main.c system_stm32f4xx.c
+SRC = main.c system_stm32f4xx.c 
 
 ##Startup File
 STARTUP = lib/startup_stm32f4xx.s
@@ -109,7 +109,7 @@ burn:
 	st-flash write $(BUILDDIR)/$(PROJ_NAME).bin 0x8000000
 
 dfu:
-	dfu-util -a 0 --dfuse-address 0x08000000 -D $(BUILDDIR)/$(PROJ_NAME).bin
+	dfu-util -a 0 -s 0x08000000 -D $(BUILDDIR)/$(PROJ_NAME).bin
 
 proj: $(PROJ_NAME).elf
 
