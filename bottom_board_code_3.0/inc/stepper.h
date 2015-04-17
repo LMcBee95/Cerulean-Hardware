@@ -12,7 +12,8 @@ typedef struct Stepper_st Stepper;
 
 //CONSTANTS
 #define NUM_STEPS 400       //The number of steps in a full 360 degree rotation
-#define TICKS_PER_STEP 30 //The number of milliseconds to elapse before changing the state of the stepper
+#define TICKS_PER_STEP 1
+ //The number of milliseconds to elapse before changing the state of the stepper
 #define STEP_DELAY 0x0FFFFF//0x01FFFF //The amount of time to delay between steps
 #define STEPPER_ENABLE_INVERTED 1   //Whether or not the enable pin is inverted
 
