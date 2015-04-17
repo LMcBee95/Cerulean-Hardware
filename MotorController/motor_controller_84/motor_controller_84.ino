@@ -41,6 +41,7 @@
 byte crc8(const byte *packet);
 byte readPacket(void);
 byte usePacket(void);
+void blinkLED(void);
 
 //Sets what baud rate we are opperating at
 #define BAUD_RATE 57600
@@ -114,6 +115,10 @@ void setup()
   
   //Begin serial communication
   mySerial.begin(BAUD_RATE);
+
+  //Thruster initialization blink
+  blinkLED();
+
  
   digitalWrite(LED, LOW); 
 
@@ -265,23 +270,23 @@ byte usePacket(void)
    }
    else if(receivedPacket[1] == LED_ON)
    {
+
      
-     digitalWrite(LED, HIGH);
-     delay(250);
-     digitalWrite(LED, LOW);
-     delay(250);
-     digitalWrite(LED, HIGH);
-     delay(250);
-     digitalWrite(LED, LOW);
-     delay(250);
-     digitalWrite(LED, HIGH);
-     delay(250);
-     digitalWrite(LED, LOW);
-     delay(250);
    }
    else 
      return 0; //Undefined Motor Command
  } 
  else
    return 0; //Motor Address Was Incorrectu
+}
+
+void blinkLED(void){
+
+	   for(int i=0;i<5;i++){
+		   digitalWrite(LED,HIGH);
+		   delay(100);
+		   digitalWrite(LED,LOW);
+		   delay(100)
+	   }
+
 }
