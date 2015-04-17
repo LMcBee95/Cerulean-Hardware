@@ -5,7 +5,7 @@ BUILDDIR=build
 
 LIBPATH=../Libraries
 
-SRC = main.c stm32f4_discovery.c system_stm32f4xx.c Bottom_Board_Functions.c Stepper.c
+SRC = main.c system_stm32f4xx.c system_stm32f4xx.c Bottom_Board_Functions.c Stepper.c
 
 ##Startup File
 STARTUP = lib/startup_stm32f4xx.s
@@ -26,7 +26,7 @@ vpath %.c lib
 
 ##Dependancies and include paths
 
-DEFS = -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx -DUSE_STM324xG_EVAL -DMANGUSTA_DISCOVERY -DUSE_USB_OTG_FS -DHSE_VALUE=8000000
+DEFS = -DUSE_STDPERIPH_DRIVER -DSTM32F40_41xxx -DHSE_VALUE=8000000  
 
 MCU = cortex-m4
 MCFLAGS = -mcpu=$(MCU) -mthumb -mlittle-endian -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb-interwork -std=c99
@@ -92,7 +92,7 @@ SRC += \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_syscfg.c \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.c \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_usart.c \
-  $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_wwdg.c
+  $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_wwdg.c	
 
 
 OBJDIR = ./$(BUILDDIR)
@@ -108,12 +108,16 @@ all: proj
 burn:
 	st-flash write $(BUILDDIR)/$(PROJ_NAME).bin 0x8000000
 
+dfu:
+	dfu-util -a 0 --dfuse-address 0x08000000 -D $(BUILDDIR)/$(PROJ_NAME).bin
+
 proj: $(PROJ_NAME).elf
 
 $(PROJ_NAME).elf: $(SRC) $(STARTUP)
 	$(CC) $(CFLAGS) $^ -lm -lc -lnosys -o $(BUILDDIR)/$@
 	$(CP) -O binary $(BUILDDIR)/$(PROJ_NAME).elf $(BUILDDIR)/$(PROJ_NAME).bin
+	$(CP) -O ihex $(BUILDDIR)/$(PROJ_NAME).elf $(BUILDDIR)/$(PROJ_NAME).hex
 
 clean:
 	rm -f Startup.lst  $(BUILDDIR)/$(PROJ_NAME)  $(BUILDDIR)/$(PROJ_NAME).lst $(BUILDDIR)/$(OBJ) $(AUTOGEN)  $(BUILDDIR)/$(PROJ_NAME).out $(BUILDDIR)/$(PROJ_NAME).map \
-	 $(BUILDDIR)/$(PROJ_NAME).dmp  $(BUILDDIR)/$(PROJ_NAME).elf $(BUILDDIR)/$(PROJ_NAME).bin
+	 $(BUILDDIR)/$(PROJ_NAME).dmp  $(BUILDDIR)/$(PROJ_NAME).elf $(BUILDDIR)/$(PROJ_NAME).bin $(BUILDDIR)/$(PROJ_NAME).hex

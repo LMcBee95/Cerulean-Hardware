@@ -22,7 +22,7 @@ int main(void) {
 	init_DMA_ADC1(ADC1ConvertedValue, NUM_DMA_ADC1_CONVERSIONS); //the function does not actually use the array address yet
 	init_DMA_ADC3(ADC3ConvertedValue, NUM_DMA_ADC3_CONVERSIONS);  //the function does not actually use the array address yet
 	init_IRQ();
-	//init_LEDS();
+	init_LEDS();
 	init_RGB_led_timers(100000, 1);
 	
 	initialize_servo_timer();
@@ -41,22 +41,20 @@ int main(void) {
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
 	RGBLedPwm(0, 0, 0);
-<<<<<<< HEAD
 	
 	while (1)
 	{
-=======
 	  
 	while (1)
 	{  
-		setServo1Angle(125);
+		GPIO_SetBits(GPIOD, GPIO_Pin_10);
 		
 		Delay(0xffffff);
 		
-		setServo1Angle(0);
+		GPIO_ResetBits(GPIOD, GPIO_Pin_10);
 		
 		Delay(0xffffff);
->>>>>>> origin/master
 
 	}
+}
 }

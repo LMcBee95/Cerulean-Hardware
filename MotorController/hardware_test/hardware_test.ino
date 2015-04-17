@@ -46,17 +46,15 @@ void loop(){
   digitalWrite(DIR_PIN,HIGH);
   analogWrite(PWM_PIN,100);
   delay(1000);
-  analogWrite(PWM_PIN,150);
-delay(1000);
-  analogWrite(PWM_PIN,200);
+  analogWrite(PWM_PIN,0);
   delay(1000);
+  check_fault();
   digitalWrite(DIR_PIN,LOW);
   analogWrite(PWM_PIN,100);
   delay(1000);
-  analogWrite(PWM_PIN,150);
-delay(1000);
-  analogWrite(PWM_PIN,200);
+  analogWrite(PWM_PIN,0);
   delay(1000);
+  check_fault();
 
 
 }

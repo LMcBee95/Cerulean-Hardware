@@ -217,6 +217,8 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define GENERAL_PWM_PRESCALER		1
 #define GENERAL_PWM_PERIOD			((84000000 * GENERAL_PWM_PRESCALER) / GENERAL_PWM_FREQUENCY)	
 
+uint32_t time = 0; //Keeps track of the number of ms that the program has been running for (for time update look at TIM5_IRQHandler)
+
 
 /***************** FUNCTION DECLARATIONS *****************/
 
@@ -247,6 +249,8 @@ void setSteppers(void);
 
 void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2);
 
+void TIM1_UP_TIM10_IRQHandler(void);
+
 void turnFootdPwm(uint8_t PWM_IN1, uint8_t PWM_IN2);
 
 void USART2_IRQHandler(void);
@@ -274,6 +278,8 @@ void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler);
 void initialize_stepper_objects(void);
 
 void initialize_timer3(uint32_t frequency, uint16_t preScaler);
+
+void initialize_timer5(void);
 
 void init_USART1(uint32_t baudrate);
 

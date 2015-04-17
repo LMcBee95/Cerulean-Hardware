@@ -149,10 +149,8 @@ void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBl
 
 void sendDataUp(void)
 {
-<<<<<<< HEAD
-=======
+
 	//RGBLedPwm(255, 255, 255);
->>>>>>> origin/master
 	dataGoingUp[0] = START_BYTE;
 	dataGoingUp[SENT_PACKET_SIZE - 1] = END_BYTE;
 	dataGoingUp[SENT_PACKET_SIZE - 2] = checksum(dataGoingUp, SENT_PACKET_SIZE - 3);
@@ -327,12 +325,9 @@ void USART6_IRQHandler(void) {
 	 //Check if interrupt was because data is received
     if (USART_GetITStatus(USART6, USART_IT_RXNE)) 
 	{	
-<<<<<<< HEAD
-		received = USART_ReceiveData(USART2);
-=======
+
 		received = USART_ReceiveData(USART6);
 	
->>>>>>> origin/master
 		if(received == START_BYTE)
 		{
 			storage[counter] = received;
@@ -389,12 +384,7 @@ void USART6_IRQHandler(void) {
 				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
 				{
-<<<<<<< HEAD
-					
-=======
-					//RED_LED_OFF
-					//ORANGE_LED_OFF
->>>>>>> origin/master
+
 					
 					sendPackets();	//Sends the motor controller commands produced by the convert function
 					pollCounter++;
@@ -789,7 +779,7 @@ void init_LEDS(void)
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
 	/* Configures the LEDS*/
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11| GPIO_Pin_12| GPIO_Pin_13;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
