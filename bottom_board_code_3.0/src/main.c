@@ -34,6 +34,8 @@ int main(void) {
 	initialize_led_timers(LED_PWM_FREQUENCY, 1);
 	initialize_timer3(100000, 1);
 	initialize_stepper_timer(100000, 1);
+	initialize_claw1_timer(100000, 1);
+	initialize_claw2_timer(100000, 1);
 
 	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
 	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
@@ -42,19 +44,20 @@ int main(void) {
 	
 	RGBLedPwm(0, 0, 0);
 	
-	while (1)
-	{
 	  
 	while (1)
 	{  
+		clawPwm(255, 255);
+		RGBLedPwm(255, 255, 255);
 		GPIO_SetBits(GPIOD, GPIO_Pin_10);
 		
 		Delay(0xffffff);
 		
 		GPIO_ResetBits(GPIOD, GPIO_Pin_10);
+		RGBLedPwm(10, 10, 10);
+		clawPwm(0, 0);
 		
 		Delay(0xffffff);
 
 	}
-}
 }
