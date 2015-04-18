@@ -213,12 +213,14 @@ void TIM5_IRQHandler(void)
 
 	if(time%2000==0 && time%4000==0)
 	{
+		RGBLedPwm(255,255,255);
 		setSteppersDebugByte(0xFF);
 		for(i=0;i<14; i++)
 			setSteppers();
 	}
 	if(time%2000==0 && time%4000!=0)
 	{
+		RGBLedPwm(0,0,0);
 		setSteppersDebugByte(0x77);
 		for(i=0;i<14;i++)
 			setSteppers();
