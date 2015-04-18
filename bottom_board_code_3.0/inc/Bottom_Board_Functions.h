@@ -217,6 +217,12 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define GENERAL_PWM_PRESCALER		1
 #define GENERAL_PWM_PERIOD			((84000000 * GENERAL_PWM_PRESCALER) / GENERAL_PWM_FREQUENCY)	
 
+<<<<<<< HEAD
+=======
+//uint32_t time = 0; //Keeps track of the number of ms that the program has been running for (for time update look at TIM5_IRQHandler)
+
+
+>>>>>>> origin/master
 /***************** FUNCTION DECLARATIONS *****************/
 
 void bilgePumpPwm(uint8_t bilgePumpOn);
@@ -224,6 +230,8 @@ void bilgePumpPwm(uint8_t bilgePumpOn);
 void cameraLedPwm(uint8_t led1DutyCycle, uint8_t led2DutyCycle, uint8_t led3DutyCycle, uint8_t led4DutyCycle, uint8_t led5DutyCycle);
 
 uint8_t checksum(uint8_t* packet, uint8_t size);
+
+void clawPwm(uint8_t PWM_IN1, uint8_t PWM_IN2);
 
 void convertTBtoBB(uint8_t* top);
 
@@ -257,6 +265,10 @@ void USART6_IRQHandler(void);
 void USART_puts(USART_TypeDef* USARTx, uint8_t data);
 
 /********* INITITALIZATION FUNCTIONS *********/
+
+void initialize_claw1_timer(uint32_t frequency, uint16_t preScaler);
+
+void initialize_claw2_timer(uint32_t frequency, uint16_t preScaler);
 
 void init_DMA_ADC1(uint16_t *array, uint16_t size);
 

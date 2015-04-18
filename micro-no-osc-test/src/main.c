@@ -22,7 +22,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_conf.h" 
 
-
 /* Private typedef -----------------------------------------------------------*/
 GPIO_InitTypeDef  GPIO_InitStructure;
 
@@ -40,7 +39,6 @@ void Delay(__IO uint32_t nCount);
   */
 int main(void)
 {
-
   SystemInit();
 
   /*!< At this stage the microcontroller clock setting is already configured, 
@@ -60,6 +58,22 @@ int main(void)
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+
+  
+
+
+  RCC_MCO2Config(RCC_MCO2Source_SYSCLK, RCC_MCO2Div_4);
 
   while (1)
   {

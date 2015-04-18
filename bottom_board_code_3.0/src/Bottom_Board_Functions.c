@@ -72,6 +72,12 @@ uint8_t checksum(uint8_t* packet, uint8_t size) {
 	return crc;
 }
 
+void clawPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
+{
+	TIM10->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN1 / 255.0;	
+	TIM11->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN2 / 255.0;	
+}
+
 void convertTBtoBB(uint8_t* top)
 {
 	//Reads through the motor values from the received top packet
