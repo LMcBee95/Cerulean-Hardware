@@ -25,13 +25,36 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //Why is this at the top of the code?
 #define TOP_BOTTOM_BAUD 115200
 #define BOTTOM_MOTOR_BAUD 57600
 
-#define USART6_ENABLE_PIN			GPIO_Pin_8					//check if these are correct 
+#define USART6_ENABLE_PIN			GPIO_Pin_8					//check if these are correct c
 #define USART6_ENABLE_PORT			GPIOC
 #define USART6_ENABLE_CLK			RCC_AHB1Periph_GPIOC
 
 #define USART6_DISABLE_PIN			GPIO_Pin_9					//check if these are correct 
 #define USART6_DISABLE_PORT			GPIOC
 #define USART6_DISABLE_CLK			RCC_AHB1Periph_GPIOC
+
+#define SERVO_PERIOD				26250 //* 2  //this users clock 2 for timer 9; clock 2 is 2 times faster than clock 1
+#define MAXSERVO 					2.1
+#define MINSERVO 					0.8
+#define MAXSERVOANGLE 				135.0
+#define MINSERVOANGLE				90
+
+/*** Servo 1 Init ***/
+
+#define SERVO_1_TIMER_CLOCK			RCC_APB1Periph_TIM4
+#define SERVO_TIMER_PIN_AF			GPIO_AF_TIM4
+#define SERVO_TIMER					TIM4
+#define SERVO_1_CLOCK_BANK			RCC_AHB1Periph_GPIOB
+#define SERVO_BANK   				GPIOB
+#define SERVO_1_PIN					GPIO_Pin_6
+#define SERVO_1_PIN_SOURCE			GPIO_PinSource6
+#define SERVO_1_CCR					TIM4->CCR1
+
+/*** Servo 2 Init ***/
+
+#define	SERVO_2_PIN 				GPIO_Pin_7
+#define SERVO_2_PIN_SOURCE			GPIO_PinSource7
+#define SERVO_2_CCR					TIM4->CCR2
 
 
 uint8_t storage[PACKET_SIZE];	 //Array used to store the data received from the top board
@@ -43,6 +66,75 @@ volatile uint8_t reset[7];		 //An array to send a reset command if one of the mo
 volatile uint8_t counter = 0;
 volatile uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since we last polled a motor
 volatile uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
+
+void initialize_servo_timer(void)
+{
+	uint16_t frequency = 50;  //period of 20 ms
+	uint16_t preScaler = 64;
+	
+	// Enable TIM3 and GPIOC clocks
+	RCC_APB1PeriphClockCmd(SERVO_1_TIMER_CLOCK, ENABLE);
+	RCC_AHB1PeriphClockCmd(SERVO_1_CLOCK_BANK, ENABLE);
+	 
+	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
+	
+	// Configure PC6-PC9 pins as AF, Pull-Down
+	GPIO_InitStructure.GPIO_Pin = SERVO_1_PIN | SERVO_2_PIN;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;	//assigns the pins to use their alternate functions
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(SERVO_BANK, &GPIO_InitStructure);	//initializes the structure
+	 
+	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
+	GPIO_PinAFConfig(SERVO_BANK, SERVO_1_PIN_SOURCE, SERVO_TIMER_PIN_AF);
+	GPIO_PinAFConfig(SERVO_BANK, SERVO_2_PIN_SOURCE, SERVO_TIMER_PIN_AF);
+	 
+	// Compute prescaler value for timebase
+	uint16_t PrescalerValue = (uint16_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
+
+	uint16_t PreCalPeriod = ((84000000 / preScaler) / frequency) - 1; 
+	
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+	
+	// Setup timebase for TIM9
+	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
+	TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;  //sets the pre scaler which is divided into the cpu clock to get a clock speed that is small enough to use for timers
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(SERVO_TIMER, &TIM_TimeBaseStructure);  //initializes this part of the code
+	 
+	// Initialize TIM3 for 4 channels
+	TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;  //sets the time to be pulse width
+	TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+	TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+	TIM_OCInitStructure.TIM_Pulse = 0;
+	
+	TIM_OC1Init(SERVO_TIMER, &TIM_OCInitStructure);  //initiates this part of the pulse width modulation
+	TIM_OC2Init(SERVO_TIMER, &TIM_OCInitStructure);
+	 
+	// Enable TIM9 peripheral Preload register on CCR1 for 4 channels
+	TIM_OC1PreloadConfig(SERVO_TIMER, TIM_OCPreload_Enable);
+	TIM_OC2PreloadConfig(SERVO_TIMER, TIM_OCPreload_Enable);
+	 
+	// Enable TIM9 peripheral Preload register on ARR.
+	TIM_ARRPreloadConfig(SERVO_TIMER, ENABLE);
+	 
+	// Enable TIM9 counter
+	TIM_Cmd(SERVO_TIMER, ENABLE); 
+	
+}
+
+void setServo1Angle(uint8_t angle)
+{ 	
+	SERVO_1_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
+}
+
+void setServo2Angle(uint8_t angle)
+{ 	
+	SERVO_2_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
+}
 
 
 void Delay(__IO uint32_t nCount) {
@@ -307,28 +399,15 @@ void convertTBtoBB(uint8_t* top)
 		motor[i][6] = 0x13;
 		motor[i][0] = 0x12;  //This is out of place because it gives me errors if I set the start byte value first
 	}
-}
-
-/*
- *This function sends a packet to poll a motor.
- *It takes the address of the motor being polled as its argument
- */
-void pollMotor(uint8_t address)
-{
-	//Stores each variable into the array
-	poll[1] = address;  //The address of the motor that we are going to poll
-	poll[2] = 3;
-	poll[3] = 0;
-	poll[4] = 0;
-	poll[5] = checksum(poll,4);
-	poll[6] = 0x13;
-	poll[0] = 0x12;  //This packet is out of place because it gives errors if this value is assigned first
-
-	//Sends the packet to poll the motor
-	for(uint8_t i = 0; i < 7; i++)
-		USART_puts(USART6, poll[i]);
-}
-
+	uint16_t servo_angle_temp = (top[9] * (MAXSERVOANGLE - MINSERVOANGLE) / 255) + MINSERVOANGLE;
+	uint8_t servo_angle = servo_angle_temp;
+	setServo1Angle(servo_angle); 
+	setServo2Angle(180 - servo_angle);
+	if(servo_angle > 100)
+	{
+		GPIO_SetBits(GPIOD, GPIO_Pin_15);
+	}
+}	
 /*
  *This function sends a packet to rest a motor if there is an error
  *It takes the address of the motor being reset as its argument
@@ -404,14 +483,14 @@ uint8_t handleTopPacket(void) {
 
             } else {
                 //NOT valid packet
-                GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+                //GPIO_ResetBits(GPIOD, GPIO_Pin_12);
                 GPIO_ResetBits(GPIOD, GPIO_Pin_13);
                 return(0);  //Returns 0 if the check sum or end byte were incorrect
             }
 
         } else {
             //Did not receive a 12, so not valid
-            GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+            //GPIO_ResetBits(GPIOD, GPIO_Pin_12);
             return(0); 
         }
 
@@ -499,7 +578,7 @@ int main(void) {
   init_LEDS(); //initialize the LEDS on the STM32F4 Discovery Board
   init_USART6(BOTTOM_MOTOR_BAUD); 	// initialize USART6 baud rate
   init_USART2(TOP_BOTTOM_BAUD);	// initialize USART2 baud rate
-
+  initialize_servo_timer();
 
   GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);	//Turns the read/write pin for rs485 to write mode
   Delay(0xFFF); //Delays to give the read/write pin time to initialize
@@ -519,10 +598,10 @@ int main(void) {
 			//Waits for twenty packets to be sent to the motors before polling a motor.
 			if(pollCounter > 20)
 			{
-						GPIO_SetBits(GPIOD, GPIO_Pin_14);
+				GPIO_SetBits(GPIOD, GPIO_Pin_14);
 				
 				//Sends a packet to poll the motor at pollAddress
-				pollMotor(pollAddress);	
+				//pollMotor(pollAddress);	
 				
 				if(!readSlavePacket())  //If we cannot read the packet
 				{

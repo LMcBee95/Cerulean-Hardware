@@ -214,6 +214,7 @@ void USART2_IRQHandler(void) {
 	
 		if(received == START_BYTE)
 		{
+			
 			storage[counter] = received;
 			counter = 1;
 		}
@@ -224,27 +225,26 @@ void USART2_IRQHandler(void) {
 			
 			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))
 			{
-				
+				RED_LED_ON
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
 				{
-					RED_LED_OFF
-					ORANGE_LED_OFF
+					
 					
 					sendPackets();	//Sends the motor controller commands produced by the convert function
 					pollCounter++;
 				
 					if(pollCounter > 20)
 					{
-						RED_LED_ON
+						
 						pollMotor(pollAddress);
 						
 						pollingMotors = 1;
 						
 						Delay(0x3FFF);		//Wait for the read write pin to turn low
-						GPIO_ResetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
-						GPIO_ResetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
+						//GPIO_ResetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
+						//GPIO_ResetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
 						
 						pollAddress++;
 						if(pollAddress == 9)
@@ -287,8 +287,10 @@ void USART2_IRQHandler(void) {
 
 void USART6_IRQHandler(void) {
     
+	
+	RED_LED_OFF
 	//Check if interrupt was because data is received
-	if (USART_GetITStatus(USART6, USART_IT_RXNE)) {
+	if (USART_GetITStatus(USART6, USART_IT_RXNE)  && 0) {
 		received = USART_ReceiveData(USART6);
 		
 		if(received == START_BYTE)

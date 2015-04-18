@@ -40,7 +40,7 @@
 #define START_BYTE					0x12
 #define END_BYTE 					0x13
 
-#define POLL_MOTOR_TIME_OUT			3 
+#define POLL_MOTOR_TIME_OUT			0 
 
 /*** Laser Measurement Tool ***/
 
@@ -80,7 +80,10 @@
 #define MINSERVO 					0.8
 #define MAXSERVOANGLE 				135.0
 
+#define NUM_DMA_CONVERSIONS			8
+
 uint16_t ADC3ConvertedValue[NUM_DMA_CONVERSIONS]; //Array that stores all of the values for the DMA ADC
+uint16_t ADC1ConvertedValue[NUM_DMA_CONVERSIONS]; //Array that stores all of the values for the DMA ADC
 
 /********* FUNCTION DECLARATIONS *********/
 
