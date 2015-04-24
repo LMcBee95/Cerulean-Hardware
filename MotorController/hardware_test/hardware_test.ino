@@ -41,6 +41,12 @@ void check_fault(){
     }
   }
 }
+  
+void reset(){
+  digitalWrite(RST_PIN,LOW);
+  delay(10);
+  digitalWrite(RST_PIN,HIGH);
+}
 
 void loop(){
   digitalWrite(DIR_PIN,HIGH);
@@ -49,12 +55,12 @@ void loop(){
   analogWrite(PWM_PIN,0);
   delay(1000);
   check_fault();
+  reset();
   digitalWrite(DIR_PIN,LOW);
   analogWrite(PWM_PIN,100);
   delay(1000);
   analogWrite(PWM_PIN,0);
   delay(1000);
   check_fault();
-
-
+  reset();
 }
