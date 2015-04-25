@@ -72,6 +72,12 @@ uint8_t checksum(uint8_t* packet, uint8_t size) {
 	return crc;
 }
 
+void clawPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
+{
+	TIM10->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN1 / 255.0;	
+	TIM11->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN2 / 255.0;	
+}
+
 void convertTBtoBB(uint8_t* top)
 {
 	//Reads through the motor values from the received top packet
@@ -231,7 +237,6 @@ void USART1_IRQHandler(void) {
 						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
 					}
 				}
-				GPIO_ResetBits(GPIOD, GPIO_Pin_12);
 				
 				//Used for testing purposes
 				if(laserDataBuff[dataMeasurementCounter] < 200)
@@ -285,6 +290,7 @@ void UART5_IRQHandler(void) {
 			//RGBLedPwm(255, 255, 255);
 			pollStorage[pollCounter] = received;
 			pollCounter = 1;
+			GPIO_SetBits(GPIOD, GPIO_Pin_13); 
 		}
 		else if(pollCounter > 0 && received != START_BYTE)
 		{
@@ -325,13 +331,13 @@ void USART6_IRQHandler(void) {
 	 //Check if interrupt was because data is received
     if (USART_GetITStatus(USART6, USART_IT_RXNE)) 
 	{	
-
 		received = USART_ReceiveData(USART6);
 	
 		if(received == START_BYTE)
 		{
 			storage[counter] = received;
 			counter = 1;
+			
 			
 		}
 		else if(counter > 0 && received != START_BYTE)
@@ -342,8 +348,9 @@ void USART6_IRQHandler(void) {
 			
 			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))
 			{
+				GPIO_SetBits(GPIOD, GPIO_Pin_10); //Blue Led On
 				RGBLedPwm(0, 255, 255);
-
+				GPIO_SetBits(GPIOD, GPIO_Pin_10); 
 				sendDataUp();
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 				
@@ -424,7 +431,7 @@ void USART6_IRQHandler(void) {
 					}
 				}
 				counter = 0; //Reset the counter
-				
+				counter = 0; //Reset the counter
 			}
 			else if(counter == PACKET_SIZE)
 			{
@@ -776,15 +783,15 @@ void init_IRQ(void)
 void init_LEDS(void)
 {
 	/* GPIOD Periph clock enable */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
-	/* Configures the LEDS*/
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11| GPIO_Pin_12| GPIO_Pin_13;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOD, &GPIO_InitStructure);
+  /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
 void initialize_led_timers(uint32_t frequency, uint16_t preScaler)
@@ -1311,20 +1318,9 @@ void init_USART6(uint32_t baudrate){
 	 */
 	 /*Enable the read write pins*/
 	
-	
-	 RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
-	 GPIO_InitTypeDef GPIO_InitStructure;
-
-	 /* Configures the leds and the read/write pin on C8 and C9 */
-	 GPIO_InitStructure.GPIO_Pin = USART6_ENABLE_PIN | USART6_DISABLE_PIN;
-	 GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	 GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	 GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	 GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	 GPIO_Init(USART6_DISABLE_PORT, &GPIO_InitStructure); 
-	 
 	GPIO_InitTypeDef GPIO_InitStruct;   // this is for the GPIO pins used as TX and RX
 	USART_InitTypeDef USART_InitStruct; // this is for the USART6 initialization
+
 	
 	/* enable APB2 peripheral clock for USART6 
 	 * note that only USART6 and USART6 are connected to APB2
@@ -1333,26 +1329,26 @@ void init_USART6(uint32_t baudrate){
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART6, ENABLE);
 	
 	/* enable the peripheral clock for the pins used by 
-	 * USART6, PC6 for Rx and PC7 for TX
+	 * USART6, PG9 for Rx and PG14 for TX
 	 */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOG, ENABLE);
 	
 	/* This sequence sets up the TX and RX pins 
 	 * so they work correctly with the USART6 peripheral
 	 */
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7; // Pins 6 (TX) and 7 (RX) are used
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_14; // Pins 9 (RX) and 14 (RX) are used
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF; 			// the pins are configured as alternate function so the USART peripheral has access to them
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;		// this defines the IO speed and has nothing to do with the baud rate!
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;			// this defines the output type as push pull mode (as opposed to open drain)
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;			// this activates the pull up resistors on the IO pins
-	GPIO_Init(GPIOC, &GPIO_InitStruct);					// now all the values are passed to the GPIO_Init() function which sets the GPIO registers
+	GPIO_Init(GPIOG, &GPIO_InitStruct);					// now all the values are passed to the GPIO_Init() function which sets the GPIO registers
 	
 	/* The RX and TX pins are now connected to their AF
 	 * so that the USART6 can take over control of the 
 	 * pins
 	 */
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_USART6); 
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_USART6);
+	GPIO_PinAFConfig(GPIOG, GPIO_PinSource9, GPIO_AF_USART6); 
+	GPIO_PinAFConfig(GPIOG, GPIO_PinSource14, GPIO_AF_USART6);
 	
 	/* Now the USART_InitStruct is used to define the 
 	 * properties of USART6 

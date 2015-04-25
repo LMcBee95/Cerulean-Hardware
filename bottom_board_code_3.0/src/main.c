@@ -22,7 +22,6 @@ int main(void) {
 	init_DMA_ADC1(ADC1ConvertedValue, NUM_DMA_ADC1_CONVERSIONS); //the function does not actually use the array address yet
 	init_DMA_ADC3(ADC3ConvertedValue, NUM_DMA_ADC3_CONVERSIONS);  //the function does not actually use the array address yet
 	init_IRQ();
-	init_LEDS();
 	init_RGB_led_timers(100000, 1);
 	
 	initialize_servo_timer();
@@ -34,6 +33,13 @@ int main(void) {
 	initialize_led_timers(LED_PWM_FREQUENCY, 1);
 	initialize_timer3(100000, 1);
 	initialize_stepper_timer(100000, 1);
+<<<<<<< HEAD
+	
+	init_LEDS();
+=======
+	initialize_claw1_timer(100000, 1);
+	initialize_claw2_timer(100000, 1);
+>>>>>>> origin/master
 
 	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
 	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
@@ -42,19 +48,28 @@ int main(void) {
 	
 	RGBLedPwm(0, 0, 0);
 	
-	while (1)
-	{
 	  
 	while (1)
 	{  
+<<<<<<< HEAD
+		GPIO_SetBits(GPIOD, GPIO_Pin_12);
+=======
+		clawPwm(255, 255);
+		RGBLedPwm(255, 255, 255);
 		GPIO_SetBits(GPIOD, GPIO_Pin_10);
+>>>>>>> origin/master
 		
-		Delay(0xffffff);
+		Delay(0xFFFFFF);
 		
+<<<<<<< HEAD
+		GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+=======
 		GPIO_ResetBits(GPIOD, GPIO_Pin_10);
+		RGBLedPwm(10, 10, 10);
+		clawPwm(0, 0);
+>>>>>>> origin/master
 		
-		Delay(0xffffff);
+		Delay(0xFFFFFF);
 
 	}
-}
 }

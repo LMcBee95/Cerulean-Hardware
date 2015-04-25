@@ -1,4 +1,4 @@
-#define PACKET_SIZE 20
+#define PACKET_SIZE 16
 
 uint8_t topPacket[PACKET_SIZE];
 
@@ -26,6 +26,32 @@ void setup()
 	
 	
 	//Puts mock data into the packet
+
+if(PACKET_SIZE == 16)
+{
+	
+	topPacket[1] = 10;
+	topPacket[2] = 20;
+	topPacket[3] = 30; 
+	topPacket[4] = 40;
+	topPacket[5] = 50;
+	topPacket[6] = 60;
+	topPacket[7] = 70;
+	topPacket[8] = 80;
+	topPacket[9] = 0;
+	topPacket[10] = 100;
+	topPacket[11] = 110;
+	topPacket[12] = 120;
+	topPacket[13] = 130;
+        delay(10);
+	topPacket[15] = 0x13;;
+        topPacket[14] = checksum(topPacket, 1, PACKET_SIZE - 3);
+        topPacket[0] = 0x12;
+
+}
+
+if(PACKET_SIZE == 20)
+{
 	
 	topPacket[1] = 10;
 	topPacket[2] = 20;
@@ -44,9 +70,12 @@ void setup()
         topPacket[19] = 0x13;
         topPacket[14] = 140;
 	topPacket[15] = 150;
+        topPacket[16] = 160;
+        topPacket[17] = 170;
         topPacket[18] = checksum(topPacket, 1, PACKET_SIZE - 3);
         topPacket[0] = 0x12;
 
+}
 	
 	uint8_t state = 0;
 	
@@ -66,7 +95,8 @@ void sendPacket(void)
 	void loop()
 	{
 	  sendPacket();
-	  delay(500);
+	  delay(100);
+          
 		
 	}
 
