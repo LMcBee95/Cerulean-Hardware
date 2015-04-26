@@ -37,7 +37,9 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //Why is this at the top of the code?
 #define MAXSERVO 					2.1
 #define MINSERVO 					0.8
 #define MAXSERVOANGLE 				135.0
-#define MINSERVOANGLE				90
+
+#define MAXSERVOCONTROLLED				0
+#define MINSERVOCONTROLLED				41
 
 /*** Servo 1 Init ***/
 
@@ -46,15 +48,15 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //Why is this at the top of the code?
 #define SERVO_TIMER					TIM4
 #define SERVO_1_CLOCK_BANK			RCC_AHB1Periph_GPIOB
 #define SERVO_BANK   				GPIOB
-#define SERVO_1_PIN					GPIO_Pin_6
-#define SERVO_1_PIN_SOURCE			GPIO_PinSource6
-#define SERVO_1_CCR					TIM4->CCR1
+#define SERVO_1_PIN					GPIO_Pin_7
+#define SERVO_1_PIN_SOURCE			GPIO_PinSource7
+#define SERVO_1_CCR					TIM4->CCR2
 
 /*** Servo 2 Init ***/
 
-#define	SERVO_2_PIN 				GPIO_Pin_7
-#define SERVO_2_PIN_SOURCE			GPIO_PinSource7
-#define SERVO_2_CCR					TIM4->CCR2
+#define	SERVO_2_PIN 				GPIO_Pin_8
+#define SERVO_2_PIN_SOURCE			GPIO_PinSource8
+#define SERVO_2_CCR					TIM4->CCR3
 
 
 uint8_t storage[PACKET_SIZE];	 //Array used to store the data received from the top board
@@ -383,7 +385,7 @@ void convertTBtoBB(uint8_t* top)
 		uint8_t direction = (top[i+ 1] < 128);
 		
 		// Removes the first byte that gave the direction, and 
-		//Bit shifts the rest of the number to multiply the value by two to get the values between 0 and 254
+		//Bit shifts he rest of the number to multiply the value by two to get the values between 0 and 254
 		uint8_t magnitude = (top[i + 1] & 127) << 1;
 		
 		// Motor controller cannot accept 18 so we round 18 down to 17
@@ -397,12 +399,12 @@ void convertTBtoBB(uint8_t* top)
 		motor[i][4] = magnitude;
 		motor[i][5] = checksum(motor[i], 4);
 		motor[i][6] = 0x13;
-		motor[i][0] = 0x12;  //This is out of place because it gives me errors if I set the start byte value first
+		motor[i][0] = 0x12;  //This is out of plasce because it gives me errors if I set the start byte value first
 	}
-	uint16_t servo_angle_temp = (top[9] * (MAXSERVOANGLE - MINSERVOANGLE) / 255) + MINSERVOANGLE;
+	uint16_t servo_angle_temp = (top[9] * (MAXSERVOCONTROLLED - MINSERVOCONTROLLED) / 255) + MINSERVOCONTROLLED;
 	uint8_t servo_angle = servo_angle_temp;
-	setServo1Angle(servo_angle); 
-	setServo2Angle(180 - servo_angle);
+	//setServo1Angle(servo_angle); 
+	//setServo2Angle(180 - servo_angle);
 	if(servo_angle > 100)
 	{
 		GPIO_SetBits(GPIOD, GPIO_Pin_15);
@@ -583,10 +585,17 @@ int main(void) {
   GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);	//Turns the read/write pin for rs485 to write mode
   Delay(0xFFF); //Delays to give the read/write pin time to initialize
   
+  uint8_t i = 0;
   while (1)
-  {  
-		//Reads the top packet, converts the top packet to motor packets, and then sends the motor packets to the motor controllers
+  {     
+		setServo1Angle(10);
+		Delay(0xffffff);
+		
+		
+		setServo1Angle(80);
+		Delay(0xffffff);
 
+		//Reads the top packet, converts the top packet to motor packets, and then sends the motor packets to the motor controllers
 		if(handleTopPacket())  //If the read top packet function was successful, go within the if statement
 		{			
 			

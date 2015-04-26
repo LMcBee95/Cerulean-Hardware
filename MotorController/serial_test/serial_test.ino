@@ -38,7 +38,7 @@ if(PACKET_SIZE == 16)
 	topPacket[6] = 60;
 	topPacket[7] = 70;
 	topPacket[8] = 80;
-	topPacket[9] = 0;
+	topPacket[9] = 255;
 	topPacket[10] = 100;
 	topPacket[11] = 110;
 	topPacket[12] = 120;

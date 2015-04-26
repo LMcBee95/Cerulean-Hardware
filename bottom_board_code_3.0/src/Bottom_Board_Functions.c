@@ -458,7 +458,7 @@ void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 void initialize_claw1_timer(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM11 and GPIOF clocks
-	RCC_APB1PeriphClockCmd(RCC_APB2Periph_TIM11, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM11, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
 	 
 	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
@@ -513,7 +513,7 @@ void initialize_claw1_timer(uint32_t frequency, uint16_t preScaler)
 void initialize_claw2_timer(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM10 and GPIOF clocks
-	RCC_APB1PeriphClockCmd(RCC_APB2Periph_TIM10, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM10, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
 	 
 	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
