@@ -1,1 +1,14 @@
-1. Remove all globally defined functions in both main.c and Bottom_Board_Functions.c
+1. Fix led 5
+2. Write test for:
+	a. ledscode 
+	b. servo motors, and current sensors
+	c. claw and turning foot dc motors and current sensors
+	d. Bilge pump
+	e. stepper motors
+	f. optocopolers
+3. Test the ADC for DMA 3
+
+4. Test if we can read the  packet from the top board (Arduino) and convert it to correct values
+
+Finished
+1. #define all of the different locations in both of the DMA arrays

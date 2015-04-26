@@ -1,6 +1,6 @@
 
 #include "Bottom_Board_Functions.h"
-#include "Stepper.h"
+#include "stepper.h"
 
 /******************** Global Variables ********************/
 
@@ -458,7 +458,7 @@ void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 void initialize_claw1_timer(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM11 and GPIOF clocks
-	RCC_APB1PeriphClockCmd(RCC_APB2Periph_TIM11, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM11, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
 	 
 	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
@@ -513,7 +513,7 @@ void initialize_claw1_timer(uint32_t frequency, uint16_t preScaler)
 void initialize_claw2_timer(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM10 and GPIOF clocks
-	RCC_APB1PeriphClockCmd(RCC_APB2Periph_TIM10, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM10, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
 	 
 	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
@@ -640,13 +640,11 @@ void init_DMA_ADC1(uint16_t *array, uint16_t size)
    ADC_CommonInit(&ADC_CommonInitStructure);
  
     ADC_RegularChannelConfig(ADC1, ADC_Channel_4,  1, ADC_SampleTime_144Cycles);//PA4
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_5,  2, ADC_SampleTime_144Cycles);//PA5
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 3, ADC_SampleTime_144Cycles);//PC0
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_11, 4, ADC_SampleTime_144Cycles);//PC1
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_12, 5, ADC_SampleTime_144Cycles);//PC2
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_13, 6, ADC_SampleTime_144Cycles);//PC3
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_14, 7, ADC_SampleTime_144Cycles);//PC4
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_15, 8, ADC_SampleTime_144Cycles);//PC5
+	ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 2, ADC_SampleTime_144Cycles);//PC0
+	ADC_RegularChannelConfig(ADC1, ADC_Channel_11, 3, ADC_SampleTime_144Cycles);//PC1
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_12, 4, ADC_SampleTime_144Cycles);//PC2
+    ADC_RegularChannelConfig(ADC1, ADC_Channel_13, 5, ADC_SampleTime_144Cycles);//PC3
+   
  
    ADC_DMARequestAfterLastTransferCmd(ADC1, ENABLE);
  
@@ -658,6 +656,90 @@ void init_DMA_ADC1(uint16_t *array, uint16_t size)
 }
 
 void init_DMA_ADC3(uint16_t *array, uint16_t size)
+{
+  GPIO_InitTypeDef      GPIO_InitStructure;
+  ADC_InitTypeDef       ADC_InitStructure;
+  ADC_CommonInitTypeDef ADC_CommonInitStructure;
+  DMA_InitTypeDef       DMA_InitStructure;
+ 
+  GPIO_StructInit(&GPIO_InitStructure);
+  ADC_StructInit(&ADC_InitStructure);
+  ADC_CommonStructInit(&ADC_CommonInitStructure);
+  DMA_StructInit(&DMA_InitStructure);
+ 
+  /**
+    Set up the clocks are needed for the ADC
+  */
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2,ENABLE);
+
+ 
+ /* Analog channel configuration : PF3, 4, 5, 10*/
+  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOF, &GPIO_InitStructure);
+  
+ 
+  /**
+    Configure the DMA
+  */
+  //==Configure DMA2 - Stream 4
+  //DMA_DeInit(DMA2_Stream0);  //Set DMA registers to default values
+  DMA_InitStructure.DMA_Channel = DMA_Channel_2;
+  DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC3->DR; //Source address
+  DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)ADC3ConvertedValue; //Destination address
+  DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
+  DMA_InitStructure.DMA_BufferSize = size; //Buffer size
+  DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+  DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+  DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord; //source size - 16bit
+  DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord; // destination size = 16b
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_Priority = DMA_Priority_High;
+  DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;
+  DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
+  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+  DMA_Init(DMA2_Stream1, &DMA_InitStructure); //Initialize the DMA
+  DMA_Cmd(DMA2_Stream1, ENABLE); //Enable the DMA2 - Stream 4
+ 
+   /**
+     Config the ADC3
+   */
+   ADC_DeInit();
+   ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+   ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
+   ADC_InitStructure.ADC_ContinuousConvMode = ENABLE; //continuous conversion
+   ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConvEdge_None;
+   ADC_InitStructure.ADC_NbrOfConversion = size;
+   ADC_InitStructure.ADC_ScanConvMode = ENABLE; // 1=scan more that one channel in group
+   ADC_Init(ADC3,&ADC_InitStructure);
+ 
+   ADC_CommonInitStructure.ADC_Mode = ADC_Mode_Independent;
+   ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div2;
+   ADC_CommonInitStructure.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
+   ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
+   ADC_CommonInit(&ADC_CommonInitStructure);
+ 
+   ADC_RegularChannelConfig(ADC3, ADC_Channel_3,  1, ADC_SampleTime_144Cycles);//PF3
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_4,  2, ADC_SampleTime_144Cycles);//PF4
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_5,  3, ADC_SampleTime_144Cycles);//PF5
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_10, 4, ADC_SampleTime_144Cycles);//PF10
+   
+ 
+   ADC_DMARequestAfterLastTransferCmd(ADC3, ENABLE);
+ 
+   ADC_DMACmd(ADC3, ENABLE); //Enable ADC3 DMA
+ 
+   ADC_Cmd(ADC3, ENABLE);   // Enable ADC3
+ 
+   ADC_SoftwareStartConv(ADC3); // Start ADC1 conversion
+}
+
+//CHANGED THE NAMEf`1
+void init_DMA_ADC(uint16_t *array, uint16_t size)
 {
   GPIO_InitTypeDef      GPIO_InitStructure;
   ADC_InitTypeDef       ADC_InitStructure;
@@ -689,8 +771,8 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
     Configure the DMA
   */
   //==Configure DMA2 - Stream 4
-  DMA_DeInit(DMA2_Stream0);  //Set DMA registers to default values
-  DMA_InitStructure.DMA_Channel = DMA_Channel_0;									//POSIBLE SOURCE OF ERROR
+  									//POSIBLE SOURCE OF ERROR
+  DMA_InitStructure.DMA_Channel = DMA_Channel_0;
   DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC3->DR; //Source address
   DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)ADC3ConvertedValue; //Destination address
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;
@@ -726,10 +808,10 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
    ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
    ADC_CommonInit(&ADC_CommonInitStructure);
  
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_3,  1, ADC_SampleTime_144Cycles);//PF3
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_4,  2, ADC_SampleTime_144Cycles);//PF4
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_5,  3, ADC_SampleTime_144Cycles);//PF5
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_10, 4, ADC_SampleTime_144Cycles);//PF10
+    ADC_RegularChannelConfig(ADC3, ADC_Channel_3,  1, ADC_SampleTime_144Cycles);//PF3
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_4,  2, ADC_SampleTime_144Cycles);//PF4
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_5,  3, ADC_SampleTime_144Cycles);//PF5
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_10, 4, ADC_SampleTime_144Cycles);//PF10
     
  
    ADC_DMARequestAfterLastTransferCmd(ADC3, ENABLE);
@@ -740,6 +822,7 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
  
    ADC_SoftwareStartConv(ADC3); // Start ADC1 conversion
 }
+
 void init_IRQ(void)
 {
 	/*
@@ -816,9 +899,9 @@ void initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 	GPIO_Init(LED_1_2_3_BANK, &GPIO_InitStructure);	//initializes the structure
 	
 	
-	//NOT TESTED
+	//initializes the led 4 pin
 	GPIO_InitStructure.GPIO_Pin = LED_PIN4;
-	GPIO_Init(LED_4_BANK, &GPIO_InitStructure);	//initializes led4 structure
+	GPIO_Init(LED_4_BANK, &GPIO_InitStructure);	
 	
 	//NOT TESTED
 	GPIO_InitStructure.GPIO_Pin = LED_PIN5;
@@ -863,7 +946,7 @@ void initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 	TIM_OC3Init(LED_1_2_3_TIMER, &TIM_OCInitStructure);
 	TIM_OC4Init(LED_1_2_3_TIMER, &TIM_OCInitStructure);
 	
-	//NOT TESTED
+	
 	TIM_OC1Init(LED_4_TIMER, &TIM_OCInitStructure);
 	TIM_OC1Init(LED_5_TIMER, &TIM_OCInitStructure);
 	
@@ -874,25 +957,25 @@ void initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 	TIM_OC3PreloadConfig(LED_1_2_3_TIMER, TIM_OCPreload_Enable);
 	TIM_OC4PreloadConfig(LED_1_2_3_TIMER, TIM_OCPreload_Enable);
 	
-	//NOT TESTED
+	
 	TIM_OC1PreloadConfig(LED_4_TIMER, TIM_OCPreload_Enable);  //sets up led4 for pwm
 	TIM_OC1PreloadConfig(LED_5_TIMER, TIM_OCPreload_Enable);  //sets up led5 for pwm
 	 
 	// Enable TIM2 peripheral Preload register on ARR.
 	TIM_ARRPreloadConfig(LED_1_2_3_TIMER, ENABLE);
 	
-	//NOT TESTED
+	
 	TIM_ARRPreloadConfig(LED_4_TIMER, ENABLE);
 	TIM_ARRPreloadConfig(LED_5_TIMER, ENABLE);
 	 
 	// Enable TIM2 counter
 	TIM_Cmd(LED_1_2_3_TIMER, ENABLE); 
 	
-	//NOT TESTED
+	
 	TIM_Cmd(LED_4_TIMER, ENABLE);	//enables TIM14
 	TIM_Cmd(LED_5_TIMER, ENABLE);	//enables TIM13
 	
-	//return(PreCalPeriod);
+
 }
 
 void init_RGB_led_timers(uint32_t frequency, uint16_t preScaler)
@@ -952,7 +1035,6 @@ void init_RGB_led_timers(uint32_t frequency, uint16_t preScaler)
 	// Enable TIM4 counter
 	TIM_Cmd(RGB_TIMER , ENABLE); 
 	
-	//return(PreCalPeriod);
 }
 
 void initialize_servo_timer(void)

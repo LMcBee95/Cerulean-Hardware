@@ -19,7 +19,7 @@
 #include <stm32f4xx_usart.h>
 
 #include "Bottom_Board_Functions.h"
-#include "Stepper.h"
+#include "stepper.h"
 
 /***************** CONSTANTS *****************/
 
@@ -53,8 +53,21 @@
 
 /***  Direct Memory Access ***/
 
-#define NUM_DMA_ADC1_CONVERSIONS 		8  //the size of the ADC1 array
+#define NUM_DMA_ADC1_CONVERSIONS 		5  //the size of the ADC1 array
 #define NUM_DMA_ADC3_CONVERSIONS 		4  //the size of the ADC3 array
+
+//Array locations of adc 1 readings
+#define CLAW_CURRENT					0 
+#define VOLT_48_CURRENT				1
+#define SERVO2CURRENT				2
+#define SERVO1CURRENT				3
+#define TURNCURRENT					4
+
+//Array locations of adc 3 readings
+#define VSEN3						0
+#define VSEN2						1
+#define VSEN1						2
+#define FUSEDETECTM					3	
 
 
 uint16_t ADC1ConvertedValue[NUM_DMA_ADC1_CONVERSIONS];  //array to store the ADC1 values
@@ -217,12 +230,10 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define GENERAL_PWM_PRESCALER		1
 #define GENERAL_PWM_PERIOD			((84000000 * GENERAL_PWM_PRESCALER) / GENERAL_PWM_FREQUENCY)	
 
-<<<<<<< HEAD
-=======
+
 //uint32_t time = 0; //Keeps track of the number of ms that the program has been running for (for time update look at TIM5_IRQHandler)
 
 
->>>>>>> origin/master
 /***************** FUNCTION DECLARATIONS *****************/
 
 void bilgePumpPwm(uint8_t bilgePumpOn);
