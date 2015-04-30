@@ -208,23 +208,6 @@ void TIM5_IRQHandler(void)
  int i;
  if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
  {
-	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
-	time++; //Updates the current time that the program has been running
-
-	if(time%2000==0 && time%4000==0)
-	{
-		RGBLedPwm(255,255,255);
-		setSteppersDebugByte(0xFF);
-		for(i=0;i<14; i++)
-			setSteppers();
-	}
-	if(time%2000==0 && time%4000!=0)
-	{
-		RGBLedPwm(0,0,0);
-		setSteppersDebugByte(0x77);
-		for(i=0;i<14;i++)
-			setSteppers();
-	}
 	Stepper_Update(verticalStepper);
 	Stepper_Update(horizontalStepper);
  }

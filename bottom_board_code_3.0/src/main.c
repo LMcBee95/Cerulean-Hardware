@@ -49,8 +49,6 @@ int main(void) {
 	 
 	while (1)
 	{  
-		//setSteppers();
-		//setSteppersDebugByte(0x70);
-		//setSteppers();
+
 	}
 }
