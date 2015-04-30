@@ -214,8 +214,21 @@ void TIM5_IRQHandler(void)
  int i;
  if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
  {
+	if(time%4000==2000)
+	{
+		RGBLedPwm(0,0,0);
+		setSteppersDebugByte(0xFF);
+		setSteppers();
+	}
+	else if(time%4000==0)
+	{
+		RGBLedPwm(255,255,255);
+		setSteppersDebugByte(0x77);
+		setSteppers();
+	}
 	Stepper_Update(verticalStepper);
 	Stepper_Update(horizontalStepper);
+	time++;
  }
 
 }
