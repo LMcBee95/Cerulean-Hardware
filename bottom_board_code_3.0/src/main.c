@@ -18,10 +18,12 @@
 #include "stepper.h"
 
 int main(void) {
+	setSteppersDebugByte(0xF1);
 
 	init_DMA_ADC1(ADC1ConvertedValue, NUM_DMA_ADC1_CONVERSIONS); //the function does not actually use the array address yet
 	//init_DMA_ADC3(ADC3ConvertedValue, NUM_DMA_ADC3_CONVERSIONS);  //the function does not actually use the array address yet
 	init_IRQ();
+	init_LEDS();
 	init_RGB_led_timers(100000, 1);
 	
 	initialize_servo_timer();
@@ -30,120 +32,23 @@ int main(void) {
 	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize USART2 baud rate
 	init_USART6(TOP_BOTTOM_BAUD); 	// initialize USART6 baud rate
 	
+	initialize_stepper_objects();
+	initialize_stepper_pins();
+
+	//initialize_stepper_timer(100000, 1);
 	initialize_led_timers(LED_PWM_FREQUENCY, 1);
 	initialize_timer3(100000, 1);
-	initialize_stepper_timer(100000, 1);
-	
-<<<<<<< HEAD
-	init_LEDS();
-	initialize_claw1_timer(100000, 1);
-	initialize_claw2_timer(100000, 1);
-=======
-	//init_LEDS();
-	initialize_claw1_timer(100000, 1);
-	initialize_claw2_timer(100000, 1);
->>>>>>> origin/master
+	initialize_timer5();
 
 	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
 	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
 
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
-
-	RGBLedPwm(125, 125, 125);
 	
-	
-	 int i; 
-	 int j;
-	 int k;
-	  
+	RGBLedPwm(0, 0, 0);
+	 
 	while (1)
-<<<<<<< HEAD
 	{  
-		GPIO_SetBits(GPIOD, GPIO_Pin_12);
-		clawPwm(255, 255);
-		RGBLedPwm(255, 255, 255);
-		GPIO_SetBits(GPIOD, GPIO_Pin_10);
-		
-		Delay(0xFFFFFF);
-		
-		GPIO_ResetBits(GPIOD, GPIO_Pin_12);
-		GPIO_ResetBits(GPIOD, GPIO_Pin_10);
-		RGBLedPwm(10, 10, 10);
-		clawPwm(0, 0);
-		
-		Delay(0xFFFFFF);
-=======
-	{  	
-		/*	LED TEST CODE:  Connect a potentiometter to the claw current pin and you can then varry the led brightness  based on the reading
-		
-			int brightness = ADC1ConvertedValue[0] >> 6;  //reads an adc value from CLAWCURRENT PIN
-		
-			cameraLedPwm(brightness, brightness, brightness, brightness, brightness); 
-		
-		*/
-		
-		/*     	SERVO MOTOR AND CURRENT SENSOR TEST CODE: servo1_curr and servo2_current are the currents for the servos. 
-			
-		
-		
-			setServo1Angle(0);
-			setServo2Angle(0);
-		
-		
-			int servo1_curr = ADC1ConvertedValue[2] >> 4;
-			int servo2_curr = ADC1ConvertedValue[3] >> 4;
-		
-			RGBLedPwm(255, servo1_curr, servo2_curr);
-		
-			Delay(0xfffff);
-			
-			setServo1Angle(100);
-			setServo2Angle(100);
-		
-		
-			servo1_curr = ADC1ConvertedValue[2] >> 4;
-			servo2_curr = ADC1ConvertedValue[3] >> 4;
-		
-			RGBLedPwm(255, servo1_curr, servo2_curr);
-			
-		
-			Delay(0xfffff);
-		
-		*/
-		
-		
-		/*	TEST CODE FOR ADC 3
-			
-		
-			
-			GPIO_SetBits(GPIOD, GPIO_Pin_13);
-			i = ADC1ConvertedValue[0] ;
-			//j = ADC3ConvertedValue[0] ;
-			k = ADC1ConvertedValue[2] ;
-		
-			
-			if(i > 1000)
-			{
-				GPIO_SetBits(GPIOD, GPIO_Pin_12);
-				
-				GPIO_SetBits(GPIOD, GPIO_Pin_10);
-			}
-			
-			if(j > 1000)
-			{
-				GPIO_SetBits(GPIOD, GPIO_Pin_11);
-			}
-			
-			Delay(0xffff);
-			
-			
-			GPIO_ResetBits(GPIOD, GPIO_Pin_12);
-				GPIO_ResetBits(GPIOD, GPIO_Pin_11);
-				GPIO_ResetBits(GPIOD, GPIO_Pin_10);
-		
-			Delay(0xffff);
-		*/	
->>>>>>> origin/master
 
 	}
 }

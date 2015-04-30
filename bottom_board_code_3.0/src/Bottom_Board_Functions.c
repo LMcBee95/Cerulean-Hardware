@@ -6,6 +6,8 @@
 
 /*** Serial Communication ***/
 
+
+
 uint8_t pollingMotors = 0;  //stores a 0 if we are not polling the motors and a 1 if the motors are being polled
 uint8_t notPolledCounter = 0;  //stores how many times the bottom board received a top board packet before it received the poll response from the motor controllers
 
@@ -37,6 +39,8 @@ uint8_t twoPreviousValue = 0;  //The value from two serial readings ago
 uint8_t previousValue = 0;    //The value from the last serial reading
 uint8_t currentValue = 0;     //The current value from the serial
 
+/*** Time Function ***/
+uint32_t time = 0;  //Keeps track of the number of ms that the program has been running for (for time update look at TIM5_IRQHandler)
 
 GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiations, must be included
 
@@ -194,10 +198,26 @@ void setSteppers(void)
   dataGoingUp[STEPPER_UP_BYTE] = angles;      //Write angle data to upgoing packet
 }
 
+void setSteppersDebugByte(uint8_t byte)
+{
+	storage[STEPPER_DOWN_BYTE] = byte;
+}
+
 void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2)
 {
 	TIM12->CCR1 = (GENERAL_PWM_PERIOD) * dutyCycle1 / 255.0;	
 	TIM12->CCR2 = (GENERAL_PWM_PERIOD) * dutyCycle2 / 255.0;	
+}
+
+void TIM5_IRQHandler(void)
+{
+ int i;
+ if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
+ {
+	Stepper_Update(verticalStepper);
+	Stepper_Update(horizontalStepper);
+ }
+
 }
 
 void turnFootdPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
@@ -276,7 +296,120 @@ void USART1_IRQHandler(void) {
 }
 
 void USART2_IRQHandler(void) {
-    
+    //Check if interrupt was because data is received
+    if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
+	{	
+		received = USART_ReceiveData(USART2);
+	
+		if(received == START_BYTE)
+		{
+			storage[counter] = received;
+			counter = 1;
+			
+		}
+		else if(counter > 0 && received != START_BYTE)
+		{
+			
+			storage[counter] = received;
+			counter++;
+			
+			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))
+			{
+				RGBLedPwm(0, 255, 255);
+
+				sendDataUp();
+				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
+				
+				/*** Do stuff with the info from the top board ***/
+				
+				
+				if(LED1_VALUE > 100)
+				{
+					RGBLedPwm(0, 255, 255);
+				}
+				
+				
+				cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
+				bilgePumpPwm(BILGE_PUMP_VALUE);
+				if(FOOT_TURNER_VALUE < 128) //Going Forward
+				{
+					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
+					turnFootdPwm(turnFootMag, 0);
+				}
+				else //Going in Reverse
+				{
+					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
+					turnFootdPwm(0, turnFootMag);
+				}
+				
+				if(READ_LASER) //Read in measurement for the laser tool
+				{
+					//Read in data from the laser measurement tool and figure out what the angle of
+					//the stepper is.  Also figure out the angle of the stepper motor. 
+				}
+				
+				if(READ_VOLTAGES)
+				{
+					//Figure out voltage flags
+				}
+				
+				/*** End doing stuff with the info from the top board ***/
+				
+				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
+				{
+
+					
+					sendPackets();	//Sends the motor controller commands produced by the convert function
+					pollCounter++;
+				
+					if(pollCounter > 20)
+					{
+						RED_LED_ON
+						pollMotor(pollAddress);
+						
+						pollingMotors = 1;
+						
+						Delay(0x3FFF);		//Wait for the read write pin to turn low
+						GPIO_ResetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
+						GPIO_ResetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
+						
+						pollAddress++;
+						if(pollAddress == 9)
+						{
+							pollAddress = 1;
+						}
+						pollCounter = 0;  //Resets the poll counter
+
+					}
+				}
+				else
+				{
+					notPolledCounter++;
+					
+					if(notPolledCounter > POLL_MOTOR_TIME_OUT)
+					{
+						GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
+						GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
+						pollingMotors = 0;
+						notPolledCounter = 0;
+						
+						//print error message or send some message to the top board.
+					}
+				}
+				counter = 0; //Reset the counter
+				
+			}
+			else if(counter == PACKET_SIZE)
+			{
+				
+			}
+		}
+		else
+		{
+			counter = 0;
+		}
+	}
+	USART_ClearITPendingBit(USART2, USART_IT_RXNE);
 }
 
 void UART5_IRQHandler(void) {
@@ -861,6 +994,13 @@ void init_IRQ(void)
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;  //sub priority assignment
 	NVIC_Init(&NVIC_InitStruct);
+	
+    /* Enable the TIM3 gloabal Interrupt */
+	NVIC_InitStruct.NVIC_IRQChannel = TIM5_IRQn;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 4;
+	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStruct);
 }
 
 void init_LEDS(void)
@@ -1096,6 +1236,26 @@ void initialize_servo_timer(void)
 	
 }
 
+void initialize_stepper_pins()
+{
+	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
+
+	GPIO_InitStructure.GPIO_Pin = STEPPER_HORIZONTAL_STEP_PIN | STEPPER_VERTICAL_STEP_PIN;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(STEPPER_STEP_BANK, &GPIO_InitStructure);	//initializes the structure
+	
+	GPIO_InitStructure.GPIO_Pin = STEPPER_HORIZONTAL_DIR_PIN | STEPPER_HORIZONTAL_ENABLE_PIN |
+								  STEPPER_VERTICAL_DIR_PIN | STEPPER_VERTICAL_ENABLE_PIN;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_Init(STEPPER_DIR_ENABLE_BANK, &GPIO_InitStructure);	//initializes the structure
+}
+
 void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM12 and GPIOC clocks
@@ -1157,15 +1317,15 @@ void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 void initialize_stepper_objects(void)
 {
   horizontalStepper = Stepper_Initialize(
-	STEPPER_HORIZONTAL_STEP_BANK, STEPPER_HORIZONTAL_STEP_PIN,
-	STEPPER_HORIZONTAL_DIR_BANK, STEPPER_HORIZONTAL_DIR_PIN,
-	STEPPER_HORIZONTAL_ENABLE_BANK, STEPPER_HORIZONTAL_ENABLE_PIN,
+	STEPPER_STEP_BANK, STEPPER_HORIZONTAL_STEP_PIN,
+	STEPPER_DIR_ENABLE_BANK, STEPPER_HORIZONTAL_DIR_PIN,
+	STEPPER_DIR_ENABLE_BANK, STEPPER_HORIZONTAL_ENABLE_PIN,
 	STEPPER_HORIZONTAL_POLARITY);
   
   verticalStepper = Stepper_Initialize(
-	STEPPER_VERTICAL_STEP_BANK, STEPPER_VERTICAL_STEP_PIN,
-	STEPPER_VERTICAL_DIR_BANK, STEPPER_VERTICAL_DIR_PIN,
-	STEPPER_VERTICAL_ENABLE_BANK, STEPPER_VERTICAL_ENABLE_PIN,
+	STEPPER_STEP_BANK, STEPPER_VERTICAL_STEP_PIN,
+	STEPPER_DIR_ENABLE_BANK, STEPPER_VERTICAL_DIR_PIN,
+	STEPPER_DIR_ENABLE_BANK, STEPPER_VERTICAL_ENABLE_PIN,
 	STEPPER_VERTICAL_POLARITY);
 }
 
@@ -1234,6 +1394,26 @@ void initialize_timer3(uint32_t frequency, uint16_t preScaler)
 	TIM_Cmd(TIM3, ENABLE); 
 	
 	//return(PreCalPeriod);
+}
+
+void initialize_timer5(void)
+{
+	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
+	
+	/* TIM5 clock enable */
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
+		
+	/* Time base configuration */
+	TIM_TimeBaseStructure.TIM_Period = 1000 - 1; //Frequency set to 1ms
+	TIM_TimeBaseStructure.TIM_Prescaler = 84 - 1;
+	TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseInit(TIM5, &TIM_TimeBaseStructure);
+	 
+	/* TIM Interrupts enable */
+	TIM_ITConfig(TIM5, TIM_IT_Update, ENABLE);
+	/* TIM5 enable counter */
+	TIM_Cmd(TIM5, ENABLE);
 }
 
 void init_USART1(uint32_t baudrate){

@@ -12,14 +12,19 @@ typedef struct Stepper_st Stepper;
 
 //CONSTANTS
 #define NUM_STEPS 400       //The number of steps in a full 360 degree rotation
-#define STEP_DELAY 0x01FFFF //The amount of time to delay between steps
+#define TICKS_PER_STEP 1
+ //The number of milliseconds to elapse before changing the state of the stepper
+#define STEP_DELAY 0x0FFFFF//0x01FFFF //The amount of time to delay between steps
 #define STEPPER_ENABLE_INVERTED 1   //Whether or not the enable pin is inverted
 
 //STRUCT DEFINITION
 struct Stepper_st{
-	int polarity; //The polarity of the stepper
-	int position; //The current position
-	int angle;
+	int polarity;   //The polarity of the stepper
+	int position;   //The current position
+	int stepBuffer; //Steps that need to happen but have not yet occurred
+	int ticksSinceLastChange; //The number of ticks since the last change
+	int stepPinPolarity;      //Whether or not the step pin is high or low
+	
 	GPIO_TypeDef* stepBlock;
 	uint16_t stepPin;
 	
@@ -53,11 +58,11 @@ void Stepper_Destroy(Stepper* stepper);
 //that it can be freely turned by external forces.
 void Stepper_Disable(Stepper* stepper);
 
+//Step both of the steppers the given amount of steps, assuming their directions have been set
+void Stepper_DoubleStep(Stepper* stepper1, Stepper* stepper2, int steps);
+
 //Turn on the stepper and allow it to hold its position
 void Stepper_Enable(Stepper* stepper);
-
-//Get current angle of the stepper motor in tenths of a degree
-int Stepper_GetAngle(Stepper* stepper);
 
 //Get the current step position of the stepper
 //Will return a number between -199 and 200
@@ -68,10 +73,8 @@ int Stepper_GetStep(Stepper* stepper);
 void Stepper_Reset(Stepper* stepper)
 __attribute__((warning("Function has not been tested thoroughly, results not guaranteed.")));
 
-//Set the stepper to the given angle in tenths of a degree
-// 0 degrees is forward
-void Stepper_SetAngle(Stepper* stepper, int angle)
-__attribute__((warning("Function has not been tested thoroughly, results not guaranteed.")));
+//Set the direction of the stepper based on its polarity and return a positive number of steps
+int Stepper_SetDirection(Stepper* stepper, int steps);
 
 //Move the stepper to a certain position
 void Stepper_SetStep(Stepper* stepper, int step)
@@ -80,6 +83,12 @@ __attribute__((warning("Function has not been tested thoroughly, results not gua
 //Step a certain number of steps; a positive or negative
 //number indicates direction
 void Stepper_Step(Stepper* stepper, int steps);
+
+//Steps two steppers simultaneously to save time real good
+void Stepper_StepTogether(Stepper* stepper1, Stepper* stepper2, int steps1, int steps2);
+
+//Update the stepper, step any pending steps that need to occur
+void Stepper_Update(Stepper* stepper);
 
 //Use byte to control horizontal and vertical steppers, return a uint32_t with
 //   first 16 bytes: horizontal position
