@@ -237,7 +237,7 @@ void TIM5_IRQHandler(void)
 
 }
 
-void turnFootdPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
+void turnFootPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
 {
 	TIM3->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN1 / 255.0;	
 	TIM3->CCR2 = (GENERAL_PWM_PERIOD) * PWM_IN2 / 255.0;	
@@ -351,12 +351,12 @@ void USART2_IRQHandler(void) {
 				if(FOOT_TURNER_VALUE < 128) //Going Forward
 				{
 					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
-					turnFootdPwm(turnFootMag, 0);
+					turnFootPwm(turnFootMag, 0);
 				}
 				else //Going in Reverse
 				{
 					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
-					turnFootdPwm(0, turnFootMag);
+					turnFootPwm(0, turnFootMag);
 				}
 				
 				if(READ_LASER) //Read in measurement for the laser tool
@@ -518,12 +518,12 @@ void USART6_IRQHandler(void) {
 				if(FOOT_TURNER_VALUE < 128) //Going Forward
 				{
 					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
-					turnFootdPwm(turnFootMag, 0);
+					turnFootPwm(turnFootMag, 0);
 				}
 				else //Going in Reverse
 				{
 					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
-					turnFootdPwm(0, turnFootMag);
+					turnFootPwm(0, turnFootMag);
 				}
 				
 				if(READ_LASER) //Read in measurement for the laser tool
@@ -621,7 +621,7 @@ void initialize_claw1_timer(uint32_t frequency, uint16_t preScaler)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_Init(GPIOF, &GPIO_InitStructure);	//initializes the structure
 	 
-	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
+	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM11 functions.
 	GPIO_PinAFConfig(GPIOF, GPIO_PinSource7, GPIO_AF_TIM11);
 
 	 
@@ -1012,7 +1012,7 @@ void init_IRQ(void)
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;  //sub priority assignment
 	NVIC_Init(&NVIC_InitStruct);
 	
-    /* Enable the TIM3 gloabal Interrupt */
+    /* Enable the TIM5 gloabal Interrupt */
 	NVIC_InitStruct.NVIC_IRQChannel = TIM5_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 4;

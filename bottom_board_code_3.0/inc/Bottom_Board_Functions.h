@@ -271,7 +271,7 @@ void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2);
 
 void TIM1_UP_TIM10_IRQHandler(void);
 
-void turnFootdPwm(uint8_t PWM_IN1, uint8_t PWM_IN2);
+void turnFootPwm(uint8_t PWM_IN1, uint8_t PWM_IN2);
 
 void USART2_IRQHandler(void);
 
