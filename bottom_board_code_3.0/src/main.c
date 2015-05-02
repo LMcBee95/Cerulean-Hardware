@@ -23,7 +23,7 @@ int main(void) {
 	init_DMA_ADC1(ADC1ConvertedValue, NUM_DMA_ADC1_CONVERSIONS); //the function does not actually use the array address yet
 	//init_DMA_ADC3(ADC3ConvertedValue, NUM_DMA_ADC3_CONVERSIONS);  //the function does not actually use the array address yet
 	init_IRQ();
-	init_LEDS();
+	
 	init_RGB_led_timers(100000, 1);
 	
 	initialize_servo_timer();
@@ -32,13 +32,16 @@ int main(void) {
 	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize USART2 baud rate
 	init_USART6(TOP_BOTTOM_BAUD); 	// initialize USART6 baud rate
 	
+	initialize_claw1_timer(100000 , 1);
+	initialize_claw2_timer(100000 , 1);
+	
 	initialize_stepper_objects();
 	initialize_stepper_pins();
 
 	//initialize_stepper_timer(100000, 1);
 	initialize_led_timers(LED_PWM_FREQUENCY, 1);
 	initialize_timer3(100000, 1);
-	initialize_timer5();
+	//initialize_timer5();
 
 	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
 	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
@@ -46,9 +49,36 @@ int main(void) {
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
 	RGBLedPwm(0, 0, 0);
-	 
+	 init_LEDS();
 	while (1)
 	{  
-
+		//RGBLedPwm(255,255, 255);
+		GPIO_SetBits(GPIOD, GPIO_Pin_13 );
+		//GPIO_SetBits(GPIOD, GPIO_Pin_12 );
+		//GPIO_SetBits(GPIOD, GPIO_Pin_11 );
+		//GPIO_SetBits(GPIOD, GPIO_Pin_10 );
+		
+		clawPwm(0, 175);
+		//turnFootdPwm(0, 175);
+		setServo1Angle(20);
+		setServo2Angle(20);
+		bilgePumpPwm(255);
+		
+		
+		Delay(0xffffff);
+		
+		GPIO_ResetBits(GPIOD, GPIO_Pin_13 );
+		GPIO_ResetBits(GPIOD, GPIO_Pin_12 );
+		GPIO_ResetBits(GPIOD, GPIO_Pin_11 );
+		GPIO_ResetBits(GPIOD, GPIO_Pin_10 );
+		
+		clawPwm(175, 0);
+		//turnFootdPwm(175, 0);
+		setServo1Angle(120);
+		setServo2Angle(120);
+		bilgePumpPwm(100);
+		
+		
+		Delay(0xffffff);
 	}
 }

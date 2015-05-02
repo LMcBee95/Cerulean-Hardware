@@ -46,9 +46,9 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiati
 
 /******************** Function Definitions ********************/
 
-void bilgePumpPwm(uint8_t bilgePumpOn)
+void bilgePumpPwm(uint8_t bilgePumpSpeed)
 {
-	TIM3->CCR3 = (GENERAL_PWM_PERIOD) * MAX_BILGE_PUMP_VALUE * bilgePumpOn / 255.0;	
+	TIM3->CCR3 = (GENERAL_PWM_PERIOD) * bilgePumpSpeed / 255.0;
 }
 
 void cameraLedPwm(uint8_t led1DutyCycle, uint8_t led2DutyCycle, uint8_t led3DutyCycle, uint8_t led4DutyCycle, uint8_t led5DutyCycle)
@@ -76,10 +76,11 @@ uint8_t checksum(uint8_t* packet, uint8_t size) {
 	return crc;
 }
 
+
 void clawPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
 {
-	TIM10->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN1 / 255.0;	
-	TIM11->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN2 / 255.0;	
+	TIM10->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN2 / 255.0;	
+	TIM11->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN1 / 255.0;	
 }
 
 void convertTBtoBB(uint8_t* top)
