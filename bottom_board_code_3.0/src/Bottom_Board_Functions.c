@@ -53,11 +53,11 @@ void bilgePumpPwm(uint8_t bilgePumpSpeed)
 
 void cameraLedPwm(uint8_t led1DutyCycle, uint8_t led2DutyCycle, uint8_t led3DutyCycle, uint8_t led4DutyCycle, uint8_t led5DutyCycle)
 {
-	TIM2->CCR4 = (GENERAL_PWM_PERIOD) * led1DutyCycle / 255.0;
-	TIM2->CCR3 = (GENERAL_PWM_PERIOD) * led2DutyCycle / 255.0;
-	TIM2->CCR2 = (GENERAL_PWM_PERIOD) * led3DutyCycle / 255.0;
-	TIM14->CCR1 = (GENERAL_PWM_PERIOD) * led4DutyCycle / 255.0;
-	TIM13->CCR1 = (GENERAL_PWM_PERIOD) * led5DutyCycle / 255.0;
+	TIM2->CCR4 = (CAMERA_LED_PWM_PERIOD) * led1DutyCycle / 255.0;
+	TIM2->CCR3 = (CAMERA_LED_PWM_PERIOD) * led2DutyCycle / 255.0;
+	TIM2->CCR2 = (CAMERA_LED_PWM_PERIOD) * led3DutyCycle / 255.0;
+	TIM14->CCR1 = (CAMERA_LED_PWM_PERIOD) * led4DutyCycle / 255.0;
+	TIM13->CCR1 = (CAMERA_LED_PWM_PERIOD) * led5DutyCycle / 255.0;
 }
 
 uint8_t checksum(uint8_t* packet, uint8_t size) {
@@ -888,7 +888,7 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
    ADC_SoftwareStartConv(ADC3); // Start ADC1 conversion
 }
 
-//CHANGED THE NAMEf`1
+//CHANGED THE NAME 1
 void init_DMA_ADC(uint16_t *array, uint16_t size)
 {
   GPIO_InitTypeDef      GPIO_InitStructure;
@@ -1071,7 +1071,7 @@ void initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 	
 	//NOT TESTED
 	GPIO_PinAFConfig(LED_4_BANK, LED_SOURCE_PIN4, LED_4_AF);
-	GPIO_PinAFConfig(LED_5_BANK, LED_SOURCE_PIN4, LED_5_AF);
+	GPIO_PinAFConfig(LED_5_BANK, LED_SOURCE_PIN5, LED_5_AF);
 	
 	// Compute prescaler value for timebase
 	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
@@ -1126,7 +1126,7 @@ void initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 	TIM_ARRPreloadConfig(LED_5_TIMER, ENABLE);
 	 
 	// Enable TIM2 counter
-	TIM_Cmd(LED_1_2_3_TIMER, ENABLE); 
+	TIM_Cmd(LED_1_2_3_TIMER, ENABLE); //enables TIM 2
 	
 	
 	TIM_Cmd(LED_4_TIMER, ENABLE);	//enables TIM14

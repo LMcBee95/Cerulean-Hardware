@@ -52,13 +52,9 @@ int main(void) {
 	//initialize_timer5();
 	
 	while (1)
-	{ 
-		turnFootPwm(0, 128);
-		
+	{
+		cameraLedPwm(128, 128, 128, 128, 128);
 		GPIO_SetBits(GPIOD, GPIO_Pin_10);
-		GPIO_SetBits(GPIOD, GPIO_Pin_11);
-		GPIO_SetBits(GPIOD, GPIO_Pin_12);
-		GPIO_SetBits(GPIOD, GPIO_Pin_13);
 		
 		Delay(0xffffff);
 	

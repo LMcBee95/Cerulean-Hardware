@@ -232,6 +232,7 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define GENERAL_PWM_FREQUENCY		100000
 #define GENERAL_PWM_PRESCALER		1
 #define GENERAL_PWM_PERIOD			((84000000 * GENERAL_PWM_PRESCALER) / GENERAL_PWM_FREQUENCY)	
+#define CAMERA_LED_PWM_PERIOD		((84000000 * GENERAL_PWM_PRESCALER) / LED_PWM_FREQUENCY)
 
 //uint32_t time = 0; //Keeps track of the number of ms that the program has been running for (for time update look at TIM5_IRQHandler)
 
