@@ -46,9 +46,9 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiati
 
 /******************** Function Definitions ********************/
 
-void bilgePumpPwm(uint8_t bilgePumpOn)
+void bilgePumpPwm(uint8_t bilgePumpSpeed)
 {
-	TIM3->CCR3 = (GENERAL_PWM_PERIOD) * MAX_BILGE_PUMP_VALUE * bilgePumpOn / 255.0;	
+	TIM3->CCR3 = (GENERAL_PWM_PERIOD) * bilgePumpSpeed / 255.0;	
 }
 
 void cameraLedPwm(uint8_t led1DutyCycle, uint8_t led2DutyCycle, uint8_t led3DutyCycle, uint8_t led4DutyCycle, uint8_t led5DutyCycle)
@@ -1363,14 +1363,13 @@ void initialize_timer3(uint32_t frequency, uint16_t preScaler)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_Init(TURN_FOOT_BANK, &GPIO_InitStructure);	//initializes the structure
 	 
-	GPIO_InitStructure.GPIO_Pin = BILGE_PUMP_PIN1 | BILGE_PUMP_PIN2;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Pin = BILGE_PUMP_PIN1;  //specifies which pins are used
 	GPIO_Init(BILGE_PUMP_BANK, &GPIO_InitStructure);	//initializes the structure
 	
 	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
 	GPIO_PinAFConfig(TURN_FOOT_BANK, TURN_FOOT_SOURCE_PIN1, GPIO_AF_TIM3);
 	GPIO_PinAFConfig(TURN_FOOT_BANK, TURN_FOOT_SOURCE_PIN2, GPIO_AF_TIM3);
 	GPIO_PinAFConfig(BILGE_PUMP_BANK, BILGE_PUMP_SOURCE_PIN1, GPIO_AF_TIM3);
-	GPIO_PinAFConfig(BILGE_PUMP_BANK, BILGE_PUMP_SOURCE_PIN2, GPIO_AF_TIM3);
 	 
 	// Compute prescaler value for timebase
 	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
@@ -1410,7 +1409,6 @@ void initialize_timer3(uint32_t frequency, uint16_t preScaler)
 	// Enable TIM3 counter
 	TIM_Cmd(TIM3, ENABLE); 
 	
-	//return(PreCalPeriod);
 }
 
 void initialize_timer5(void)

@@ -18,7 +18,7 @@
 #include "stepper.h"
 
 int main(void) {
-	//setSteppersDebugByte(0xF1);
+	setSteppersDebugByte(0xF1);
 
 	init_DMA_ADC1(ADC1ConvertedValue, NUM_DMA_ADC1_CONVERSIONS); //the function does not actually use the array address yet
 	//init_DMA_ADC3(ADC3ConvertedValue, NUM_DMA_ADC3_CONVERSIONS);  //the function does not actually use the array address yet
@@ -32,8 +32,11 @@ int main(void) {
 	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize USART2 baud rate
 	init_USART6(TOP_BOTTOM_BAUD); 	// initialize USART6 baud rate
 	
-	//initialize_stepper_objects();
-	//initialize_stepper_pins();
+	initialize_stepper_objects();
+	initialize_stepper_pins();
+	
+	initialize_claw1_timer(100000, 1);
+	initialize_claw2_timer(100000, 1);
 
 	//initialize_stepper_timer(100000, 1);
 	initialize_led_timers(LED_PWM_FREQUENCY, 1);

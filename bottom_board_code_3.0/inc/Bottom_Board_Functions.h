@@ -155,7 +155,7 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define TURN_FOOT_PIN1				GPIO_Pin_6
 #define TURN_FOOT_PIN2				GPIO_Pin_7
 #define BILGE_PUMP_PIN1 			GPIO_Pin_0
-#define BILGE_PUMP_PIN2 			GPIO_Pin_1
+
 
 #define TURN_FOOT_SOURCE_PIN1		GPIO_PinSource6
 #define TURN_FOOT_SOURCE_PIN2		GPIO_PinSource7
