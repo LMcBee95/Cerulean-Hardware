@@ -37,11 +37,15 @@ int main(void) {
 	
 	initialize_stepper_objects();
 	initialize_stepper_pins();
+	
+	initialize_claw1_timer(100000, 1);
+	initialize_claw2_timer(100000, 1);
 
 	//initialize_stepper_timer(100000, 1);
 	initialize_led_timers(LED_PWM_FREQUENCY, 1);
 	initialize_timer3(100000, 1);
 	//initialize_timer5();
+	
 
 	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
 	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
@@ -81,4 +85,6 @@ int main(void) {
 		
 		Delay(0xffffff);
 	}
+	
+	return(0);
 }

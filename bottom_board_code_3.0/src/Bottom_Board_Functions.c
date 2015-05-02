@@ -215,13 +215,30 @@ void TIM5_IRQHandler(void)
  int i;
  if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
  {
+	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
+	time++; //Updates the current time that the program has been running
+
+	if(time%2000==0 && time%4000==0)
+	{
+		RGBLedPwm(255,255,255);
+		setSteppersDebugByte(0xFF);
+		for(i=0;i<14; i++)
+			setSteppers();
+	}
+	if(time%2000==0 && time%4000!=0)
+	{
+		RGBLedPwm(0,0,0);
+		setSteppersDebugByte(0x77);
+		for(i=0;i<14;i++)
+			setSteppers();
+	}
 	Stepper_Update(verticalStepper);
 	Stepper_Update(horizontalStepper);
  }
 
 }
 
-void turnFootdPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
+void turnFootPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
 {
 	TIM3->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN1 / 255.0;	
 	TIM3->CCR2 = (GENERAL_PWM_PERIOD) * PWM_IN2 / 255.0;	
@@ -335,12 +352,12 @@ void USART2_IRQHandler(void) {
 				if(FOOT_TURNER_VALUE < 128) //Going Forward
 				{
 					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
-					turnFootdPwm(turnFootMag, 0);
+					turnFootPwm(turnFootMag, 0);
 				}
 				else //Going in Reverse
 				{
 					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
-					turnFootdPwm(0, turnFootMag);
+					turnFootPwm(0, turnFootMag);
 				}
 				
 				if(READ_LASER) //Read in measurement for the laser tool
@@ -502,12 +519,12 @@ void USART6_IRQHandler(void) {
 				if(FOOT_TURNER_VALUE < 128) //Going Forward
 				{
 					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
-					turnFootdPwm(turnFootMag, 0);
+					turnFootPwm(turnFootMag, 0);
 				}
 				else //Going in Reverse
 				{
 					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
-					turnFootdPwm(0, turnFootMag);
+					turnFootPwm(0, turnFootMag);
 				}
 				
 				if(READ_LASER) //Read in measurement for the laser tool
@@ -605,7 +622,7 @@ void initialize_claw1_timer(uint32_t frequency, uint16_t preScaler)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_Init(GPIOF, &GPIO_InitStructure);	//initializes the structure
 	 
-	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
+	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM11 functions.
 	GPIO_PinAFConfig(GPIOF, GPIO_PinSource7, GPIO_AF_TIM11);
 
 	 
@@ -996,7 +1013,7 @@ void init_IRQ(void)
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;  //sub priority assignment
 	NVIC_Init(&NVIC_InitStruct);
 	
-    /* Enable the TIM3 gloabal Interrupt */
+    /* Enable the TIM5 gloabal Interrupt */
 	NVIC_InitStruct.NVIC_IRQChannel = TIM5_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 4;
@@ -1347,14 +1364,13 @@ void initialize_timer3(uint32_t frequency, uint16_t preScaler)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_Init(TURN_FOOT_BANK, &GPIO_InitStructure);	//initializes the structure
 	 
-	GPIO_InitStructure.GPIO_Pin = BILGE_PUMP_PIN1 | BILGE_PUMP_PIN2;  //specifies which pins are used
+	GPIO_InitStructure.GPIO_Pin = BILGE_PUMP_PIN1;  //specifies which pins are used
 	GPIO_Init(BILGE_PUMP_BANK, &GPIO_InitStructure);	//initializes the structure
 	
 	// Since each pin has multiple extra functions, this part of the code makes the alternate functions the TIM3 functions.
 	GPIO_PinAFConfig(TURN_FOOT_BANK, TURN_FOOT_SOURCE_PIN1, GPIO_AF_TIM3);
 	GPIO_PinAFConfig(TURN_FOOT_BANK, TURN_FOOT_SOURCE_PIN2, GPIO_AF_TIM3);
 	GPIO_PinAFConfig(BILGE_PUMP_BANK, BILGE_PUMP_SOURCE_PIN1, GPIO_AF_TIM3);
-	GPIO_PinAFConfig(BILGE_PUMP_BANK, BILGE_PUMP_SOURCE_PIN2, GPIO_AF_TIM3);
 	 
 	// Compute prescaler value for timebase
 	uint32_t PrescalerValue = (uint32_t) ((SystemCoreClock /2) / (84000000 / preScaler)) - 1;  //To figure out what the numbers do
@@ -1394,7 +1410,6 @@ void initialize_timer3(uint32_t frequency, uint16_t preScaler)
 	// Enable TIM3 counter
 	TIM_Cmd(TIM3, ENABLE); 
 	
-	//return(PreCalPeriod);
 }
 
 void initialize_timer5(void)
