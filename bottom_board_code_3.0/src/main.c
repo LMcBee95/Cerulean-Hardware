@@ -1,6 +1,6 @@
 
 
-/*									       Information about this code
+/*									       Information about this code!
  *				
  *	This code currently takes a packet from the top board, converts it to packets the motor controllers can use, and
  *	then sends the packets out to the motors. The code will automatically poll a motor every twenty packets
