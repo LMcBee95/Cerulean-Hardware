@@ -10,7 +10,7 @@
  *	the Rx is A3 and the Tx is A2.	
  *
  *  The important part of the code is at the bottom, within main(). Everything before that is just initializing
- *  variables and creating functions.
+ *  variables and creating functions
  *
  */
 
