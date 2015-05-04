@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include "Bottom_Board_Functions.h"
 #include "stepper.h"
 
@@ -1643,6 +1644,8 @@ void init_USART6(uint32_t baudrate){
 	
 	USART_ITConfig(USART6, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
 }
+=======
+>>>>>>> origin/master
 
 #include "Bottom_Board_Functions.h"
 #include "stepper.h"
@@ -3289,4 +3292,9 @@ void init_USART6(uint32_t baudrate){
 	USART_Cmd(USART6, ENABLE);	//Enables USART6
 	
 	USART_ITConfig(USART6, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt
+<<<<<<< HEAD
 }
+=======
+}
+
+>>>>>>> origin/master

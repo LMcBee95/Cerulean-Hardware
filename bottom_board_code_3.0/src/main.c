@@ -54,6 +54,7 @@ int main(void) {
 	
 	RGBLedPwm(0, 0, 0);
 	 init_LEDS();
+<<<<<<< HEAD
 	while (1)
 	{
 		cameraLedPwm(128, 128, 128, 128, 128);
@@ -61,6 +62,22 @@ int main(void) {
 		
 		
 		Delay(0xffffff);
+=======
+	while (1)
+	{  
+		//RGBLedPwm(255,255, 255);
+		GPIO_SetBits(GPIOD, GPIO_Pin_13 );
+		//GPIO_SetBits(GPIOD, GPIO_Pin_12 );
+		//GPIO_SetBits(GPIOD, GPIO_Pin_11 );
+		//GPIO_SetBits(GPIOD, GPIO_Pin_10 );
+		
+		clawPwm(0, 175);
+		//turnFootdPwm(0, 175);
+		setServo1Angle(20);
+		setServo2Angle(20);
+		bilgePumpPwm(255);
+		
+>>>>>>> origin/master
 		
 		GPIO_ResetBits(GPIOD, GPIO_Pin_13 );
 		GPIO_ResetBits(GPIOD, GPIO_Pin_12 );
@@ -73,6 +90,20 @@ int main(void) {
 		setServo2Angle(120);
 		bilgePumpPwm(100);
 		
+<<<<<<< HEAD
+=======
+		GPIO_ResetBits(GPIOD, GPIO_Pin_13 );
+		GPIO_ResetBits(GPIOD, GPIO_Pin_12 );
+		GPIO_ResetBits(GPIOD, GPIO_Pin_11 );
+		GPIO_ResetBits(GPIOD, GPIO_Pin_10 );
+		
+		clawPwm(175, 0);
+		//turnFootdPwm(175, 0);
+		setServo1Angle(120);
+		setServo2Angle(120);
+		bilgePumpPwm(100);
+		
+>>>>>>> origin/master
 		
 		Delay(0xffffff);
 	}
