@@ -1,4 +1,4 @@
-#define PACKET_SIZE 16
+#define PACKET_SIZE 20
 
 uint8_t topPacket[PACKET_SIZE];
 
@@ -23,7 +23,7 @@ uint8_t checksum(uint8_t* packet, uint8_t start_index, uint8_t size) {
 
 void setup()
 {
-	
+	pinMode(9, OUTPUT);
 	
 	//Puts mock data into the packet
 
@@ -47,7 +47,7 @@ if(PACKET_SIZE == 16)
 	topPacket[15] = 0x13;;
         topPacket[14] = checksum(topPacket, 1, PACKET_SIZE - 3);
         topPacket[0] = 0x12;
-
+        
 }
 
 if(PACKET_SIZE == 20)
@@ -61,18 +61,19 @@ if(PACKET_SIZE == 20)
 	topPacket[6] = 60;
 	topPacket[7] = 70;
 	topPacket[8] = 80;
-	topPacket[9] = 150;
-	topPacket[10] = 100;
-	topPacket[11] = 110;
-	topPacket[12] = 120;
-	topPacket[13] = 130;
+	topPacket[9] = 255;
+	topPacket[10] = (1 << 2);
+	topPacket[11] = 0;
+	topPacket[12] = 0;
+	topPacket[13] = 0;
         delay(10);
         topPacket[19] = 0x13;
-        topPacket[14] = 140;
-	topPacket[15] = 150;
-        topPacket[16] = 160;
-        topPacket[17] = 170;
+        topPacket[14] = 0;
+	topPacket[15] = 0;
+        topPacket[16] = 0;
+        topPacket[17] = 0;
         topPacket[18] = checksum(topPacket, 1, PACKET_SIZE - 3);
+
         topPacket[0] = 0x12;
 
 }
@@ -94,8 +95,17 @@ void sendPacket(void)
 	
 	void loop()
 	{
-	  sendPacket();
-	  delay(100);
+	  //topPacket[12] = analogRead(A0) >> 2;
+          //topPacket[13] = analogRead(A0) >> 2;
+          //topPacket[14] = analogRead(A0) >> 2;
+          //topPacket[15] = analogRead(A0) >> 2;
+          topPacket[16] = analogRead(A0) >> 2;
+          topPacket[18] = checksum(topPacket, 1, PACKET_SIZE - 3);
+          topPacket[0] = 0x12;
+          //delay(10);
+          analogWrite(9, topPacket[13]);
+          sendPacket();
+	  delay(20);
           
 		
 	}
