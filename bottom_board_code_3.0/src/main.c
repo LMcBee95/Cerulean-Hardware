@@ -52,25 +52,25 @@ int main(void) {
 	
 	RGBLedPwm(0, 0, 0);
 	 init_LEDS();
-	
-	GPIO_SetBits(GPIOD, GPIO_Pin_13);
-	
-	int i;
-	int j;
-	int k;
-	
+
+
 	while (1)
 	{  
 		
 		
-		i = ADC3ConvertedValue[0] >> 4;
-		j = ADC3ConvertedValue[1] >> 4;
-		k = ADC3ConvertedValue[0] >> 4;
+		GPIO_ResetBits(GPIOD, GPIO_Pin_13 );
+		GPIO_ResetBits(GPIOD, GPIO_Pin_12 );
+		GPIO_ResetBits(GPIOD, GPIO_Pin_11 );
+		GPIO_ResetBits(GPIOD, GPIO_Pin_10 );
 		
-		clawPwm(k,k);
+		clawPwm(175, 0);
+		//turnFootdPwm(175, 0);
+		setServo1Angle(120);
+		setServo2Angle(120);
+		bilgePumpPwm(100);
 		
-		
-		Delay(0xffff);
+
+		Delay(0xffffff);
 
 	}
 	
