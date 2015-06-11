@@ -121,19 +121,10 @@ void Stepper_SetStep(Stepper* stepper, int step)
 
 void Stepper_Step(Stepper* stepper, int steps)
 {
-	int i; //For iteration
 	Stepper_Enable(stepper);
 	stepper->stepBuffer += steps;
 	
 	Stepper_SetDirection(stepper, stepper->stepBuffer);
-	
-	/*for(i=0; i<steps; i++)
-	{
-		GPIO_SetBits(stepper->stepBlock, stepper->stepPin);
-		Delay(STEP_DELAY);
-		GPIO_ResetBits(stepper->stepBlock, stepper->stepPin);
-		Delay(STEP_DELAY);
-	}*/
 }
 
 void Stepper_StepTogether(Stepper* stepper1, Stepper* stepper2, int steps1, int steps2)
@@ -172,9 +163,7 @@ uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
   uint8_t horzSteps = (byte>>4)&0x07; //Horizontal steps
   uint8_t vertSteps = byte & 0x07;    //Vertical steps
   
-  //Convert steps to be positive or negative based on direction
-  //horzSteps *= (-1 + 2*horzDir);  //0 is negative 1 is positive
-  //vertSteps *= (-1 + 2*vertDir);
+  //Convert steps to be positive or negative based on direction 
   int correctedHorzSteps = horzDir==1 ? horzSteps : -horzSteps;
   int correctedVertSteps = vertDir==1 ? vertSteps : -vertSteps;
   
@@ -194,21 +183,24 @@ void Stepper_Update(Stepper* stepper)
 {
 	if(stepper->ticksSinceLastChange >= TICKS_PER_STEP)
 	{
-		stepper->ticksSinceLastChange=0;
-		if(stepper->stepBuffer!=0)
+		stepper->ticksSinceLastChange = 0;
+		if(stepper->stepBuffer != 0)
 		{
-			if(stepper->stepPinPolarity==1)
+			if(stepper->stepPinPolarity == 1)
 			{
-				stepper->stepPinPolarity=0;
+				stepper->stepPinPolarity = 0;
+				
+				//brings the step buffer closer to 0, whether it is positive or negative
 				if (stepper->stepBuffer < 0)
 					stepper->stepBuffer++;
 				else
 					stepper->stepBuffer--;
+				
 				GPIO_ResetBits(stepper->stepBlock,stepper->stepPin);
 			}
 			else
 			{
-				stepper->stepPinPolarity=1;
+				stepper->stepPinPolarity = 1;
 				GPIO_SetBits(stepper->stepBlock,stepper->stepPin);
 			}
 		}
