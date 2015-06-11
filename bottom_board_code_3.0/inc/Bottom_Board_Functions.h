@@ -65,10 +65,10 @@
 #define TURNCURRENT					4
 
 //Array locations of adc 3 readings
-#define VSEN3						0
-#define VSEN2						1
-#define VSEN1						2
-#define FUSEDETECTM					3	
+#define VSEN3						3
+#define VSEN2						2
+#define VSEN1						1
+#define FUSEDETECTM					0	
 
 
 uint16_t ADC1ConvertedValue[NUM_DMA_ADC1_CONVERSIONS];  //array to store the ADC1 values
@@ -176,16 +176,9 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define STEPPER_SOURCE_PIN2			GPIO_PinSource15
 
 /*** Stepper Motor Pins ***/
+
 #define STEPPER_STEP_BANK						GPIOB
 #define STEPPER_DIR_ENABLE_BANK					GPIOC
-
-/*#define STEPPER_HORIZONTAL_DIR_BANK         GPIOC
-#define STEPPER_HORIZONTAL_ENABLE_BANK        GPIOC
-#define STEPPER_HORIZONTAL_STEP_BANK          GPIOB
-
-#define STEPPER_VERTICAL_DIR_BANK             GPIOC
-#define STEPPER_VERTICAL_ENABLE_BANK          GPIOC
-#define STEPPER_VERTICAL_STEP_BANK            GPIOB*/
 
 #define STEPPER_HORIZONTAL_DIR_PIN        GPIO_Pin_15
 #define STEPPER_HORIZONTAL_ENABLE_PIN     GPIO_Pin_13
@@ -217,6 +210,10 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define BLUE_LED_SOURCE_PIN			GPIO_PinSource12
 
 #define RGB_AF						GPIO_AF_TIM4
+
+/***  Camera Muxes  ***/
+#define MUX1						storage[11] & (1 << 0)
+#define MUX2						storage[11] & (1 << 1)
 
 /*** General PWM Information ***/
 

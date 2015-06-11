@@ -52,13 +52,12 @@ int main(void) {
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
 	 init_LEDS();
-	turnFootPwm(255, 0);
 
 	while (1)
 	{  
-		//sendPackets();
+		sendPackets();
 		Delay(0xfffff);
-		
+
 	}
 	
 	return(0);

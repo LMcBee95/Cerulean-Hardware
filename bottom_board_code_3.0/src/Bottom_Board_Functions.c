@@ -291,7 +291,7 @@ void TIM5_IRQHandler(void)
 	}
 	if(time % 100 == 0)
 	{
-		sendPackets();
+		//sendPackets();
 	}
 	
 	if(time % 500 == 0)
@@ -454,7 +454,7 @@ void USART6_IRQHandler(void) {
 		}
 		else if(counter > 0 && received != START_BYTE)
 		{
-			cameraLedPwm(0, 0, 0, 0, (storage[1] % 128) * 2);
+			cameraLedPwm((storage[1] % 128) * 2, (storage[1] % 128) * 2, (storage[1] % 128) * 2, (storage[1] % 128) * 2, (storage[1] % 128) * 2);
 			storage[counter] = received;
 			counter++;
 			
@@ -462,17 +462,28 @@ void USART6_IRQHandler(void) {
 			{
 				GPIO_SetBits(GPIOD, GPIO_Pin_10); //Blue Led On
 				
-				//sendDataUp();
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 				
 				/*** Do stuff with the info from the top board ***/
 				
-
 				
+				//sets the camera muxes
+				if(MUX1)
+					GPIO_SetBits(GPIOF, GPIO_Pin_0);
+				else
+					GPIO_ResetBits(GPIOF, GPIO_Pin_0);
+				
+				if(MUX2)
+					GPIO_SetBits(GPIOF, GPIO_Pin_1);
+				else
+					GPIO_ResetBits(GPIOF, GPIO_Pin_1);
+					
 				
 				//cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
 				bilgePumpPwm(BILGE_PUMP_VALUE);
 				
+				
+				//sets the speed of the turning foot motor
 				if(FOOT_TURNER_VALUE < 128) //Going Forward
 				{
 					uint8_t turnFootMag = (FOOT_TURNER_VALUE << 1);
@@ -483,16 +494,23 @@ void USART6_IRQHandler(void) {
 					uint8_t turnFootMag = (FOOT_TURNER_VALUE  << 1);
 					turnFootPwm(0, turnFootMag);
 				}
+
 				
-				if(READ_LASER) //Read in measurement for the laser tool
-				{
-					//Read in data from the laser measurement tool and figure out what the angle of
-					//the stepper is.  Also figure out the angle of the stepper motor. 
-				}
-				
+				//reads the voltage sensors and outputs the which voltages are high
 				if(READ_VOLTAGES)
 				{
-					//Figure out voltage flags
+					if(ADC3ConvertedValue[VSEN1] > 3000)
+					{
+						
+					}
+					if(ADC3ConvertedValue[VSEN2] > 3000)
+					{
+						
+					}
+					if(ADC3ConvertedValue[VSEN3] > 3000)
+					{
+						
+					}
 				}
 				
 				/*** End doing stuff with the info from the top board ***/
@@ -913,16 +931,16 @@ void init_IRQ(void)
 
 void init_LEDS(void)
 {
-	/* GPIOD Periph clock enable */
-  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+  /* GPIOD Periph clock enable */
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);
 
   /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_Init(GPIOD, &GPIO_InitStructure);
+  GPIO_Init(GPIOF, &GPIO_InitStructure);
 }
 
 void initialize_led_timers(uint32_t frequency, uint16_t preScaler)
@@ -1087,7 +1105,16 @@ void init_RGB_led_timers(uint32_t frequency, uint16_t preScaler)
 
 void init_muxes(void)
 {
-	
+   /* GPIOD Periph clock enable */
+  RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+
+  /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+  GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
 void initialize_servo_timer(void)
