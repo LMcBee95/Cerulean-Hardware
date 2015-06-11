@@ -6,8 +6,6 @@
 
 /*** Serial Communication ***/
 
-
-
 uint8_t pollingMotors = 0;  //stores a 0 if we are not polling the motors and a 1 if the motors are being polled
 uint8_t notPolledCounter = 0;  //stores how many times the bottom board received a top board packet before it received the poll response from the motor controllers
 
@@ -25,6 +23,7 @@ uint8_t pollAddress = 1; //Stores the address of the motor that is going to be p
 uint8_t received;  //Variable to store in incoming serial data
 
 /*** Variables for Stepper Motors ***/
+
 Stepper* horizontalStepper;  //Structure to store horizontal stepper data
 Stepper* verticalStepper;    //Structure to store vertical stepper data
 
@@ -41,12 +40,14 @@ uint8_t currentValue = 0;     //The current value from the serial
 
 
 /*** Time Function ***/
+
 uint32_t time = 0;  //Keeps track of the number of ms that the program has been running for (for time update look at TIM5_IRQHandler)
+
+/*** General GPIO Struct Initialization ***/
 
 GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiations, must be included
 
 /******************** Function Definitions ********************/
-
 
 /******************************************************************************
 * Description: <Sets the speed of the bilge pump in one dirrection.>
@@ -313,11 +314,12 @@ void turnFootPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
 	TIM3->CCR2 = (GENERAL_PWM_PERIOD) * PWM_IN2 / 255.0;	
 }
 
-void USART1_IRQHandler(void) {
-    //Check if interrupt was because data is received
-    if (USART_GetITStatus(USART1, USART_IT_RXNE)) 
+void USART2_IRQHandler(void) {
+
+	//Check if interrupt was because data is received
+    if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
 	{
-		uint8_t received = USART_ReceiveData(USART1);
+		uint8_t received = USART_ReceiveData(USART2);
 		
 		twoPreviousValue = previousValue;
 		previousValue = currentValue;
@@ -343,12 +345,6 @@ void USART1_IRQHandler(void) {
 					{
 						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
 					}
-				}
-				
-				//Used for testing purposes
-				if(laserDataBuff[dataMeasurementCounter] < 200)
-				{
-					
 				}
 				
 				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
@@ -380,16 +376,6 @@ void USART1_IRQHandler(void) {
         //Clear interrupt flag
         USART_ClearITPendingBit(LASER_USART	, USART_IT_RXNE);
     }
-}
-
-void USART2_IRQHandler(void) {
-    
-	
-	//Check if interrupt was because data is received
-    if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
-	{	
-	}
-	USART_ClearITPendingBit(USART2, USART_IT_RXNE);
 }
 
 void UART5_IRQHandler(void) {
@@ -886,39 +872,33 @@ void init_IRQ(void)
 {
 	/*
 		Interrupt Priorities
-		0 : USART 2
-		1 : USART 6	
-		2 : USART 1
+		0 : USART 6 - Data sent along the tether
+		1 : USART 5	- Data sent to the motors
+		2 : USART 2 - Data sent to and from the laser tool
+		3 : TIM 5 - Timer used to keep track of time
 	*/
 	
 	NVIC_InitTypeDef NVIC_InitStruct;
 	
 	//Initiate Interrupt Request on USART channel 2
-	NVIC_InitStruct.NVIC_IRQChannel = USART2_IRQn;
+	NVIC_InitStruct.NVIC_IRQChannel = USART6_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
 	NVIC_Init(&NVIC_InitStruct);
 	
-	//Initiate Interrupt Request for USART  channel 6
-	NVIC_InitStruct.NVIC_IRQChannel = USART6_IRQn;
-	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
-	NVIC_Init(&NVIC_InitStruct);
-	
-	//Initiate Interrupt Request for USART  channel 1
-	NVIC_InitStruct.NVIC_IRQChannel = USART1_IRQn;  //sets the handler for USART1
-	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 3;  //sub priority assignment
-	NVIC_Init(&NVIC_InitStruct);
-	
-	//Initiate Interrupt Request for USART  channel 1
+	//Initiate Interrupt Request for USART  channel 5
 	NVIC_InitStruct.NVIC_IRQChannel = UART5_IRQn;  //sets the handler for USART1
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;  //sub priority assignment
+	NVIC_Init(&NVIC_InitStruct);
+	
+	//Initiate Interrupt Request for USART  channel 1
+	NVIC_InitStruct.NVIC_IRQChannel = USART2_IRQn;  //sets the handler for USART1
+	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 3;  //sub priority assignment
 	NVIC_Init(&NVIC_InitStruct);
 	
     /* Enable the TIM5 gloabal Interrupt */
