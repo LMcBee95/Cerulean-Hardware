@@ -49,9 +49,15 @@
 /*** Laser Measurement Tool ***/
 
 #define LASER_BAUD 					115200
-#define LASER_USART					USART1	
+#define LASER_USART					USART2	
 
 #define READ_LASER					(storage[10]) & 0x10
+
+//Commands found at http://blog.qartis.com/laser-distance-meter-update-serial-commands-timing-measurements/
+#define START_COMMAND 				"*00004#"
+#define LASER_LIGHT_ON_COMMAND		"*001515#"
+#define TURN_LASER_OFF_COMMAND		"*004747#"
+
 
 /***  Direct Memory Access ***/
 
@@ -248,6 +254,8 @@ void resetMotor(uint8_t address);
 void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBlue);
 
 void sendPackets(void);
+
+void sendLaserCommand(char* command);
 
 void setServo1Angle(uint8_t angle);
 

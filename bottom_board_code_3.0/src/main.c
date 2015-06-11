@@ -25,8 +25,13 @@ int main(void) {
 	
 	initialize_servo_timer();
 	init_USART1(LASER_BAUD);  		//initializes USART1 baud rate
+<<<<<<< HEAD
+	init_USART2(LASER_BAUD);		// initialize USART2 baud rate
+	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize UART5 baud rate
+=======
 	init_USART2(TOP_BOTTOM_BAUD);	// initialize USART2 baud rate
 	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize USART2 baud rate
+>>>>>>> origin/master
 	init_USART6(TOP_BOTTOM_BAUD); 	// initialize USART6 baud rate
 	
 	//initializes the pwm for the dc motors on the claw
@@ -55,11 +60,31 @@ int main(void) {
 
 	while (1)
 	{  
+<<<<<<< HEAD
+		//sendPackets();
+		Delay(0xffff);
+		
+		sendLaserCommand(START_COMMAND);
+		/*
+		USART_puts(LASER_USART, 42);
+		USART_puts(LASER_USART, 48);
+		USART_puts(LASER_USART, 48);
+		USART_puts(LASER_USART, 48);
+		USART_puts(LASER_USART, 48);
+		USART_puts(LASER_USART, 52);
+		USART_puts(LASER_USART, 35);
+		*/
+=======
 		sendPackets();
 		
 		Delay(0xfffff);
 		
+<<<<<<< HEAD
 		cameraLedPwm(ADC3ConvertedValue[0] >> 4, 0, ADC1ConvertedValue[CLAW_CURRENT] >> 4, 0, 0);
+=======
+		//GPIO_ResetBits(GPIOD, GPIO_Pin_10);
+>>>>>>> origin/master
+>>>>>>> 936ff938ad184da041625dabfdd832e15bdfba2f
 	}
 	
 	return(0);
