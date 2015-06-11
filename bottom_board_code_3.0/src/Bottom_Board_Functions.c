@@ -6,6 +6,8 @@
 
 /*** Serial Communication ***/
 
+
+
 uint8_t pollingMotors = 0;  //stores a 0 if we are not polling the motors and a 1 if the motors are being polled
 uint8_t notPolledCounter = 0;  //stores how many times the bottom board received a top board packet before it received the poll response from the motor controllers
 
@@ -23,7 +25,6 @@ uint8_t pollAddress = 1; //Stores the address of the motor that is going to be p
 uint8_t received;  //Variable to store in incoming serial data
 
 /*** Variables for Stepper Motors ***/
-
 Stepper* horizontalStepper;  //Structure to store horizontal stepper data
 Stepper* verticalStepper;    //Structure to store vertical stepper data
 
@@ -40,14 +41,12 @@ uint8_t currentValue = 0;     //The current value from the serial
 
 
 /*** Time Function ***/
-
 uint32_t time = 0;  //Keeps track of the number of ms that the program has been running for (for time update look at TIM5_IRQHandler)
-
-/*** General GPIO Struct Initialization ***/
 
 GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiations, must be included
 
 /******************** Function Definitions ********************/
+
 
 /******************************************************************************
 * Description: <Sets the speed of the bilge pump in one dirrection.>
@@ -55,7 +54,7 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiati
 ******************************************************************************/
 void bilgePumpPwm(uint8_t bilgePumpOn)
 {
-	TIM3->CCR3 = (GENERAL_PWM_PERIOD) * bilgePumpOn ;// / 255.0;
+	TIM3->CCR3 = (GENERAL_PWM_PERIOD) * bilgePumpOn ;
 }
 
 
@@ -290,9 +289,12 @@ void TIM5_IRQHandler(void)
 		for(i=0;i<14;i++)
 			setSteppers();
 	}
-	if(time % 100 == 0)
+	if(time%2000==0 && time%4000!=0)
 	{
-		//sendPackets();
+		RGBLedPwm(0,0,0);
+		setSteppersDebugByte(0xFF);
+		for(i=0;i<28;i++)
+			setSteppers();
 	}
 	
 	if(time % 500 == 0)
@@ -314,12 +316,11 @@ void turnFootPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
 	TIM3->CCR2 = (GENERAL_PWM_PERIOD) * PWM_IN2 / 255.0;	
 }
 
-void USART2_IRQHandler(void) {
-
-	//Check if interrupt was because data is received
-    if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
+void USART1_IRQHandler(void) {
+    //Check if interrupt was because data is received
+    if (USART_GetITStatus(USART1, USART_IT_RXNE)) 
 	{
-		uint8_t received = USART_ReceiveData(USART2);
+		uint8_t received = USART_ReceiveData(USART1);
 		
 		twoPreviousValue = previousValue;
 		previousValue = currentValue;
@@ -345,6 +346,12 @@ void USART2_IRQHandler(void) {
 					{
 						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
 					}
+				}
+				
+				//Used for testing purposes
+				if(laserDataBuff[dataMeasurementCounter] < 200)
+				{
+					
 				}
 				
 				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
@@ -376,6 +383,16 @@ void USART2_IRQHandler(void) {
         //Clear interrupt flag
         USART_ClearITPendingBit(LASER_USART	, USART_IT_RXNE);
     }
+}
+
+void USART2_IRQHandler(void) {
+    
+	
+	//Check if interrupt was because data is received
+    if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
+	{	
+	}
+	USART_ClearITPendingBit(USART2, USART_IT_RXNE);
 }
 
 void UART5_IRQHandler(void) {
@@ -440,7 +457,6 @@ void USART6_IRQHandler(void) {
 		}
 		else if(counter > 0 && received != START_BYTE)
 		{
-			cameraLedPwm((storage[1] % 128) * 2, (storage[1] % 128) * 2, (storage[1] % 128) * 2, (storage[1] % 128) * 2, (storage[1] % 128) * 2);
 			storage[counter] = received;
 			counter++;
 			
@@ -485,17 +501,29 @@ void USART6_IRQHandler(void) {
 				//reads the voltage sensors and outputs the which voltages are high
 				if(READ_VOLTAGES)
 				{
-					if(ADC3ConvertedValue[VSEN1] > 3000)
+					if(ADC3ConvertedValue[VSEN1] > ADC_TO_VOLTS * ON_VOLTAGE)
 					{
-						
+						//TODO
 					}
-					if(ADC3ConvertedValue[VSEN2] > 3000)
+					else
 					{
-						
+						//TODO
 					}
-					if(ADC3ConvertedValue[VSEN3] > 3000)
+					if(ADC3ConvertedValue[VSEN2] > ADC_TO_VOLTS * ON_VOLTAGE)
 					{
-						
+						//TODO
+					}
+					else
+					{
+						//TODO
+					}
+					if(ADC3ConvertedValue[VSEN3] > ADC_TO_VOLTS * ON_VOLTAGE)
+					{
+						//TODO
+					}
+					else
+					{
+						//TODO
 					}
 				}
 				
@@ -504,9 +532,6 @@ void USART6_IRQHandler(void) {
 				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
 				{
-
-					
-					//sendPackets();	//Sends the motor controller commands produced by the convert function
 					//pollCounter++;
 				
 					if(pollCounter > 20)
@@ -872,33 +897,39 @@ void init_IRQ(void)
 {
 	/*
 		Interrupt Priorities
-		0 : USART 6 - Data sent along the tether
-		1 : USART 5	- Data sent to the motors
-		2 : USART 2 - Data sent to and from the laser tool
-		3 : TIM 5 - Timer used to keep track of time
+		0 : USART 2
+		1 : USART 6	
+		2 : USART 1
 	*/
 	
 	NVIC_InitTypeDef NVIC_InitStruct;
 	
 	//Initiate Interrupt Request on USART channel 2
-	NVIC_InitStruct.NVIC_IRQChannel = USART6_IRQn;
+	NVIC_InitStruct.NVIC_IRQChannel = USART2_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
 	NVIC_Init(&NVIC_InitStruct);
 	
-	//Initiate Interrupt Request for USART  channel 5
+	//Initiate Interrupt Request for USART  channel 6
+	NVIC_InitStruct.NVIC_IRQChannel = USART6_IRQn;
+	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
+	NVIC_Init(&NVIC_InitStruct);
+	
+	//Initiate Interrupt Request for USART  channel 1
+	NVIC_InitStruct.NVIC_IRQChannel = USART1_IRQn;  //sets the handler for USART1
+	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 3;  //sub priority assignment
+	NVIC_Init(&NVIC_InitStruct);
+	
+	//Initiate Interrupt Request for USART  channel 1
 	NVIC_InitStruct.NVIC_IRQChannel = UART5_IRQn;  //sets the handler for USART1
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;  //sub priority assignment
-	NVIC_Init(&NVIC_InitStruct);
-	
-	//Initiate Interrupt Request for USART  channel 1
-	NVIC_InitStruct.NVIC_IRQChannel = USART2_IRQn;  //sets the handler for USART1
-	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 3;  //sub priority assignment
 	NVIC_Init(&NVIC_InitStruct);
 	
     /* Enable the TIM5 gloabal Interrupt */
@@ -1126,7 +1157,7 @@ void initialize_servo_timer(void)
 	uint16_t PreCalPeriod = ((84000000 / preScaler) / frequency) - 1; 
 	
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
-    TIM_OCInitTypeDef  TIM_OCInitStructure;
+	TIM_OCInitTypeDef  TIM_OCInitStructure;
 	
 	// Setup timebase for TIM9
 	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
@@ -1202,7 +1233,7 @@ void initialize_stepper_timer(uint32_t frequency, uint16_t preScaler)
 	uint32_t PreCalPeriod = ((84000000 * preScaler) / frequency) - 1;  //To figure out what the numbers do
 
 	TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;  //structure used by stm in initializing the pwm
-    TIM_OCInitTypeDef  TIM_OCInitStructure;
+	TIM_OCInitTypeDef  TIM_OCInitStructure;
 	
 	// Setup timebase for TIM12
 	TIM_TimeBaseStructure.TIM_Period = PreCalPeriod;  //sets the period of the timer
