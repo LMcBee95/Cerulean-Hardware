@@ -27,9 +27,9 @@ int main(void) {
 	init_RGB_led_timers(100000, 1);
 	
 	initialize_servo_timer();
-	init_USART1(LASER_BAUD);  //initializes USART1 baud rate
-	init_USART2(TOP_BOTTOM_BAUD);	// initialize USART2 baud rate
-	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize USART2 baud rate
+	init_USART1(LASER_BAUD);  		//initializes USART1 baud rate
+	init_USART2(LASER_BAUD);		// initialize USART2 baud rate
+	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize UART5 baud rate
 	init_USART6(TOP_BOTTOM_BAUD); 	// initialize USART6 baud rate
 	
 	initialize_claw1_timer(100000 , 1);
@@ -55,9 +55,19 @@ int main(void) {
 
 	while (1)
 	{  
-		sendPackets();
-		Delay(0xfffff);
-
+		//sendPackets();
+		Delay(0xffff);
+		
+		sendLaserCommand(START_COMMAND);
+		/*
+		USART_puts(LASER_USART, 42);
+		USART_puts(LASER_USART, 48);
+		USART_puts(LASER_USART, 48);
+		USART_puts(LASER_USART, 48);
+		USART_puts(LASER_USART, 48);
+		USART_puts(LASER_USART, 52);
+		USART_puts(LASER_USART, 35);
+		*/
 	}
 	
 	return(0);

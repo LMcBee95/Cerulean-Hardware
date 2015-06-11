@@ -50,7 +50,7 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiati
 /******************** Function Definitions ********************/
 
 /******************************************************************************
-* Description: <Sets the speed of the bilge pump in one dirrection.>
+* Description: <Sets the speed of the bilge pump in one direction.>
 * Parameters:  <bilgePumpSpeeed; uint8_t;  whether the bilge pump should be on or not>             
 ******************************************************************************/
 void bilgePumpPwm(uint8_t bilgePumpOn)
@@ -62,10 +62,10 @@ void bilgePumpPwm(uint8_t bilgePumpOn)
 /******************************************************************************
 * Description: <Sets the brightness of the five head light leds on the rov.>
 * Parameters:  <led1DutyCycle; uint8_t; led1 brightness>      
-*			<led2DutyCycle; uint8_t; led2 brightness>
-*			<led3DutyCycle; uint8_t; led3 brightness>
-*			<led4DutyCycle; uint8_t; led4 brightness>
-*			<led5DutyCycle; uint8_t; led5 brightness>
+*			   <led2DutyCycle; uint8_t; led2 brightness>
+*			   <led3DutyCycle; uint8_t; led3 brightness>
+*			   <led4DutyCycle; uint8_t; led4 brightness>
+*			   <led5DutyCycle; uint8_t; led5 brightness>
 ******************************************************************************/
 void cameraLedPwm(uint8_t led1DutyCycle, uint8_t led2DutyCycle, uint8_t led3DutyCycle, uint8_t led4DutyCycle, uint8_t led5DutyCycle)
 {
@@ -80,7 +80,7 @@ void cameraLedPwm(uint8_t led1DutyCycle, uint8_t led2DutyCycle, uint8_t led3Duty
 /******************************************************************************
 * Description: <Calculates a checksum from a packet of data to ensure no data has become corrupted.>
 * Parameters:  <packet; uint8_t*;  The starting adress of the array containing the packet>    
-*			<size; uint8_t;  The size of the array with the packet>   
+*			   <size; uint8_t;  The size of the array with the packet>   
 ******************************************************************************/
 uint8_t checksum(uint8_t* packet, uint8_t size) {
 	uint8_t crc = 0;
@@ -103,7 +103,7 @@ uint8_t checksum(uint8_t* packet, uint8_t size) {
 /******************************************************************************
 * Description: <Sets the two pwm signals needed to control the claw h-bridge. One of the pwm will be zero while the other is between zero and 255.>
 * Parameters:  <PWM_IN1; uint8_t;  pwm for the first pin>    
-*			<PWM_IN2; uint8_t;  pwm for the second pin>  
+*			   <PWM_IN2; uint8_t;  pwm for the second pin>  
 ******************************************************************************/ 
 void clawPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
 {
@@ -237,6 +237,24 @@ void sendPackets(void){
 	}
 }
 
+void sendLaserCommand(char* command)
+{
+	GPIO_SetBits(GPIOD, GPIO_Pin_10); //Blue Led Ons
+	
+	uint8_t index = 0;
+	char letter = command[index];
+
+	while(letter != '#')
+	{
+		USART_puts(LASER_USART, letter);
+		index++;
+		letter = command[index];
+	}
+	
+	USART_puts(LASER_USART, '#');
+	
+}
+
 void setServo1Angle(uint8_t angle)
 { 	
 	SERVO_1_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
@@ -347,11 +365,18 @@ void USART2_IRQHandler(void) {
 					}
 				}
 				
+				/*
 				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
 				USART_puts(LASER_USART	, sendData);
 				
 				sendData = (laserDataBuff[dataMeasurementCounter]);
 				USART_puts(LASER_USART	, sendData);
+				*/
+				
+				if(laserDataBuff[dataMeasurementCounter] > 2000)
+				{
+					GPIO_SetBits(GPIOD, GPIO_Pin_10); //Blue Led Ons
+				}
 				
 				dataMeasurementCounter++;
 				
@@ -446,7 +471,6 @@ void USART6_IRQHandler(void) {
 			
 			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))
 			{
-				GPIO_SetBits(GPIOD, GPIO_Pin_10); //Blue Led On
 				
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 				
