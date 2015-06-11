@@ -468,6 +468,12 @@ void USART6_IRQHandler(void) {
 				
 				/*** Do stuff with the info from the top board ***/
 				
+				//gets the angles sent from the top board and converts them into stepper commands
+				setSteppers();
+				
+				//Set camera leds
+				
+				
 				
 				//sets the camera muxes
 				if(MUX1)
@@ -724,15 +730,12 @@ void init_DMA_ADC1(uint16_t *array, uint16_t size)
 
  
   /* Analog channel configuration */
-  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
+  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;
   GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
   
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  
-  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_4;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
  
   /**
@@ -795,20 +798,20 @@ void init_DMA_ADC1(uint16_t *array, uint16_t size)
 void init_DMA_ADC3(uint16_t *array, uint16_t size)
 {
 	ADC_InitTypeDef       ADC_InitStruct;
-    ADC_CommonInitTypeDef ADC_CommonInitStruct;
-    DMA_InitTypeDef       DMA_InitStruct;
-    GPIO_InitTypeDef      GPIO_InitStruct;
+	ADC_CommonInitTypeDef ADC_CommonInitStruct;
+	DMA_InitTypeDef       DMA_InitStruct;
+	GPIO_InitTypeDef      GPIO_InitStruct;
     
 	
 	/* Enable ADC3, DMA2 and GPIO clocks ****************************************/
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2 | RCC_AHB1Periph_GPIOF, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);//ADC3 is connected to the APB2 peripheral bus
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2 | RCC_AHB1Periph_GPIOF, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);//ADC3 is connected to the APB2 peripheral bus
     
 	/* Analog channel configuration : PF3, 4, 5, 10*/
-  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_10;
-  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_Init(GPIOF, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;// | GPIO_Pin_10;
+	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOF, &GPIO_InitStructure);
 	
 	
 	
@@ -831,16 +834,7 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
     DMA_InitStruct.DMA_MemoryBurst = DMA_MemoryBurst_Single;
     DMA_InitStruct.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
     DMA_Init(DMA2_Stream0, &DMA_InitStruct);
-    DMA_Cmd(DMA2_Stream0, ENABLE);
-   
-   
-   /* Configure GPIO pins *****************************************************
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;// PC0, PC1, PC2, PC3
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN;//The pins are configured in analog mode
-    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL ;//We don't need any pull up or pull down
-    GPIO_Init(GPIOC, &GPIO_InitStruct);//Initialize GPIOC pins with the configuration
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1;//PA1
-    GPIO_Init(GPIOA, &GPIO_InitStruct);//Initialize GPIOA pins with the configuration */
+    DMA_Cmd(DMA2_Stream0, ENABLE); 
     
     
     /* ADC Common Init **********************************************************/
@@ -853,7 +847,7 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
 
 
 /* ADC3 Init ****************************************************************/
-    ADC_DeInit();
+    //ADC_DeInit();
     ADC_InitStruct.ADC_Resolution = ADC_Resolution_12b;//Input voltage is converted into a 12bit int (max 4095)
     ADC_InitStruct.ADC_ScanConvMode = ENABLE;//The scan is configured in multiple channels
     ADC_InitStruct.ADC_ContinuousConvMode = ENABLE;//Continuous conversion: input signal is sampled more than once
@@ -864,19 +858,12 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
     ADC_Init(ADC3, &ADC_InitStruct);//Initialize ADC with the configuration
     /* Select the channels to be read from **************************************/
     
+
     
-    
-    /*ADC_RegularChannelConfig(ADC3, ADC_Channel_10, 1, ADC_SampleTime_144Cycles);//PC0
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_11, 2, ADC_SampleTime_144Cycles);//PC1
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_12, 3, ADC_SampleTime_144Cycles);//PC2
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_13, 4, ADC_SampleTime_144Cycles);//PC3
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_1,  5, ADC_SampleTime_144Cycles);//PA1*/
-    
-    
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_8,  1, ADC_SampleTime_144Cycles);//PF3
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_9,  1, ADC_SampleTime_144Cycles);//PF3
 	ADC_RegularChannelConfig(ADC3, ADC_Channel_15,  2, ADC_SampleTime_144Cycles);//PF4
 	ADC_RegularChannelConfig(ADC3, ADC_Channel_14,  3, ADC_SampleTime_144Cycles);//PF5
-	ADC_RegularChannelConfig(ADC3, ADC_Channel_9, 4, ADC_SampleTime_144Cycles);//PF10
+	//ADC_RegularChannelConfig(ADC3, ADC_Channel_9, 4, ADC_SampleTime_144Cycles);//PF10
     
     /* Enable DMA request after last transfer (Single-ADC mode) */
     ADC_DMARequestAfterLastTransferCmd(ADC3, ENABLE);

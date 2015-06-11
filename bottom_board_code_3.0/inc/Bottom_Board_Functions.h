@@ -56,7 +56,7 @@
 /***  Direct Memory Access ***/
 
 #define NUM_DMA_ADC1_CONVERSIONS 		5  //the size of the ADC1 array
-#define NUM_DMA_ADC3_CONVERSIONS 		4  //the size of the ADC3 array
+#define NUM_DMA_ADC3_CONVERSIONS 		3  //the size of the ADC3 array
 
 //Array locations of adc 1 readings
 #define CLAW_CURRENT					0 
@@ -66,10 +66,10 @@
 #define TURNCURRENT					4
 
 //Array locations of adc 3 readings
-#define VSEN3						3
+#define VSEN3						0
 #define VSEN2						2
 #define VSEN1						1
-#define FUSEDETECTM					0	
+//#define FUSEDETECTM					0	
 
 
 uint16_t ADC1ConvertedValue[NUM_DMA_ADC1_CONVERSIONS];  //array to store the ADC1 values

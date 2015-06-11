@@ -17,6 +17,8 @@ int main(void) {
 
 	init_DMA_ADC1(ADC1ConvertedValue, NUM_DMA_ADC1_CONVERSIONS); //the function does not actually use the array address yet
 	init_DMA_ADC3(ADC3ConvertedValue, NUM_DMA_ADC3_CONVERSIONS);  //the function does not actually use the array address yet
+	
+	
 	init_IRQ();  //initiates all of the interrupts that are used for serial communication and timing
 	
 	init_RGB_led_timers(100000, 1);
@@ -49,17 +51,15 @@ int main(void) {
 	
 	 init_LEDS();  //initializes the leds that are used to light up the cammeras
 	 
+	 
 
 	while (1)
 	{  
 		sendPackets();
-		Delay(0xffffff);
-		
-		//GPIO_SetBits(GPIOD, GPIO_Pin_10);
 		
 		Delay(0xfffff);
 		
-		//GPIO_ResetBits(GPIOD, GPIO_Pin_10);
+		cameraLedPwm(ADC3ConvertedValue[0] >> 4, 0, ADC1ConvertedValue[CLAW_CURRENT] >> 4, 0, 0);
 	}
 	
 	return(0);
