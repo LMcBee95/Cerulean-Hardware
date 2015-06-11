@@ -15,7 +15,7 @@ uint8_t motor[8][7];	 //A multidimensional array to store all of the motor comma
 uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
 uint8_t storage[PACKET_SIZE];  //stores the message that is sent from the top board
 uint8_t pollStorage[MOTOR_PACKET_SIZE];
-uint8_t dataGoingUp[SENT_PACKET_SIZE] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}; //Storage for the data that is going to be sent up to the base-station
+uint8_t dataGoingUp[SENT_PACKET_SIZE] = {1, 2, 3, 124, 5, 6, 7, 8, 9, 10, 11, 12}; //Storage for the data that is going to be sent up to the base-station
 
 uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
 uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
@@ -38,6 +38,7 @@ uint8_t dataMeasurementCounter = 0;  //Counter that determines which element of 
 uint8_t twoPreviousValue = 0;  //The value from two serial readings ago
 uint8_t previousValue = 0;    //The value from the last serial reading
 uint8_t currentValue = 0;     //The current value from the serial
+
 
 /*** Time Function ***/
 uint32_t time = 0;  //Keeps track of the number of ms that the program has been running for (for time update look at TIM5_IRQHandler)
@@ -268,13 +269,16 @@ void TIM5_IRQHandler(void)
  int i;
  if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
  {
-	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
+	
+	 
+	 TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	time++; //Updates the current time that the program has been running
 
 	if(time%2000==0 && time%4000==0)
 	{
-		RGBLedPwm(255,255,255);
+		//RGBLedPwm(255,255,255);
 		setSteppersDebugByte(0xFF);
+		GPIO_ToggleBits(GPIOD, GPIO_Pin_11);
 		for(i=0;i<14; i++)
 			setSteppers();
 	}
@@ -285,6 +289,18 @@ void TIM5_IRQHandler(void)
 		for(i=0;i<14;i++)
 			setSteppers();
 	}
+	if(time % 100 == 0)
+	{
+		sendPackets();
+	}
+	
+	if(time % 500 == 0)
+	{
+		sendDataUp();
+	}
+		
+	
+	
 	Stepper_Update(verticalStepper);
 	Stepper_Update(horizontalStepper);
  }
@@ -332,7 +348,7 @@ void USART1_IRQHandler(void) {
 				//Used for testing purposes
 				if(laserDataBuff[dataMeasurementCounter] < 200)
 				{
-					GREEN_LED_ON
+					
 				}
 				
 				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
@@ -367,118 +383,11 @@ void USART1_IRQHandler(void) {
 }
 
 void USART2_IRQHandler(void) {
-    //Check if interrupt was because data is received
+    
+	
+	//Check if interrupt was because data is received
     if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
 	{	
-		received = USART_ReceiveData(USART2);
-	
-		if(received == START_BYTE)
-		{
-			storage[counter] = received;
-			counter = 1;
-			
-		}
-		else if(counter > 0 && received != START_BYTE)
-		{
-			
-			storage[counter] = received;
-			counter++;
-			
-			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))
-			{
-				RGBLedPwm(0, 255, 255);
-
-				sendDataUp();
-				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
-				
-				/*** Do stuff with the info from the top board ***/
-				
-				
-				if(LED1_VALUE > 100)
-				{
-					RGBLedPwm(0, 255, 255);
-				}
-				
-				
-				cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
-				bilgePumpPwm(BILGE_PUMP_VALUE);
-				if(FOOT_TURNER_VALUE < 128) //Going Forward
-				{
-					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
-					turnFootPwm(turnFootMag, 0);
-				}
-				else //Going in Reverse
-				{
-					uint8_t turnFootMag = (FOOT_TURNER_VALUE & 0x0F) << 1;
-					turnFootPwm(0, turnFootMag);
-				}
-				
-				if(READ_LASER) //Read in measurement for the laser tool
-				{
-					//Read in data from the laser measurement tool and figure out what the angle of
-					//the stepper is.  Also figure out the angle of the stepper motor. 
-				}
-				
-				if(READ_VOLTAGES)
-				{
-					//Figure out voltage flags
-				}
-				
-				/*** End doing stuff with the info from the top board ***/
-				
-				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
-				{
-
-					
-					sendPackets();	//Sends the motor controller commands produced by the convert function
-					pollCounter++;
-				
-					if(pollCounter > 20)
-					{
-						RED_LED_ON
-						pollMotor(pollAddress);
-						
-						pollingMotors = 1;
-						
-						Delay(0x3FFF);		//Wait for the read write pin to turn low
-						GPIO_ResetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
-						GPIO_ResetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
-						
-						pollAddress++;
-						if(pollAddress == 9)
-						{
-							pollAddress = 1;
-						}
-						pollCounter = 0;  //Resets the poll counter
-
-					}
-				}
-				else
-				{
-					notPolledCounter++;
-					
-					if(notPolledCounter > POLL_MOTOR_TIME_OUT)
-					{
-						GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
-						GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
-						pollingMotors = 0;
-						notPolledCounter = 0;
-						
-						//print error message or send some message to the top board.
-					}
-				}
-				counter = 0; //Reset the counter
-				
-			}
-			else if(counter == PACKET_SIZE)
-			{
-				
-			}
-		}
-		else
-		{
-			counter = 0;
-		}
 	}
 	USART_ClearITPendingBit(USART2, USART_IT_RXNE);
 }
@@ -505,7 +414,6 @@ void UART5_IRQHandler(void) {
 			{
 				//do stuff with the received data
 				
-				ORANGE_LED_ON
 				
 				pollCounter = 0; //Reset the counter
 				
@@ -537,7 +445,6 @@ void USART6_IRQHandler(void) {
 	{	
 		received = USART_ReceiveData(USART6);
 		
-		
 		if(received == START_BYTE)
 		{
 			storage[counter] = received;
@@ -547,7 +454,7 @@ void USART6_IRQHandler(void) {
 		}
 		else if(counter > 0 && received != START_BYTE)
 		{
-			
+			cameraLedPwm(0, 0, 0, 0, (storage[1] % 128) * 2);
 			storage[counter] = received;
 			counter++;
 			
@@ -555,7 +462,7 @@ void USART6_IRQHandler(void) {
 			{
 				GPIO_SetBits(GPIOD, GPIO_Pin_10); //Blue Led On
 				
-				sendDataUp();
+				//sendDataUp();
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 				
 				/*** Do stuff with the info from the top board ***/
@@ -563,7 +470,7 @@ void USART6_IRQHandler(void) {
 
 				
 				
-				cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
+				//cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
 				bilgePumpPwm(BILGE_PUMP_VALUE);
 				
 				if(FOOT_TURNER_VALUE < 128) //Going Forward
@@ -590,16 +497,16 @@ void USART6_IRQHandler(void) {
 				
 				/*** End doing stuff with the info from the top board ***/
 				
+				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
 				{
 
 					
-					sendPackets();	//Sends the motor controller commands produced by the convert function
-					pollCounter++;
+					//sendPackets();	//Sends the motor controller commands produced by the convert function
+					//pollCounter++;
 				
 					if(pollCounter > 20)
 					{
-						RED_LED_ON
 						pollMotor(pollAddress);
 						
 						pollingMotors = 1;
@@ -1175,6 +1082,11 @@ void init_RGB_led_timers(uint32_t frequency, uint16_t preScaler)
 	 
 	// Enable TIM4 counter
 	TIM_Cmd(RGB_TIMER , ENABLE); 
+	
+}
+
+void init_muxes(void)
+{
 	
 }
 

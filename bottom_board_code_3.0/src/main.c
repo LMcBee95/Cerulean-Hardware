@@ -44,34 +44,21 @@ int main(void) {
 	initialize_timer3(100000, 1);
 	initialize_timer5();
 	
-
+	init_muxes();  //initializes the camera muxes
+	
 	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
 	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
 
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
-	RGBLedPwm(0, 0, 0);
 	 init_LEDS();
-
+	turnFootPwm(255, 0);
 
 	while (1)
 	{  
+		//sendPackets();
+		Delay(0xfffff);
 		
-		
-		GPIO_ResetBits(GPIOD, GPIO_Pin_13 );
-		GPIO_ResetBits(GPIOD, GPIO_Pin_12 );
-		GPIO_ResetBits(GPIOD, GPIO_Pin_11 );
-		GPIO_ResetBits(GPIOD, GPIO_Pin_10 );
-		
-		clawPwm(175, 0);
-		//turnFootdPwm(175, 0);
-		setServo1Angle(120);
-		setServo2Angle(120);
-		bilgePumpPwm(100);
-		
-
-		Delay(0xffffff);
-
 	}
 	
 	return(0);

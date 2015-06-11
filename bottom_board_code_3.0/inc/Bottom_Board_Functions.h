@@ -24,7 +24,7 @@
 /***************** CONSTANTS *****************/
 
 /***  Serial Communication ***/
-#define PACKET_SIZE 				20
+#define PACKET_SIZE 				16
 #define SENT_PACKET_SIZE			12
 #define MOTOR_PACKET_SIZE			7
 #define NUMBER_OF_MOTORS			8
@@ -74,17 +74,6 @@
 uint16_t ADC1ConvertedValue[NUM_DMA_ADC1_CONVERSIONS];  //array to store the ADC1 values
 uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC3 values
 
-
-/*** Discovery Board Debugging Led Pins ***/
-
-#define GREEN_LED_ON				GPIO_SetBits(GPIOD, GPIO_Pin_12);
-#define GREEN_LED_OFF				GPIO_ResetBits(GPIOD, GPIO_Pin_12);
-#define ORANGE_LED_ON				GPIO_SetBits(GPIOD, GPIO_Pin_13);
-#define ORANGE_LED_OFF				GPIO_ResetBits(GPIOD, GPIO_Pin_13);
-#define RED_LED_ON					GPIO_SetBits(GPIOD, GPIO_Pin_14);
-#define RED_LED_OFF					GPIO_ResetBits(GPIOD, GPIO_Pin_14);
-#define BLUE_LED_ON					GPIO_SetBits(GPIOD, GPIO_Pin_15);
-#define BLUE_LED_OFF				GPIO_ResetBits(GPIOD, GPIO_Pin_15);
 
 /*** Servo 1 Init ***/
 
@@ -297,6 +286,8 @@ void init_IRQ(void);
 void init_LEDS(void);
 
 void init_RGB_led_timers(uint32_t frequency, uint16_t preScaler);
+
+void init_muxes(void);
 
 void initialize_servo_timer(void);
 
