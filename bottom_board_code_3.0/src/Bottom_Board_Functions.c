@@ -365,23 +365,13 @@ void USART1_IRQHandler(void) {
 						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
 					}
 				}
-				
-<<<<<<< HEAD
-				/*
-=======
-				//Used for testing purposes
-				if(laserDataBuff[dataMeasurementCounter] < 200)
-				{
-					
-				}
-				
->>>>>>> origin/master
+
 				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
 				USART_puts(LASER_USART	, sendData);
 				
 				sendData = (laserDataBuff[dataMeasurementCounter]);
 				USART_puts(LASER_USART	, sendData);
-				*/
+				
 				
 				if(laserDataBuff[dataMeasurementCounter] > 2000)
 				{
