@@ -483,7 +483,7 @@ void USART6_IRQHandler(void) {
 					
 					
 					//Set camera leds
-					cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
+					//cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
 					
 					
 					//sets the camera muxes
@@ -503,7 +503,7 @@ void USART6_IRQHandler(void) {
 					
 					
 					//sets the speed of the turning foot motor 
-					if(FOOT_TURNER_VALUE < 128) //Going Forward
+					/*if(FOOT_TURNER_VALUE < 128) //Going Forward
 					{
 						uint8_t turnFootMag = (FOOT_TURNER_VALUE << 1);
 						turnFootPwm(turnFootMag, 0);
@@ -512,11 +512,11 @@ void USART6_IRQHandler(void) {
 					{
 						uint8_t turnFootMag = (FOOT_TURNER_VALUE  << 1);
 						turnFootPwm(0, turnFootMag);
-					}
+					}*/
 
 					
 					//reads the voltage sensors and outputs the which voltages are high
-					if(READ_VOLTAGES)
+					/*if(READ_VOLTAGES)
 					{
 						if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)
 							dataGoingUp[MISC_BYTE] |= (1 << V1);
@@ -532,7 +532,7 @@ void USART6_IRQHandler(void) {
 							dataGoingUp[MISC_BYTE] |= (1 << V3);
 						else
 							dataGoingUp[MISC_BYTE] &= ~(1 << V3);
-					}
+					}/*
 					
 					/*** End doing stuff with the info from the top board ***/
 				}
