@@ -62,8 +62,61 @@ int main(void) {
 		Delay(0xfffff);
 		
 		
-		//TODO: make test code that MATT can uncomment and test different hardware
-	}
-	
+		//servo integration test code
+		//moves the two servos from 0 degrees to 100 degrees
+		
+		/*Delay(0xfffff);
+		setServo1Angle(0);
+		setServo2Angle(0);
+		
+		Delay(0xfffff);
+		setServo1Angle(100);
+		setServo2Angle(100);*/
+		
+		
+		
+		//LED integratin test code
+		//turns the leds to 2/5 full power
+		
+		/*cameraLedPwm(100, 100, 100, 100, 100);*/
+		
+		
+		//Voltage detection code
+		//turns on the green led if a voltage is on VSEN1, the yellow led if VSEN2, and the red led if VSEN3
+		
+		/*if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)
+			GPIO_SetBits(GPIOD, GPIO_Pin_11); 
+		else
+			GPIO_ResetBits(GPIOD, GPIO_Pin_11);
+		
+		if(ADC3ConvertedValue[VSEN2] < ADC_TO_VOLTS * ON_VOLTAGE)
+			GPIO_SetBits(GPIOD, GPIO_Pin_12);
+		else
+			GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+		
+		if(ADC3ConvertedValue[VSEN3] < ADC_TO_VOLTS * ON_VOLTAGE)
+			GPIO_SetBits(GPIOD, GPIO_Pin_13);
+		else
+			GPIO_ResetBits(GPIOD, GPIO_Pin_13);*/
+			
+		
+		//Bilge pump
+		//turns the bilge pump on
+		
+		/*bilgePumpPwm(1); */
+		
+		
+		//turn foot motor
+		//spins the motor in one dirrection, waits a little bit, and then turns the motor in the other dirrection
+
+		/*turnFootPwm(150, 0);
+		
+		Delay(0xffffff);
+		
+		turnFootPwm(0, 150);
+		
+		Delay(0xffffff)*/
+		
 	return(0);
+	}
 }

@@ -298,7 +298,7 @@ void TIM5_IRQHandler(void)
 		
 		
 		sendDataUp();
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_11);
+		GPIO_ToggleBits(GPIOD, GPIO_Pin_10);
 	}
 		
 	
@@ -447,6 +447,7 @@ void USART6_IRQHandler(void) {
 	{	
 		received = USART_ReceiveData(USART6);
 		
+		//if the byte is the start byte, 0x12, then the code triggers
 		if(received == START_BYTE)
 		{
 			storage[counter] = received;
@@ -460,87 +461,81 @@ void USART6_IRQHandler(void) {
 			counter++;
 			
 			
-			
+			//checks if  all the bytes have been recieved, if they are, it then checks if the checksum is correct and if the last byte is 0x13
 			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))
 			{
-				GPIO_SetBits(GPIOD, GPIO_Pin_10);
-				
-				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
-				
-				/*** Do stuff with the info from the top board ***/
-				
-				if(ADC3ConvertedValue[VOLT_48_CURRENT] > 3000) // <<figure out what is a good value
+				//command if the base station wants actions to run like they normaly do
+				if(COMMAND = NORMAL)
 				{
-					//TODO
-				}
-				
-				//gets the angles sent from the top board and converts them into stepper commands
-				setSteppers();
-				
-				//Set camera leds
-				cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
-				
-				
-				//sets the camera muxes
-				if(MUX1)
-					GPIO_SetBits(GPIOF, GPIO_Pin_0);
-				else
-					GPIO_ResetBits(GPIOF, GPIO_Pin_0);
-				
-				if(MUX2)
-					GPIO_SetBits(GPIOF, GPIO_Pin_1);
-				else
-					GPIO_ResetBits(GPIOF, GPIO_Pin_1);
+					convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 					
-				
-				//cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
-				bilgePumpPwm(BILGE_PUMP_VALUE);
-				
-				
-				//sets the speed of the turning foot motor
-				if(FOOT_TURNER_VALUE < 128) //Going Forward
-				{
-					uint8_t turnFootMag = (FOOT_TURNER_VALUE << 1);
-					turnFootPwm(turnFootMag, 0);
-				}
-				else //Going in Reverse
-				{
-					uint8_t turnFootMag = (FOOT_TURNER_VALUE  << 1);
-					turnFootPwm(0, turnFootMag);
-				}
+					
+					/*** Do stuff with the info from the top board ***/
+					
+					if(ADC3ConvertedValue[VOLT_48_CURRENT] > 3000) // <<figure out what is a good value
+					{
+						//TODO
+					}
+					
+					
+					//gets the angles sent from the top board and converts them into stepper commands
+					setSteppers();
+					
+					
+					//Set camera leds
+					cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
+					
+					
+					//sets the camera muxes
+					if(MUX1)
+						GPIO_SetBits(GPIOF, GPIO_Pin_0);
+					else
+						GPIO_ResetBits(GPIOF, GPIO_Pin_0);
+					
+					if(MUX2)
+						GPIO_SetBits(GPIOF, GPIO_Pin_1);
+					else
+						GPIO_ResetBits(GPIOF, GPIO_Pin_1);
+						
+					
+					//Turns the bilge pump either on or off
+					bilgePumpPwm(BILGE_PUMP_VALUE);
+					
+					
+					//sets the speed of the turning foot motor 
+					if(FOOT_TURNER_VALUE < 128) //Going Forward
+					{
+						uint8_t turnFootMag = (FOOT_TURNER_VALUE << 1);
+						turnFootPwm(turnFootMag, 0);
+					}
+					else //Going in Reverse
+					{
+						uint8_t turnFootMag = (FOOT_TURNER_VALUE  << 1);
+						turnFootPwm(0, turnFootMag);
+					}
 
-				
-				//reads the voltage sensors and outputs the which voltages are high
-				if(READ_VOLTAGES)
-				{
-					if(ADC3ConvertedValue[VSEN1] > ADC_TO_VOLTS * ON_VOLTAGE)
+					
+					//reads the voltage sensors and outputs the which voltages are high
+					if(READ_VOLTAGES)
 					{
-						//TODO
+						if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)
+							dataGoingUp[MISC_BYTE] |= (1 << V1);
+						else
+							dataGoingUp[MISC_BYTE] &= ~(1 << V1);
+						
+						if(ADC3ConvertedValue[VSEN2] < ADC_TO_VOLTS * ON_VOLTAGE)
+							dataGoingUp[MISC_BYTE] |= (1 << V2);
+						else
+							dataGoingUp[MISC_BYTE] &= ~(1 << V2);
+						
+						if(ADC3ConvertedValue[VSEN3] < ADC_TO_VOLTS * ON_VOLTAGE)
+							dataGoingUp[MISC_BYTE] |= (1 << V3);
+						else
+							dataGoingUp[MISC_BYTE] &= ~(1 << V3);
 					}
-					else
-					{
-						//TODO
-					}
-					if(ADC3ConvertedValue[VSEN2] > ADC_TO_VOLTS * ON_VOLTAGE)
-					{
-						//TODO
-					}
-					else
-					{
-						//TODO
-					}
-					if(ADC3ConvertedValue[VSEN3] > ADC_TO_VOLTS * ON_VOLTAGE)
-					{
-						//TODO
-					}
-					else
-					{
-						//TODO
-					}
+					
+					/*** End doing stuff with the info from the top board ***/
 				}
-				
-				/*** End doing stuff with the info from the top board ***/
-				
 				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
 				{

@@ -81,7 +81,11 @@
 uint16_t ADC1ConvertedValue[NUM_DMA_ADC1_CONVERSIONS];  //array to store the ADC1 values
 uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC3 values
 
-#define COMMAND	storage
+
+/*** micro board command code ***/
+#define COMMAND	storage[17]
+#define NORMAL	0x01
+
 
 
 /*** Servo 1 Init ***/
@@ -170,8 +174,13 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 /*** Voltage Sesnors ***/
 
 #define READ_VOLTAGES				(storage[10] & 0x08)
-#define ON_VOLTAGE				2.5
+#define ON_VOLTAGE				1.5
 #define ADC_TO_VOLTS				4096.0 / 3.3
+#define MISC_BYTE					8
+#define V1						0
+#define V2						1
+#define V3						2
+
 /*** Stepper Motor Init***/
 
 #define STEPPER_TIMER_CLOCK			RCC_APB1Periph_TIM12
