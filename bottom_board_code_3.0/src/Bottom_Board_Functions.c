@@ -15,7 +15,7 @@ uint8_t motor[8][7];	 //A multidimensional array to store all of the motor comma
 uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
 uint8_t storage[PACKET_SIZE];  //stores the message that is sent from the top board
 uint8_t pollStorage[MOTOR_PACKET_SIZE];
-uint8_t dataGoingUp[SENT_PACKET_SIZE] = {1, 2, 3, 124, 5, 6, 7, 8, 9, 10, 11, 12}; //Storage for the data that is going to be sent up to the base-station
+uint8_t dataGoingUp[SENT_PACKET_SIZE] = {1, 2, 3, 124, 5, 6, 7, 8, 9, 10, 11}; //Storage for the data that is going to be sent up to the base-station
 
 uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
 uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
@@ -267,7 +267,7 @@ void setServo2Angle(uint8_t angle)
 void setSteppers(void)
 {
   uint8_t  byte = storage[STEPPER_DOWN_BYTE]; //Get surface packet
-  uint32_t angles = Stepper_UseByte(byte, horizontalStepper, verticalStepper); //Move steppers and get angles
+  uint8_t angles = Stepper_UseByte(byte, horizontalStepper, verticalStepper); //Move steppers and get angles
   dataGoingUp[STEPPER_UP_BYTE] = angles;      //Write angle data to upgoing packet
 }
 
@@ -291,33 +291,14 @@ void TIM5_IRQHandler(void)
 	 
 	 TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	time++; //Updates the current time that the program has been running
-
-	if(time%2000==0 && time%4000==0)
-	{
-		//RGBLedPwm(255,255,255);
-		setSteppersDebugByte(0xFF);
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_11);
-		for(i=0;i<14; i++)
-			setSteppers();
-	}
-	if(time%2000==0 && time%4000!=0)
-	{
-		RGBLedPwm(0,0,0);
-		setSteppersDebugByte(0x77);
-		for(i=0;i<14;i++)
-			setSteppers();
-	}
-	if(time%2000==0 && time%4000!=0)
-	{
-		RGBLedPwm(0,0,0);
-		setSteppersDebugByte(0xFF);
-		for(i=0;i<28;i++)
-			setSteppers();
-	}
 	
 	if(time % 500 == 0)
 	{
+		dataGoingUp[2] = ADC1ConvertedValue[VOLT_48_CURRENT] & 0xff;
+		
+		
 		sendDataUp();
+		GPIO_ToggleBits(GPIOD, GPIO_Pin_11);
 	}
 		
 	
@@ -478,18 +459,26 @@ void USART6_IRQHandler(void) {
 			storage[counter] = received;
 			counter++;
 			
+			
+			
 			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))
 			{
+				GPIO_SetBits(GPIOD, GPIO_Pin_10);
 				
 				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 				
 				/*** Do stuff with the info from the top board ***/
 				
+				if(ADC3ConvertedValue[VOLT_48_CURRENT] > 3000) // <<figure out what is a good value
+				{
+					//TODO
+				}
+				
 				//gets the angles sent from the top board and converts them into stepper commands
 				setSteppers();
 				
 				//Set camera leds
-				
+				cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
 				
 				
 				//sets the camera muxes

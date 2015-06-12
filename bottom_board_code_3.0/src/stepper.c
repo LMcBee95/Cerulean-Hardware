@@ -150,7 +150,7 @@ void Stepper_StepTogether(Stepper* stepper1, Stepper* stepper2, int steps1, int 
   
 }
 
-uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
+uint8_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
 {
   //Declare return int
   uint32_t position;
@@ -173,10 +173,13 @@ uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical)
   Stepper_Step(vertical, correctedVertSteps);
   
   //Return position of stepper motors
-  horzPos = Stepper_GetStep(horizontal);
+  
+ return Stepper_GetStep(horizontal) & 0xFF;
   vertPos = Stepper_GetStep(vertical);
   position = horzPos<<16 + vertPos;
-  return position;  
+  
+  
+  //return position;  
 }
 
 void Stepper_Update(Stepper* stepper)

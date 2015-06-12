@@ -25,8 +25,8 @@
 /***************** CONSTANTS *****************/
 
 /***  Serial Communication ***/
-#define PACKET_SIZE 				16
-#define SENT_PACKET_SIZE			12
+#define PACKET_SIZE 				20
+#define SENT_PACKET_SIZE			11
 #define MOTOR_PACKET_SIZE			7
 #define NUMBER_OF_MOTORS			8
 #define TOP_BOTTOM_BAUD 			115200
@@ -80,6 +80,8 @@
 
 uint16_t ADC1ConvertedValue[NUM_DMA_ADC1_CONVERSIONS];  //array to store the ADC1 values
 uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC3 values
+
+#define COMMAND	storage
 
 
 /*** Servo 1 Init ***/

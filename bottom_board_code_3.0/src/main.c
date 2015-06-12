@@ -61,8 +61,8 @@ int main(void) {
 		
 		Delay(0xfffff);
 		
-		cameraLedPwm(ADC3ConvertedValue[0] >> 4, 0, ADC1ConvertedValue[CLAW_CURRENT] >> 4, 0, 0);
-
+		
+		//TODO: make test code that MATT can uncomment and test different hardware
 	}
 	
 	return(0);

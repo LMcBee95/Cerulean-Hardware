@@ -93,7 +93,7 @@ void Stepper_Update(Stepper* stepper);
 //Use byte to control horizontal and vertical steppers, return a uint32_t with
 //   first 16 bytes: horizontal position
 //   last 16 bytes: vertical position
-uint32_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical);
+uint8_t Stepper_UseByte(uint8_t byte, Stepper* horizontal, Stepper* vertical);
 
 
 #endif /*__STEPPER_INCLUDED*/
