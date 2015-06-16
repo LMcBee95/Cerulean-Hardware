@@ -13,7 +13,7 @@ uint8_t motor[8][7];	 //A multidimensional array to store all of the motor comma
 uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
 uint8_t storage[PACKET_SIZE];  //stores the message that is sent from the top board
 uint8_t pollStorage[MOTOR_PACKET_SIZE];
-uint8_t dataGoingUp[SENT_PACKET_SIZE] = {1, 2, 3, 124, 5, 6, 7, 8, 9, 10, 11, 12}; //Storage for the data that is going to be sent up to the base-station
+uint8_t dataGoingUp[SENT_PACKET_SIZE] = {1, 2, 3, 124, 5, 6, 7, 8, 9, 10, 11}; //Storage for the data that is going to be sent up to the base-station
 
 uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
 uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
@@ -289,7 +289,7 @@ void setServo2Angle(uint8_t angle)
 void setSteppers(void)
 {
   uint8_t  byte = storage[STEPPER_DOWN_BYTE]; //Get surface packet
-  uint32_t angles = Stepper_UseByte(byte, horizontalStepper, verticalStepper); //Move steppers and get angles
+  uint8_t angles = Stepper_UseByte(byte, horizontalStepper, verticalStepper); //Move steppers and get angles
   dataGoingUp[STEPPER_UP_BYTE] = angles;      //Write angle data to upgoing packet
 }
 
@@ -324,33 +324,14 @@ void TIM5_IRQHandler(void)
 	 
 	 TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	time++; //Updates the current time that the program has been running
-
-	if(time%2000==0 && time%4000==0)
-	{
-		//RGBLedPwm(255,255,255);
-		setSteppersDebugByte(0xFF);
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_11);
-		for(i=0;i<14; i++)
-			setSteppers();
-	}
-	if(time%2000==0 && time%4000!=0)
-	{
-		RGBLedPwm(0,0,0);
-		setSteppersDebugByte(0x77);
-		for(i=0;i<14;i++)
-			setSteppers();
-	}
-	if(time%2000==0 && time%4000!=0)
-	{
-		RGBLedPwm(0,0,0);
-		setSteppersDebugByte(0xFF);
-		for(i=0;i<28;i++)
-			setSteppers();
-	}
 	
 	if(time % 500 == 0)
 	{
+		dataGoingUp[2] = ADC1ConvertedValue[VOLT_48_CURRENT] & 0xff;
+		
+		
 		sendDataUp();
+		GPIO_ToggleBits(GPIOD, GPIO_Pin_10);
 	}
 		
 	
@@ -412,6 +393,16 @@ void USART2_IRQHandler(void) {
 						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
 					}
 				}
+<<<<<<< HEAD
+=======
+
+				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
+				USART_puts(LASER_USART	, sendData);
+				
+				sendData = (laserDataBuff[dataMeasurementCounter]);
+				USART_puts(LASER_USART	, sendData);
+				
+>>>>>>> origin/master
 				
 				if(laserDataBuff[dataMeasurementCounter] > 2000)
 				{
@@ -506,6 +497,7 @@ void USART6_IRQHandler(void) {
 	{	
 		received = USART_ReceiveData(USART6);
 		
+		//if the byte is the start byte, 0x12, then the code triggers
 		if(received == START_BYTE)
 		{
 			storage[counter] = received;
@@ -518,74 +510,82 @@ void USART6_IRQHandler(void) {
 			storage[counter] = received;
 			counter++;
 			
+			
+			//checks if  all the bytes have been recieved, if they are, it then checks if the checksum is correct and if the last byte is 0x13
 			if(counter == PACKET_SIZE  && (checksum(storage, PACKET_SIZE - 3) == storage[PACKET_SIZE - 2]) && (storage[PACKET_SIZE - 1] == END_BYTE))
 			{
-				
-				convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
-				
-				/*** Do stuff with the info from the top board ***/
-				
-				
-				//sets the camera muxes
-				if(MUX1)
-					GPIO_SetBits(GPIOF, GPIO_Pin_0);
-				else
-					GPIO_ResetBits(GPIOF, GPIO_Pin_0);
-				
-				if(MUX2)
-					GPIO_SetBits(GPIOF, GPIO_Pin_1);
-				else
-					GPIO_ResetBits(GPIOF, GPIO_Pin_1);
+				//command if the base station wants actions to run like they normaly do
+				if(COMMAND = NORMAL)
+				{
+					convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 					
-				
-				//cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
-				bilgePumpPwm(BILGE_PUMP_VALUE);
-				
-				
-				//sets the speed of the turning foot motor
-				if(FOOT_TURNER_VALUE < 128) //Going Forward
-				{
-					uint8_t turnFootMag = (FOOT_TURNER_VALUE << 1);
-					turnFootPwm(turnFootMag, 0);
-				}
-				else //Going in Reverse
-				{
-					uint8_t turnFootMag = (FOOT_TURNER_VALUE  << 1);
-					turnFootPwm(0, turnFootMag);
-				}
+					
+					/*** Do stuff with the info from the top board ***/
+					
+					if(ADC3ConvertedValue[VOLT_48_CURRENT] > 3000) // <<figure out what is a good value
+					{
+						//TODO
+					}
+					
+					
+					//gets the angles sent from the top board and converts them into stepper commands
+					setSteppers();
+					
+					
+					//Set camera leds
+					//cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
+					
+					
+					//sets the camera muxes
+					if(MUX1)
+						GPIO_SetBits(GPIOF, GPIO_Pin_0);
+					else
+						GPIO_ResetBits(GPIOF, GPIO_Pin_0);
+					
+					if(MUX2)
+						GPIO_SetBits(GPIOF, GPIO_Pin_1);
+					else
+						GPIO_ResetBits(GPIOF, GPIO_Pin_1);
+						
+					
+					//Turns the bilge pump either on or off
+					bilgePumpPwm(BILGE_PUMP_VALUE);
+					
+					
+					//sets the speed of the turning foot motor 
+					/*if(FOOT_TURNER_VALUE < 128) //Going Forward
+					{
+						uint8_t turnFootMag = (FOOT_TURNER_VALUE << 1);
+						turnFootPwm(turnFootMag, 0);
+					}
+					else //Going in Reverse
+					{
+						uint8_t turnFootMag = (FOOT_TURNER_VALUE  << 1);
+						turnFootPwm(0, turnFootMag);
+					}*/
 
-				
-				//reads the voltage sensors and outputs the which voltages are high
-				if(READ_VOLTAGES)
-				{
-					if(ADC3ConvertedValue[VSEN1] > ADC_TO_VOLTS * ON_VOLTAGE)
+					
+					//reads the voltage sensors and outputs the which voltages are high
+					/*if(READ_VOLTAGES)
 					{
-						//TODO
-					}
-					else
-					{
-						//TODO
-					}
-					if(ADC3ConvertedValue[VSEN2] > ADC_TO_VOLTS * ON_VOLTAGE)
-					{
-						//TODO
-					}
-					else
-					{
-						//TODO
-					}
-					if(ADC3ConvertedValue[VSEN3] > ADC_TO_VOLTS * ON_VOLTAGE)
-					{
-						//TODO
-					}
-					else
-					{
-						//TODO
-					}
+						if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)
+							dataGoingUp[MISC_BYTE] |= (1 << V1);
+						else
+							dataGoingUp[MISC_BYTE] &= ~(1 << V1);
+						
+						if(ADC3ConvertedValue[VSEN2] < ADC_TO_VOLTS * ON_VOLTAGE)
+							dataGoingUp[MISC_BYTE] |= (1 << V2);
+						else
+							dataGoingUp[MISC_BYTE] &= ~(1 << V2);
+						
+						if(ADC3ConvertedValue[VSEN3] < ADC_TO_VOLTS * ON_VOLTAGE)
+							dataGoingUp[MISC_BYTE] |= (1 << V3);
+						else
+							dataGoingUp[MISC_BYTE] &= ~(1 << V3);
+					}/*
+					
+					/*** End doing stuff with the info from the top board ***/
 				}
-				
-				/*** End doing stuff with the info from the top board ***/
-				
 				
 				if(!pollingMotors)  //if we are not polling the motors for fault data, pollingMotors will be 0 and the the code will send motor commands to the motor controllers
 				{
@@ -814,15 +814,12 @@ void init_DMA_ADC1(uint16_t *array, uint16_t size)
 
  
   /* Analog channel configuration */
-  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;
+  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;
   GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
   GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(GPIOC, &GPIO_InitStructure);
   
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4 | GPIO_Pin_5;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  
-  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_4;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
   GPIO_Init(GPIOA, &GPIO_InitStructure);
  
   /**
@@ -893,20 +890,20 @@ void init_DMA_ADC1(uint16_t *array, uint16_t size)
 void init_DMA_ADC3(uint16_t *array, uint16_t size)
 {
 	ADC_InitTypeDef       ADC_InitStruct;
-    ADC_CommonInitTypeDef ADC_CommonInitStruct;
-    DMA_InitTypeDef       DMA_InitStruct;
-    GPIO_InitTypeDef      GPIO_InitStruct;
+	ADC_CommonInitTypeDef ADC_CommonInitStruct;
+	DMA_InitTypeDef       DMA_InitStruct;
+	GPIO_InitTypeDef      GPIO_InitStruct;
     
 	
 	/* Enable ADC3, DMA2 and GPIO clocks ****************************************/
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2 | RCC_AHB1Periph_GPIOF, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);//ADC3 is connected to the APB2 peripheral bus
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2 | RCC_AHB1Periph_GPIOF, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC3, ENABLE);//ADC3 is connected to the APB2 peripheral bus
     
 	/* Analog channel configuration : PF3, 4, 5, 10*/
-  GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_10;
-  GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_Init(GPIOF, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin   = GPIO_Pin_3 | GPIO_Pin_4 | GPIO_Pin_5;// | GPIO_Pin_10;
+	GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_AN;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOF, &GPIO_InitStructure);
 	
 	
 	
@@ -929,16 +926,7 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
     DMA_InitStruct.DMA_MemoryBurst = DMA_MemoryBurst_Single;
     DMA_InitStruct.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
     DMA_Init(DMA2_Stream0, &DMA_InitStruct);
-    DMA_Cmd(DMA2_Stream0, ENABLE);
-   
-   
-   /* Configure GPIO pins *****************************************************
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;// PC0, PC1, PC2, PC3
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AN;//The pins are configured in analog mode
-    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL ;//We don't need any pull up or pull down
-    GPIO_Init(GPIOC, &GPIO_InitStruct);//Initialize GPIOC pins with the configuration
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1;//PA1
-    GPIO_Init(GPIOA, &GPIO_InitStruct);//Initialize GPIOA pins with the configuration */
+    DMA_Cmd(DMA2_Stream0, ENABLE); 
     
     
     /* ADC Common Init **********************************************************/
@@ -951,7 +939,7 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
 
 
 /* ADC3 Init ****************************************************************/
-    ADC_DeInit();
+    //ADC_DeInit();
     ADC_InitStruct.ADC_Resolution = ADC_Resolution_12b;//Input voltage is converted into a 12bit int (max 4095)
     ADC_InitStruct.ADC_ScanConvMode = ENABLE;//The scan is configured in multiple channels
     ADC_InitStruct.ADC_ContinuousConvMode = ENABLE;//Continuous conversion: input signal is sampled more than once
@@ -962,19 +950,12 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
     ADC_Init(ADC3, &ADC_InitStruct);//Initialize ADC with the configuration
     /* Select the channels to be read from **************************************/
     
+
     
-    
-    /*ADC_RegularChannelConfig(ADC3, ADC_Channel_10, 1, ADC_SampleTime_144Cycles);//PC0
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_11, 2, ADC_SampleTime_144Cycles);//PC1
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_12, 3, ADC_SampleTime_144Cycles);//PC2
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_13, 4, ADC_SampleTime_144Cycles);//PC3
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_1,  5, ADC_SampleTime_144Cycles);//PA1*/
-    
-    
-    ADC_RegularChannelConfig(ADC3, ADC_Channel_8,  1, ADC_SampleTime_144Cycles);//PF3
+	ADC_RegularChannelConfig(ADC3, ADC_Channel_9,  1, ADC_SampleTime_144Cycles);//PF3
 	ADC_RegularChannelConfig(ADC3, ADC_Channel_15,  2, ADC_SampleTime_144Cycles);//PF4
 	ADC_RegularChannelConfig(ADC3, ADC_Channel_14,  3, ADC_SampleTime_144Cycles);//PF5
-	ADC_RegularChannelConfig(ADC3, ADC_Channel_9, 4, ADC_SampleTime_144Cycles);//PF10
+	//ADC_RegularChannelConfig(ADC3, ADC_Channel_9, 4, ADC_SampleTime_144Cycles);//PF10
     
     /* Enable DMA request after last transfer (Single-ADC mode) */
     ADC_DMARequestAfterLastTransferCmd(ADC3, ENABLE);

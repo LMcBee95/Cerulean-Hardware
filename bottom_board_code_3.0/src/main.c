@@ -17,11 +17,19 @@ int main(void) {
 
 	init_DMA_ADC1(ADC1ConvertedValue, NUM_DMA_ADC1_CONVERSIONS); //the function does not actually use the array address yet
 	init_DMA_ADC3(ADC3ConvertedValue, NUM_DMA_ADC3_CONVERSIONS);  //the function does not actually use the array address yet
+	
+	
 	init_IRQ();  //initiates all of the interrupts that are used for serial communication and timing
 	
 	init_RGB_led_timers(100000, 1);
 	
+<<<<<<< HEAD
 	initialize_servo_timer();
+=======
+	initialize_servo_timer();
+	init_USART1(LASER_BAUD);  		//initializes USART1 baud rate
+
+>>>>>>> origin/master
 	init_USART2(LASER_BAUD);		// initialize USART2 baud rate
 	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize UART5 baud rate
 	init_USART6(TOP_BOTTOM_BAUD); 	// initialize USART6 baud rate
@@ -48,8 +56,10 @@ int main(void) {
 	
 	init_LEDS();  //initializes the leds that are used to light up the cammeras
 	 
+	 
 
 	while (1)
+<<<<<<< HEAD
 	{  
 		//sendPackets();
 		Delay(0xffff);
@@ -66,5 +76,70 @@ int main(void) {
 		*/
 	}
 	
+=======
+	{  
+
+		sendPackets();
+		
+		Delay(0xfffff);
+		
+		
+		//servo integration test code
+		//moves the two servos from 0 degrees to 100 degrees
+		
+		/*Delay(0xfffff);
+		setServo1Angle(0);
+		setServo2Angle(0);
+		
+		Delay(0xfffff);
+		setServo1Angle(100);
+		setServo2Angle(100);*/
+		
+		
+		
+		//LED integratin test code
+		//turns the leds to 2/5 full power
+		
+		/*cameraLedPwm(100, 100, 100, 100, 100);*/
+		
+		
+		//Voltage detection code
+		//turns on the green led if a voltage is on VSEN1, the yellow led if VSEN2, and the red led if VSEN3
+		
+		/*if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)
+			GPIO_SetBits(GPIOD, GPIO_Pin_11); 
+		else
+			GPIO_ResetBits(GPIOD, GPIO_Pin_11);
+		
+		if(ADC3ConvertedValue[VSEN2] < ADC_TO_VOLTS * ON_VOLTAGE)
+			GPIO_SetBits(GPIOD, GPIO_Pin_12);
+		else
+			GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+		
+		if(ADC3ConvertedValue[VSEN3] < ADC_TO_VOLTS * ON_VOLTAGE)
+			GPIO_SetBits(GPIOD, GPIO_Pin_13);
+		else
+			GPIO_ResetBits(GPIOD, GPIO_Pin_13);*/
+			
+		
+		//Bilge pump
+		//turns the bilge pump on
+		
+		/*bilgePumpPwm(1); */
+		
+		
+		//turn foot motor
+		//spins the motor in one dirrection, waits a little bit, and then turns the motor in the other dirrection
+
+		/*turnFootPwm(150, 0);
+		
+		Delay(0xffffff);
+		
+		turnFootPwm(0, 150);
+		
+		Delay(0xffffff)*/
+		
+>>>>>>> origin/master
 	return(0);
+	}
 }
