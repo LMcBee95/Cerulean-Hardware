@@ -6,8 +6,6 @@
 
 /*** Serial Communication ***/
 
-
-
 uint8_t pollingMotors = 0;  //stores a 0 if we are not polling the motors and a 1 if the motors are being polled
 uint8_t notPolledCounter = 0;  //stores how many times the bottom board received a top board packet before it received the poll response from the motor controllers
 
@@ -47,7 +45,6 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiati
 
 /******************** Function Definitions ********************/
 
-
 /******************************************************************************
 * Description: <Sets the speed of the bilge pump in one direction.>
 * Parameters:  <bilgePumpSpeeed; uint8_t;  whether the bilge pump should be on or not>             
@@ -56,7 +53,6 @@ void bilgePumpPwm(uint8_t bilgePumpOn)
 {
 	TIM3->CCR3 = (GENERAL_PWM_PERIOD) * bilgePumpOn ;
 }
-
 
 /******************************************************************************
 * Description: <Sets the brightness of the five head light leds on the rov.>
@@ -74,7 +70,6 @@ void cameraLedPwm(uint8_t led1DutyCycle, uint8_t led2DutyCycle, uint8_t led3Duty
 	TIM14->CCR1 = (LED_PWM_PERIOD) * led4DutyCycle / 255.0;
 	TIM13->CCR1 = (LED_PWM_PERIOD) * led5DutyCycle / 255.0;
 }
-
 
 /******************************************************************************
 * Description: <Calculates a checksum from a packet of data to ensure no data has become corrupted.>
@@ -97,10 +92,10 @@ uint8_t checksum(uint8_t* packet, uint8_t size) {
 	return crc;
 }
 
-
-
 /******************************************************************************
-* Description: <Sets the two pwm signals needed to control the claw h-bridge. One of the pwm will be zero while the other is between zero and 255.>
+* Description: <Sets the two pwm signals needed to control the claw h-bridge. 
+*				One of the pwm will be zero while the other is between zero 
+*				and 255.>
 * Parameters:  <PWM_IN1; uint8_t;  pwm for the first pin>    
 *			   <PWM_IN2; uint8_t;  pwm for the second pin>  
 ******************************************************************************/ 
@@ -110,10 +105,11 @@ void clawPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
 	TIM11->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN1 / 255.0;	
 }
 
-
 /******************************************************************************
-* Description: <Converets motor commands from the tether into commands that can be sent to the motorss.>
-* Parameters:  <top; uint8_t*;  address of the array that contains the data from the tether>    
+* Description: <Converts motor commands from the tether into commands that
+*				can be sent to the motors.>
+* Parameters:  <top; uint8_t*;  address of the array that contains the data 
+*				from the tether>    
 ******************************************************************************/ 
 void convertTBtoBB(uint8_t* top)
 {
@@ -145,20 +141,21 @@ void convertTBtoBB(uint8_t* top)
 	
 }
 
-
 /******************************************************************************
 * Description: <Loops through a while loop to create a delay.>
-* Parameters:  <nCount; uint32_t;  The number of loops through the array that you want to delay in the code>    
+* Parameters:  <nCount; uint32_t;  The number of clock cycles the user wants
+*   			to delay the cpu for; the larger the value the longer the 
+*				delay is>    
 ******************************************************************************/ 
 void Delay(__IO uint32_t nCount) {
   while(nCount--) {
   }
 }
 
-
 /******************************************************************************
 * Description: <Sends out a command to poll the motors for faults.>
-* Parameters:  <address; uint8_t;  address of the motor that needs to be pulled>    
+* Parameters:  <address; uint8_t;  address of the motor that needs to be 
+*				pulled>    
 ******************************************************************************/ 
 void pollMotor(uint8_t address)
 {
@@ -175,8 +172,6 @@ void pollMotor(uint8_t address)
 	for(uint8_t i = 0; i < MOTOR_PACKET_SIZE; i++)
 		USART_puts(UART5, poll[i]);
 }
-
-
 
 /******************************************************************************
 * Description: <Sends out a command to reset a motor.>
@@ -198,8 +193,6 @@ void resetMotor(uint8_t address)
 		USART_puts(UART5, reset[i]);
 }
 
-
-
 /******************************************************************************
 * Description: <Sets the brightness of each of the party leds.>
 * Parameters:  <address; uint8_t;  address of the motor that needs to be pulled>    
@@ -212,6 +205,10 @@ void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBl
 	
 }
 
+/******************************************************************************
+* Description: <Sends data from the micro board to the base station>
+* Parameters:  <none>    
+******************************************************************************/ 
 void sendDataUp(void)
 {
 
@@ -226,6 +223,10 @@ void sendDataUp(void)
 	}
 }
 
+/******************************************************************************
+* Description: <Sends data from the micro board to all eight motors>
+* Parameters:  <none>    
+******************************************************************************/ 
 void sendPackets(void){
 	for(uint8_t i = 0; i < NUMBER_OF_MOTORS; i++)  //Cycles through all of the packets
 	{
@@ -236,6 +237,12 @@ void sendPackets(void){
 	}
 }
 
+/******************************************************************************
+* Description: <Takes a command from the user and transfers that command to the
+*				laser distance measurement tool>
+* Parameters:  <command; char*; command that the user wants to send to the 
+*				laser measurement tool>    
+******************************************************************************/ 
 void sendLaserCommand(char* command)
 {
 	GPIO_SetBits(GPIOD, GPIO_Pin_10); //Blue Led Ons
@@ -254,16 +261,31 @@ void sendLaserCommand(char* command)
 	
 }
 
+/******************************************************************************
+* Description: <Sets the angle of stepper motor one to the angle given by the 
+*				user>
+* Parameters:  <angle; uint8_t; angle given by the user>  
+******************************************************************************/ 
 void setServo1Angle(uint8_t angle)
 { 	
 	SERVO_1_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
 }
 
+/******************************************************************************
+* Description: <Sets the angle of stepper motor two to the angle given by the 
+*				user>
+* Parameters:  <angle; uint8_t; angle given by the user>  
+******************************************************************************/
 void setServo2Angle(uint8_t angle)
 { 	
 	SERVO_2_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
 }
 
+/******************************************************************************
+* Description: <Takes the data from the packet sent from the base station and
+*				and changes the angle of the stepper motor accordingly>
+* Parameters:  <none>  
+******************************************************************************/
 void setSteppers(void)
 {
   uint8_t  byte = storage[STEPPER_DOWN_BYTE]; //Get surface packet
@@ -271,6 +293,10 @@ void setSteppers(void)
   dataGoingUp[STEPPER_UP_BYTE] = angles;      //Write angle data to upgoing packet
 }
 
+/******************************************************************************
+* Description: <Function used for testing purposes for the stepper motor>
+* Parameters:  <byte; uint8_t; the number of steps to update the stepper motor>  
+******************************************************************************/
 void setSteppersDebugByte(uint8_t byte)
 {
 	storage[STEPPER_DOWN_BYTE] = byte;
@@ -282,6 +308,13 @@ void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2)
 	TIM12->CCR2 = (GENERAL_PWM_PERIOD) * dutyCycle2 / 255.0;	
 }
 
+/******************************************************************************
+* Description: <Interrupt handler for timer 5; This timer is called 
+*				approximately every 1 ms; handles updating the stepper motors
+*				and triggering the sending of data back up to the base 
+*				station>
+* Parameters:  <none>  
+******************************************************************************/
 void TIM5_IRQHandler(void)
 {
  int i;
@@ -328,17 +361,31 @@ void TIM5_IRQHandler(void)
 
 }
 
+/******************************************************************************
+* Description: <Sets the speed of the turning foot DC  motor>
+* Parameters:  <PWM_IN1; uint8_t; When PWM_IN2 is held at 0, this parameters
+*				acts as the speed of the turning foot motor in the clockwise
+*				direction>  
+*				<PWM_IN2; uint8_t; When PWM_IN1 is held at 0, this parameters
+*				acts as the speed of the turning foot motor in the counter-
+*				clockwise direction>
+******************************************************************************/
 void turnFootPwm(uint8_t PWM_IN1, uint8_t PWM_IN2)
 {
 	TIM3->CCR1 = (GENERAL_PWM_PERIOD) * PWM_IN1 / 255.0;	
 	TIM3->CCR2 = (GENERAL_PWM_PERIOD) * PWM_IN2 / 255.0;	
 }
 
-void USART1_IRQHandler(void) {
+/******************************************************************************
+* Description: <Interrupt handler for USART2; deals with parsing the distance	
+*				data sent back from the laser measurement tool>
+* Parameters:  <none>
+******************************************************************************/
+void USART2_IRQHandler(void) {
     //Check if interrupt was because data is received
-    if (USART_GetITStatus(USART1, USART_IT_RXNE)) 
+    if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
 	{
-		uint8_t received = USART_ReceiveData(USART1);
+		uint8_t received = USART_ReceiveData(USART2);
 		
 		twoPreviousValue = previousValue;
 		previousValue = currentValue;
@@ -354,7 +401,7 @@ void USART1_IRQHandler(void) {
 		{
 			if(currentValue == 'c')
 			{
-				for(int i = 0; i < (laserSerialCounter); i++)
+				for(uint8_t i = 0; i < (laserSerialCounter); i++)
 				{
 					if(i == 0)
 					{
@@ -365,23 +412,6 @@ void USART1_IRQHandler(void) {
 						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
 					}
 				}
-				
-<<<<<<< HEAD
-				/*
-=======
-				//Used for testing purposes
-				if(laserDataBuff[dataMeasurementCounter] < 200)
-				{
-					
-				}
-				
->>>>>>> origin/master
-				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
-				USART_puts(LASER_USART	, sendData);
-				
-				sendData = (laserDataBuff[dataMeasurementCounter]);
-				USART_puts(LASER_USART	, sendData);
-				*/
 				
 				if(laserDataBuff[dataMeasurementCounter] > 2000)
 				{
@@ -413,16 +443,11 @@ void USART1_IRQHandler(void) {
     }
 }
 
-void USART2_IRQHandler(void) {
-    
-	
-	//Check if interrupt was because data is received
-    if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
-	{	
-	}
-	USART_ClearITPendingBit(USART2, USART_IT_RXNE);
-}
-
+/******************************************************************************
+* Description: <Interrupt handler for UART5; deals with the communication of 
+*				data between the micro board and the eight thruster motors>
+* Parameters:  <none>
+******************************************************************************/
 void UART5_IRQHandler(void) {
     
 	//Check if interrupt was because data is received
@@ -463,12 +488,17 @@ void UART5_IRQHandler(void) {
 		else
 		{
 			pollCounter = 0;//Clear interrupt flag
-			USART_ClearITPendingBit(UART5, USART_IT_RXNE);
+			
 		}
+		USART_ClearITPendingBit(UART5, USART_IT_RXNE); 
 	}
-        
 }
 
+/******************************************************************************
+* Description: <Interrupt handler for USART2; deals with handling the data 
+*				received from the base station and parsing that data>
+* Parameters:  <none>
+******************************************************************************/
 void USART6_IRQHandler(void) {
     
 	 //Check if interrupt was because data is received
@@ -610,6 +640,13 @@ void USART6_IRQHandler(void) {
 	USART_ClearITPendingBit(USART6, USART_IT_RXNE);
 }
 
+/******************************************************************************
+* Description: <Allows the user to send an 8 bit integer over serial>
+* Parameters:  <USARTx; USART_TypeDef*; The usart the user of the function
+*				wishes to send data across>
+*			   <data; uint8_t; the data that the user wants to send by using
+*			    serial.
+******************************************************************************/
 void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 		
 		// wait until data register is empty
@@ -619,6 +656,15 @@ void USART_puts(USART_TypeDef* USARTx, uint8_t data){
 
 /********** Initializations *********/
 
+/******************************************************************************
+* Description: <Initializes timer 11 in order to generate pwm signals for 
+*				servo number one>
+* Parameters:  <frequency; uint32_t; the number of times the pwm cycle happens
+*				per second>
+*			   <preScaler; uint16_t; Determines the speed of the clock for 
+*				timer 11; the frequency of the timer will be the clock speed
+*				of the main processor divided by the pre-scaler>
+******************************************************************************/
 void initialize_claw1_timer(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM11 and GPIOF clocks
@@ -674,6 +720,15 @@ void initialize_claw1_timer(uint32_t frequency, uint16_t preScaler)
 	TIM_Cmd(TIM11, ENABLE); 
 }
 
+/******************************************************************************
+* Description: <Initializes timer 10 in order to generate pwm signals for 
+*				servo number one>
+* Parameters:  <frequency; uint32_t; the number of times the pwm cycle happens
+*				per second>
+*			   <preScaler; uint16_t; Determines the speed of the clock for 
+*				timer 11; the frequency of the timer will be the clock speed
+*				of the main processor divided by the pre-scaler>
+******************************************************************************/
 void initialize_claw2_timer(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM10 and GPIOF clocks
@@ -729,6 +784,14 @@ void initialize_claw2_timer(uint32_t frequency, uint16_t preScaler)
 	TIM_Cmd(TIM10, ENABLE); 
 }
 
+/******************************************************************************
+* Description: <Initializes DMA(direct memory access) for ADC values for ACD
+*				channel 1>
+* Parameters:  <array; uint16_t *; An array that holds the values of the ADC
+*				values to be stored using DMA>
+*			   <size; uint16_t; the number of values on this DMA channel
+*				that will be read into the buffer>
+******************************************************************************/
 void init_DMA_ADC1(uint16_t *array, uint16_t size)
 {
   GPIO_InitTypeDef      GPIO_InitStructure;
@@ -786,8 +849,8 @@ void init_DMA_ADC1(uint16_t *array, uint16_t size)
   DMA_Cmd(DMA2_Stream4, ENABLE); //Enable the DMA2 - Stream 4
  
    /**
-     Config the ADC1 
-   */
+    * Config the ADC1 
+    **/
    ADC_DeInit();
    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
    ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
@@ -819,6 +882,14 @@ void init_DMA_ADC1(uint16_t *array, uint16_t size)
    ADC_SoftwareStartConv(ADC1); // Start ADC1 conversion
 }
 
+/******************************************************************************
+* Description: <Initializes DMA(direct memory access) for ADC values for ACD
+*				channel 3>
+* Parameters:  <array; uint16_t *; An array that holds the values of the ADC
+*				values to be stored using DMA>
+*			   <size; uint16_t; the number of values on this DMA channel
+*				that will be read into the buffer>
+******************************************************************************/
 void init_DMA_ADC3(uint16_t *array, uint16_t size)
 {
 	ADC_InitTypeDef       ADC_InitStruct;
@@ -919,14 +990,18 @@ void init_DMA_ADC3(uint16_t *array, uint16_t size)
     ADC_SoftwareStartConv(ADC3);
 }
 
-
+/******************************************************************************
+* Description: <Initializes all interrupt handlers used>
+* Parameters:  <none>
+******************************************************************************/
 void init_IRQ(void)
 {
-	/*
+	/**
 		Interrupt Priorities
-		0 : USART 2
-		1 : USART 6	
-		2 : USART 1
+		0 : USART 6
+		1 : UART  5	
+		2 : USART 2
+		3 : Timer 5
 	*/
 	
 	NVIC_InitTypeDef NVIC_InitStruct;
@@ -935,34 +1010,27 @@ void init_IRQ(void)
 	NVIC_InitStruct.NVIC_IRQChannel = USART2_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 3;
 	NVIC_Init(&NVIC_InitStruct);
 	
 	//Initiate Interrupt Request for USART  channel 6
 	NVIC_InitStruct.NVIC_IRQChannel = USART6_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
 	NVIC_Init(&NVIC_InitStruct);
 	
-	//Initiate Interrupt Request for USART  channel 1
-	NVIC_InitStruct.NVIC_IRQChannel = USART1_IRQn;  //sets the handler for USART1
-	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 3;  //sub priority assignment
-	NVIC_Init(&NVIC_InitStruct);
-	
-	//Initiate Interrupt Request for USART  channel 1
+	//Initiate Interrupt Request for UART  channel 5
 	NVIC_InitStruct.NVIC_IRQChannel = UART5_IRQn;  //sets the handler for USART1
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;  //sets the priority, or which interrupt will get called first if multiple interrupts go off at once. The lower the number, the higher the priority.
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;  //sub priority assignment
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 1;  //sub priority assignment
 	NVIC_Init(&NVIC_InitStruct);
 	
     /* Enable the TIM5 gloabal Interrupt */
 	NVIC_InitStruct.NVIC_IRQChannel = TIM5_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 4;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 2;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct);
 }
@@ -981,13 +1049,21 @@ void init_LEDS(void)
   GPIO_Init(GPIOF, &GPIO_InitStructure);
 }
 
+/******************************************************************************
+* Description: <Initializes pwm for the five camera leds>
+* Parameters:  <frequency; uint32_t; the number of times the pwm happens per 
+*				second>
+*			   <preScaler; uint16_t; Determines the speed of the clock for 
+*				timer 11; the frequency of the timer will be the clock speed
+*				of the main processor divided by the pre-scaler>
+******************************************************************************/
 void initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM2 and GPIOA clocks
 	
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE); //inititalizes the timers for 
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM13, ENABLE); //NOT TESTED
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14, ENABLE); //NOT TESTED
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE); 
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM13, ENABLE); 
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM14, ENABLE); 
 	
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOF, ENABLE);//NOT TESTED
@@ -1082,6 +1158,14 @@ void initialize_led_timers(uint32_t frequency, uint16_t preScaler)
 
 }
 
+/******************************************************************************
+* Description: <Initializes pwm for RGB light>
+* Parameters:  <frequency; uint32_t; the number of times the pwm happens per 
+*				second>
+*			   <preScaler; uint16_t; Determines the speed of the clock for 
+*				timer 11; the frequency of the timer will be the clock speed
+*				of the main processor divided by the pre-scaler>
+******************************************************************************/
 void init_RGB_led_timers(uint32_t frequency, uint16_t preScaler)
 {
 	// Enable TIM4 and GPIOC clocks
@@ -1155,6 +1239,10 @@ void init_muxes(void)
   GPIO_Init(GPIOD, &GPIO_InitStructure);
 }
 
+/******************************************************************************
+* Description: <Initializes the timer for the servo motors; period = 20ms>
+* Parameters:  <none>
+******************************************************************************/
 void initialize_servo_timer(void)
 {
 	uint16_t frequency = 50;  //period of 20 ms

@@ -22,14 +22,8 @@ int main(void) {
 	init_RGB_led_timers(100000, 1);
 	
 	initialize_servo_timer();
-	init_USART1(LASER_BAUD);  		//initializes USART1 baud rate
-<<<<<<< HEAD
 	init_USART2(LASER_BAUD);		// initialize USART2 baud rate
 	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize UART5 baud rate
-=======
-	init_USART2(TOP_BOTTOM_BAUD);	// initialize USART2 baud rate
-	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize USART2 baud rate
->>>>>>> origin/master
 	init_USART6(TOP_BOTTOM_BAUD); 	// initialize USART6 baud rate
 	
 	//initializes the pwm for the dc motors on the claw
@@ -52,12 +46,11 @@ int main(void) {
 
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
-	 init_LEDS();  //initializes the leds that are used to light up the cammeras
+	init_LEDS();  //initializes the leds that are used to light up the cammeras
 	 
 
 	while (1)
 	{  
-<<<<<<< HEAD
 		//sendPackets();
 		Delay(0xffff);
 		
@@ -71,16 +64,6 @@ int main(void) {
 		USART_puts(LASER_USART, 52);
 		USART_puts(LASER_USART, 35);
 		*/
-=======
-		sendPackets();
-		Delay(0xffffff);
-		
-		//GPIO_SetBits(GPIOD, GPIO_Pin_10);
-		
-		Delay(0xfffff);
-		
-		//GPIO_ResetBits(GPIOD, GPIO_Pin_10);
->>>>>>> origin/master
 	}
 	
 	return(0);
