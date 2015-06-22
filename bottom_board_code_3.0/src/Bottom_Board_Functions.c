@@ -331,7 +331,7 @@ void TIM5_IRQHandler(void)
 		sendDataUp();
 		
 		//sendUpTrigger = 1;
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_10);
+		GPIO_ToggleBits(GPIOD, GPIO_Pin_13);
 	}
 		
 	
