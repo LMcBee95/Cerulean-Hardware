@@ -22,8 +22,6 @@ uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since 
 uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
 uint8_t received;  //Variable to store in incoming serial data
 
-uint8_t sendUpTrigger = 0; // 0 means don't send data up, 1 means send data up
-
 /*** Variables for Stepper Motors ***/
 Stepper* horizontalStepper;  //Structure to store horizontal stepper data
 Stepper* verticalStepper;    //Structure to store vertical stepper data
@@ -322,16 +320,17 @@ void TIM5_IRQHandler(void)
  int i;
  if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
  {
-	
 	 
-	 TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
+	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	time++; //Updates the current time that the program has been running
 	
 	if(time % 500 == 0)
 	{
 		dataGoingUp[2] = ADC1ConvertedValue[VOLT_48_CURRENT] & 0xff;
 		
-		sendUpTrigger = 1;
+		sendDataUp();
+		
+		//sendUpTrigger = 1;
 		GPIO_ToggleBits(GPIOD, GPIO_Pin_10);
 	}
 		

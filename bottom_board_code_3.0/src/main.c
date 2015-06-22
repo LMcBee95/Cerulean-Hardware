@@ -60,11 +60,13 @@ int main(void) {
 
 		sendPackets();
 		
+		/* Trying to remove serial communication from interrupt
 		if(sendUpTrigger)
 		{
 			sendDataUp();
 			sendUpTrigger = 0;
 		}
+		*/
 		
 		Delay(0xfffff);
 		
