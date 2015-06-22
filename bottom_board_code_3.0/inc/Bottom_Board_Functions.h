@@ -109,7 +109,7 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 
 #define SERVO_PERIOD				26250 * 2  //this users clock 2 for timer 9; clock 2 is 2 times faster than clock 1
 #define MAXSERVO 					2.1
-#define MINSERVO 					0.8
+#define MINSERVO 					0.9
 #define MAXSERVOANGLE 				135.0
 
 /*** Camera Leds ***/
