@@ -22,8 +22,6 @@ uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since 
 uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
 uint8_t received;  //Variable to store in incoming serial data
 
-uint8_t sendUpTrigger = 0; // 0 means don't send data up, 1 means send data up
-
 /*** Variables for Stepper Motors ***/
 Stepper* horizontalStepper;  //Structure to store horizontal stepper data
 Stepper* verticalStepper;    //Structure to store vertical stepper data

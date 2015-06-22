@@ -241,7 +241,9 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define GENERAL_PWM_PERIOD			((84000000 * GENERAL_PWM_PRESCALER) / GENERAL_PWM_FREQUENCY)	
 #define CAMERA_LED_PWM_PERIOD		((84000000 * GENERAL_PWM_PRESCALER) / LED_PWM_FREQUENCY)
 
+/*** Serial Flags ***/
 
+uint8_t sendUpTrigger = 0; // 0 means don't send data up, 1 means send data up
 
 
 /***************** FUNCTION DECLARATIONS *****************/
