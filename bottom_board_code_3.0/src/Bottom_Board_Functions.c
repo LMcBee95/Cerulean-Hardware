@@ -530,6 +530,7 @@ void USART6_IRQHandler(void) {
 				//command if the base station wants actions to run like they normaly do
 				if(COMMAND = NORMAL)
 				{
+					GPIO_ToggleBits(GPIOD, GPIO_Pin_12); //Indication that the micro board is receiving information
 					convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 					
 					
