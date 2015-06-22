@@ -23,13 +23,10 @@ int main(void) {
 	
 	init_RGB_led_timers(100000, 1);
 	
-<<<<<<< HEAD
 	initialize_servo_timer();
-=======
 	initialize_servo_timer();
 	init_USART1(LASER_BAUD);  		//initializes USART1 baud rate
 
->>>>>>> origin/master
 	init_USART2(LASER_BAUD);		// initialize USART2 baud rate
 	init_UART5(BOTTOM_MOTOR_BAUD);	// initialize UART5 baud rate
 	init_USART6(TOP_BOTTOM_BAUD); 	// initialize USART6 baud rate
@@ -43,8 +40,8 @@ int main(void) {
 	initialize_stepper_pins();
 	
 
-	initialize_led_timers(LED_PWM_FREQUENCY, 1);  //timer used to control the large leds on the cammeras
-	initialize_timer3(100000, 1);  //timmer used for the pwm in mulitple different toolss
+	initialize_led_timers(LED_PWM_FREQUENCY, 1);  //timer used to control the large leds on the cameras
+	initialize_timer3(100000, 1);  //timer used for the pwm in mulitple different toolss
 	initialize_timer5();  //initializes a timer that will be triggered once a ms
 	
 	init_muxes();  //initializes the camera muxes
@@ -54,32 +51,20 @@ int main(void) {
 
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
-	init_LEDS();  //initializes the leds that are used to light up the cammeras
+	init_LEDS();  //initializes the leds that are used to light up the cameras
 	 
 	 
 
 	while (1)
-<<<<<<< HEAD
-	{  
-		//sendPackets();
-		Delay(0xffff);
-		
-		sendLaserCommand(START_COMMAND);
-		/*
-		USART_puts(LASER_USART, 42);
-		USART_puts(LASER_USART, 48);
-		USART_puts(LASER_USART, 48);
-		USART_puts(LASER_USART, 48);
-		USART_puts(LASER_USART, 48);
-		USART_puts(LASER_USART, 52);
-		USART_puts(LASER_USART, 35);
-		*/
-	}
-	
-=======
 	{  
 
 		sendPackets();
+		
+		if(sendUpTrigger)
+		{
+			sendDataUp();
+			sendUpTrigger = 0;
+		}
 		
 		Delay(0xfffff);
 		
@@ -129,7 +114,7 @@ int main(void) {
 		
 		
 		//turn foot motor
-		//spins the motor in one dirrection, waits a little bit, and then turns the motor in the other dirrection
+		//spins the motor in one direction, waits a little bit, and then turns the motor in the other direction
 
 		/*turnFootPwm(150, 0);
 		
@@ -139,7 +124,6 @@ int main(void) {
 		
 		Delay(0xffffff)*/
 		
->>>>>>> origin/master
 	return(0);
 	}
 }

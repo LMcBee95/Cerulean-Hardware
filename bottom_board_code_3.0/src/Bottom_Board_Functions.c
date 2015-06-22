@@ -22,6 +22,8 @@ uint8_t pollCounter = 0; //Keeps track of how many packets have been sent since 
 uint8_t pollAddress = 1; //Stores the address of the motor that is going to be pulled next
 uint8_t received;  //Variable to store in incoming serial data
 
+uint8_t sendUpTrigger = 0; // 0 means don't send data up, 1 means send data up
+
 /*** Variables for Stepper Motors ***/
 Stepper* horizontalStepper;  //Structure to store horizontal stepper data
 Stepper* verticalStepper;    //Structure to store vertical stepper data
@@ -329,8 +331,7 @@ void TIM5_IRQHandler(void)
 	{
 		dataGoingUp[2] = ADC1ConvertedValue[VOLT_48_CURRENT] & 0xff;
 		
-		
-		sendDataUp();
+		sendUpTrigger = 1;
 		GPIO_ToggleBits(GPIOD, GPIO_Pin_10);
 	}
 		
@@ -393,16 +394,29 @@ void USART2_IRQHandler(void) {
 						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
 					}
 				}
-<<<<<<< HEAD
-=======
 
+				/*******************
+				
+				The data for the laser measurement tool is stored within an array called
+				laserDataBuff where dataMeasurement counter corresponds to the last 
+				measurement read in.  The data for the measurement is stored as an
+				unsigned 16 bit integer.  Below This I have included some code where I
+				have successfully sent the 16 bit packet using USART.  
+				
+				
 				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
 				USART_puts(LASER_USART	, sendData);
 				
 				sendData = (laserDataBuff[dataMeasurementCounter]);
 				USART_puts(LASER_USART	, sendData);
 				
->>>>>>> origin/master
+				*******************/
+				
+				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
+				USART_puts(LASER_USART	, sendData);
+				
+				sendData = (laserDataBuff[dataMeasurementCounter]);
+				USART_puts(LASER_USART	, sendData);
 				
 				if(laserDataBuff[dataMeasurementCounter] > 2000)
 				{
