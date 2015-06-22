@@ -243,7 +243,7 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 
 /*** Serial Flags ***/
 
-uint8_t sendUpTrigger = 0; // 0 means don't send data up, 1 means send data up
+//uint8_t sendUpTrigger = 0; // 0 means don't send data up, 1 means send data up
 
 
 /***************** FUNCTION DECLARATIONS *****************/
@@ -267,6 +267,8 @@ void resetMotor(uint8_t address);
 void RGBLedPwm(uint8_t dutyCycleRed, uint8_t dutyCycleGreen, uint8_t dutyCycleBlue);
 
 void sendPackets(void);
+
+void sendDataUp(void);
 
 void sendLaserCommand(char* command);
 

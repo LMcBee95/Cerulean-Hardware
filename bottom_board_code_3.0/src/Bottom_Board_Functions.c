@@ -320,16 +320,17 @@ void TIM5_IRQHandler(void)
  int i;
  if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
  {
-	
 	 
-	 TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
+	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	time++; //Updates the current time that the program has been running
 	
 	if(time % 500 == 0)
 	{
 		dataGoingUp[2] = ADC1ConvertedValue[VOLT_48_CURRENT] & 0xff;
 		
-		sendUpTrigger = 1;
+		sendDataUp();
+		
+		//sendUpTrigger = 1;
 		GPIO_ToggleBits(GPIOD, GPIO_Pin_10);
 	}
 		
