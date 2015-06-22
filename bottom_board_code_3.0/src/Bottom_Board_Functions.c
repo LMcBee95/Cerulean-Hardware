@@ -463,7 +463,7 @@ void UART5_IRQHandler(void) {
 			//RGBLedPwm(255, 255, 255);
 			pollStorage[pollCounter] = received;
 			pollCounter = 1;
-			GPIO_SetBits(GPIOD, GPIO_Pin_13); 
+			GPIO_SetBits(GPIOD, GPIO_Pin_13); //red
 		}
 		else if(pollCounter > 0 && received != START_BYTE)
 		{
@@ -530,7 +530,7 @@ void USART6_IRQHandler(void) {
 				//command if the base station wants actions to run like they normaly do
 				if(COMMAND = NORMAL)
 				{
-					GPIO_ToggleBits(GPIOD, GPIO_Pin_12); //Indication that the micro board is receiving information
+					GPIO_ToggleBits(GPIOD, GPIO_Pin_12);  //yellow     //Indication that the micro board is receiving information
 					convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 					
 					
@@ -1226,7 +1226,7 @@ void init_muxes(void)
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
   /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10 | GPIO_Pin_0;  //initiates pin 0 for RS485 write mode
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
