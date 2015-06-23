@@ -1266,7 +1266,7 @@ void init_muxes(void)
 ******************************************************************************/
 void initialize_servo_timer(void)
 {
-	uint16_t frequency = 50;  //period of 20 ms
+	uint16_t frequency = 25;  //period of 20 ms
 	uint16_t preScaler = 64;
 	
 	// Enable TIM3 and GPIOC clocks
