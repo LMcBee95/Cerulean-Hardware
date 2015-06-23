@@ -546,29 +546,23 @@ void USART6_IRQHandler(void) {
 					cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
 					
 					//sets the claw to the correct position
-					if(SERVO1_STATE)
+					if(SERVO_CLOSE)
 					{
-						//setServo1Angle(ON_ANGLE);
-						//setServo2Angle(ON_ANGLE);	
+						setServo1Angle(OFF_ANGLE);
+						setServo2Angle(180 - OFF_ANGLE);	
 					}
-					else
+					else if(SERVO_OPEN)
 					{
-						//setServo1Angle(OFF_ANGLE);
-						//setServo2Angle(OFF_ANGLE);	
+						setServo1Angle(ON_ANGLE);
+						setServo2Angle(180 - ON_ANGLE);	
 					}
 					
 					
 					//sets the camera muxes
 					if(MUX1)
-					{
 						GPIO_SetBits(GPIOF, GPIO_Pin_0);
-						GPIO_SetBits(GPIOD, GPIO_Pin_10);
-					}
 					else
-					{
 						GPIO_ResetBits(GPIOF, GPIO_Pin_0);
-						GPIO_ResetBits(GPIOD, GPIO_Pin_10);
-					}
 					if(MUX2)
 						GPIO_SetBits(GPIOF, GPIO_Pin_1);
 					else
@@ -580,7 +574,7 @@ void USART6_IRQHandler(void) {
 					
 					
 					//sets the speed of the turning foot motor 
-					/*if(FOOT_TURNER_VALUE < 128) //Going Forward
+					if(FOOT_TURNER_VALUE < 128) //Going Forward
 					{
 						uint8_t turnFootMag = (FOOT_TURNER_VALUE << 1);
 						turnFootPwm(turnFootMag, 0);
@@ -589,11 +583,11 @@ void USART6_IRQHandler(void) {
 					{
 						uint8_t turnFootMag = (FOOT_TURNER_VALUE  << 1);
 						turnFootPwm(0, turnFootMag);
-					}*/
+					}
 
 					
 					//reads the voltage sensors and outputs the which voltages are high
-					/*if(READ_VOLTAGES)
+					if(READ_VOLTAGES)
 					{
 						if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)
 							dataGoingUp[MISC_BYTE] |= (1 << V1);
@@ -609,7 +603,7 @@ void USART6_IRQHandler(void) {
 							dataGoingUp[MISC_BYTE] |= (1 << V3);
 						else
 							dataGoingUp[MISC_BYTE] &= ~(1 << V3);
-					}/*
+					}
 					
 					/*** End doing stuff with the info from the top board ***/
 				}

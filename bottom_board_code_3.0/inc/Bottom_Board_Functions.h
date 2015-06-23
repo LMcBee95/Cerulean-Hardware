@@ -112,10 +112,10 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define MINSERVO 					0.9
 #define MAXSERVOANGLE 			135.0
 
-#define SERVO1_STATE				storage[10] & (1 << 2)
-#define SERVO2_STATE				storage[10] & (1 << 3)
+#define SERVO_OPEN				storage[10] & (1 << 5)
+#define SERVO_CLOSE				storage[10] & (1 << 4)
 
-#define ON_ANGLE					50
+#define ON_ANGLE					45
 #define OFF_ANGLE					0
 
 #define SERVO1_START				180
@@ -167,7 +167,7 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 
 #define TURN_FOOT_PIN1				GPIO_Pin_6
 #define TURN_FOOT_PIN2				GPIO_Pin_7
-#define BILGE_PUMP_PIN1 			GPIO_Pin_0
+#define BILGE_PUMP_PIN1 				GPIO_Pin_0
 
 
 #define TURN_FOOT_SOURCE_PIN1		GPIO_PinSource6
@@ -182,7 +182,7 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 
 /*** Voltage Sesnors ***/
 
-#define READ_VOLTAGES				(storage[10] & 0x08)
+#define READ_VOLTAGES				(storage[10] & (1 << 2))
 #define ON_VOLTAGE				1.5
 #define ADC_TO_VOLTS				4096.0 / 3.3
 #define MISC_BYTE					8
