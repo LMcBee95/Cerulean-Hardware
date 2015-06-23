@@ -288,9 +288,12 @@ void setServo2Angle(uint8_t angle)
 ******************************************************************************/
 void setSteppers(void)
 {
-  uint8_t  byte = storage[STEPPER_DOWN_BYTE]; //Get surface packet
-  uint8_t angles = Stepper_UseByte(byte, horizontalStepper, verticalStepper); //Move steppers and get angles
-  dataGoingUp[STEPPER_UP_BYTE] = angles;      //Write angle data to upgoing packet
+	uint8_t  byte = storage[STEPPER_DOWN_BYTE]; //Get surface packet
+	uint8_t angles = Stepper_UseByte(byte, horizontalStepper, verticalStepper); //Move steppers and get angles
+  
+	//WriteS angle data to the up packet
+	dataGoingUp[STEPPER_UP_VERT] = Stepper_GetStep(verticalStepper) && 0xFF;      
+	dataGoingUp[STEPPER_UP_HOR] = Stepper_GetStep(horizontalStepper) && 0xFF;
 }
 
 /******************************************************************************
@@ -327,6 +330,7 @@ void TIM5_IRQHandler(void)
 	if(time % 500 == 0)
 	{
 		dataGoingUp[2] = ADC1ConvertedValue[VOLT_48_CURRENT] & 0xff;
+		
 		
 		sendDataUp();
 		

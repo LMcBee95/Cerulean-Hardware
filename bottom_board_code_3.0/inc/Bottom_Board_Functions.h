@@ -219,7 +219,8 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define STEPPER_VERTICAL_POLARITY    1  //If the stepper turns the wrong way, just
 #define STEPPER_HORIZONTAL_POLARITY  1  //change the polarity from 1 to 0 or from 0 to 1.
 
-#define STEPPER_UP_BYTE 4               //Write 4 bytes to the upgoing packet, starting at this one
+#define STEPPER_UP_VERT	 1               //the location in the up packet of the vertical steppers angle
+#define STEPPER_UP_HOR	 2               //the location in the up packet of the horizontal steppers angle
 #define STEPPER_DOWN_BYTE 11            //Read this byte from the packet from the surface to control steppers
 
 /*** RGB Led Init ***/
@@ -240,8 +241,8 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define RGB_AF						GPIO_AF_TIM4
 
 /***  Camera Muxes  ***/
-#define MUX1						storage[11] & (1 << 0)
-#define MUX2						storage[11] & (1 << 1)
+#define MUX1						storage[10] & (1 << 0)
+#define MUX2						storage[10] & (1 << 1)
 
 /*** General PWM Information ***/
 
