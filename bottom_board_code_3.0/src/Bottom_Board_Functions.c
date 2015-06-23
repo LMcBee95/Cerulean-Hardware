@@ -543,7 +543,7 @@ void USART6_IRQHandler(void) {
 					
 					
 					//Set camera leds
-					//cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
+					cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
 					
 					//sets the claw to the correct position
 					if(SERVO1_STATE)
