@@ -54,12 +54,20 @@ int main(void) {
 	
 	init_LEDS();  //initializes the leds that are used to light up the cameras
 	 
-	 
+	 int counter = 0; 
 
 	while (1)
 	{  
 
 		sendPackets();
+		
+		if(counter == 15)
+		{
+			sendDataUp();
+			counter++;
+			counter = 0;
+		}
+		
 		
 		/* Trying to remove serial communication from interrupt
 		if(sendUpTrigger)

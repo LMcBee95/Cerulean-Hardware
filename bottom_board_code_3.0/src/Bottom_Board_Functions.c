@@ -332,7 +332,7 @@ void TIM5_IRQHandler(void)
 		dataGoingUp[2] = ADC1ConvertedValue[VOLT_48_CURRENT] & 0xff;
 		
 		
-		sendDataUp();
+		//sendDataUp();
 		
 		//sendUpTrigger = 1;
 		GPIO_ToggleBits(GPIOD, GPIO_Pin_13);
