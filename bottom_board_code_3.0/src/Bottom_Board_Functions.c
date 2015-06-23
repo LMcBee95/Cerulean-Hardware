@@ -29,7 +29,7 @@ Stepper* verticalStepper;    //Structure to store vertical stepper data
 /*** Variables for Laser Tool ***/
 
 uint8_t tempLaserData[10];  //Stores the decimal values of the length of the measurement.
-uint16_t laserDataBuff[100];  //Stores the actual value of the length in mm from the target
+uint16_t laserDataBuff[1000];  //Stores the actual value of the length in mm from the target
 
 uint8_t laserSerialCounter = 0;  //Counter that determines where in the tempLaserData to store the next value
 uint8_t dataMeasurementCounter = 0;  //Counter that determines which element of laserDataBuff to store the next value 
@@ -37,6 +37,7 @@ uint8_t twoPreviousValue = 0;  //The value from two serial readings ago
 uint8_t previousValue = 0;    //The value from the last serial reading
 uint8_t currentValue = 0;     //The current value from the serial
 
+int laserIsOn = 0;
 
 /*** Time Function ***/
 uint32_t time = 0;  //Keeps track of the number of ms that the program has been running for (for time update look at TIM5_IRQHandler)
@@ -320,7 +321,7 @@ void stepperPwm(uint8_t dutyCycle1, uint8_t dutyCycle2)
 ******************************************************************************/
 void TIM5_IRQHandler(void)
 {
- int i;
+
  if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
  {
 	 
@@ -555,6 +556,16 @@ void USART6_IRQHandler(void) {
 					{
 						setServo1Angle(ON_ANGLE);
 						setServo2Angle(180 - ON_ANGLE);	
+					}
+					
+					if(READ_LASER && !laserIsOn)
+					{
+						sendLaserCommand(LASER_LIGHT_ON_COMMAND);
+					}
+					
+					if(!READ_LASER && laserIsOn)
+					{
+						sendLaserCommand(TURN_LASER_OFF_COMMAND);
 					}
 					
 					

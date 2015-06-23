@@ -12,6 +12,8 @@
 #include "Bottom_Board_Functions.h"  //library that contains all of the functions that control the ROV
 #include "stepper.h"  //library used to control and keep track of stepper motors
 
+#define DEFINE_GLOBAL 0
+
 int main(void) {
 	setSteppersDebugByte(0xF1);
 
@@ -67,6 +69,12 @@ int main(void) {
 			counter++;
 			counter = 0;
 		}
+		
+		if(laserIsOn)
+		{
+			sendLaserCommand(START_COMMAND);
+		}
+		
 		
 		
 		/* Trying to remove serial communication from interrupt

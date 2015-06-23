@@ -51,7 +51,7 @@
 #define LASER_BAUD 					115200
 #define LASER_USART					USART2	
 
-#define READ_LASER					(storage[10]) & 0x10
+#define READ_LASER					(storage[10]) & (1 << 0)
 
 //Commands found at http://blog.qartis.com/laser-distance-meter-update-serial-commands-timing-measurements/
 #define START_COMMAND 				"*00004#"
@@ -81,11 +81,12 @@
 uint16_t ADC1ConvertedValue[NUM_DMA_ADC1_CONVERSIONS];  //array to store the ADC1 values
 uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC3 values
 
+extern int laserIsOn; //Variable that indicates that the laser is on
+
 
 /*** micro board command code ***/
 #define COMMAND	storage[17]
 #define NORMAL	0x01
-
 
 
 /*** Servo 1 Init ***/
