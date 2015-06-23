@@ -60,7 +60,7 @@ int main(void) {
 	GPIO_ResetBits(GPIOF, GPIO_Pin_0);
 	GPIO_ResetBits(GPIOF, GPIO_Pin_1);
 	 
-	 int counter = 0; 
+	int counter = 0; 
 
 	while (1)
 	{  
