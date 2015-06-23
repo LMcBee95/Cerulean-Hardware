@@ -108,10 +108,10 @@ extern int laserIsOn; //Variable that indicates that the laser is on
 
 /*** Setting Servo Angle ***/
 
-#define SERVO_PERIOD				26250 //* 2  //this users clock 2 for timer 9; clock 2 is 2 times faster than clock 1
+#define SERVO_PERIOD				26250 * 2  //this users clock 2 for timer 9; clock 2 is 2 times faster than clock 1
 #define MAXSERVO 					2.1
 #define MINSERVO 					0.9
-#define MAXSERVOANGLE 			180.0
+#define MAXSERVOANGLE 			135.0
 
 #define SERVO_OPEN				storage[10] & (1 << 5)
 #define SERVO_CLOSE				storage[10] & (1 << 4)
