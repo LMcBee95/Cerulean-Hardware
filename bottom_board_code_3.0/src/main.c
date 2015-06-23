@@ -54,7 +54,11 @@ int main(void) {
 
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
+	
 	init_LEDS();  //initializes the leds that are used to light up the cameras
+	cameraLedPwm(0, 0, 0, 0, 0);
+	GPIO_ResetBits(GPIOF, GPIO_Pin_0);
+	GPIO_ResetBits(GPIOF, GPIO_Pin_1);
 	 
 	 int counter = 0; 
 
@@ -74,7 +78,6 @@ int main(void) {
 		{
 			sendLaserCommand(START_COMMAND);
 		}
-		
 		
 		
 		/* Trying to remove serial communication from interrupt

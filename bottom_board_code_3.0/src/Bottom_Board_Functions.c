@@ -52,7 +52,15 @@ GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiati
 ******************************************************************************/
 void bilgePumpPwm(uint8_t bilgePumpOn)
 {
-	TIM3->CCR3 = (GENERAL_PWM_PERIOD) * bilgePumpOn ;
+	if(bilgePumpOn > 0)
+	{
+		TIM3->CCR3 = (GENERAL_PWM_PERIOD) * MAX_BILGE_PUMP_VALUE / 255;
+	}
+	else
+	{
+		TIM3->CCR3 = 0;
+	}
+	
 }
 
 /******************************************************************************
