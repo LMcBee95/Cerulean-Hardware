@@ -560,10 +560,15 @@ void USART6_IRQHandler(void) {
 					
 					//sets the camera muxes
 					if(MUX1)
+					{
 						GPIO_SetBits(GPIOF, GPIO_Pin_0);
+						GPIO_SetBits(GPIOD, GPIO_Pin_10);
+					}
 					else
+					{
 						GPIO_ResetBits(GPIOF, GPIO_Pin_0);
-					
+						GPIO_ResetBits(GPIOD, GPIO_Pin_10);
+					}
 					if(MUX2)
 						GPIO_SetBits(GPIOF, GPIO_Pin_1);
 					else

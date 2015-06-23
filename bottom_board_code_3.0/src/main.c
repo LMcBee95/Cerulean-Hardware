@@ -44,16 +44,17 @@ int main(void) {
 	initialize_timer3(100000, 1);  //timer used for the pwm in mulitple different toolss
 	initialize_timer5();  //initializes a timer that will be triggered once a ms
 	
+	
 	init_muxes();  //initializes the camera muxes
 	
-	//GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
-	//GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
+	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
+	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
 
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	
 	init_LEDS();  //initializes the leds that are used to light up the cameras
 	 
-	 GPIO_SetBits(GPIOD, GPIO_Pin_0);  //sets the RS485 for the motor controllers to write mode
+	 
 
 	while (1)
 	{  
@@ -69,7 +70,8 @@ int main(void) {
 		*/
 		
 		Delay(0xfffff);
-		
+		GPIO_SetBits(GPIOF, GPIO_Pin_0);
+		GPIO_SetBits(GPIOF, GPIO_Pin_1);
 		
 		//servo integration test code
 		//moves the two servos from 0 degrees to 100 degrees
