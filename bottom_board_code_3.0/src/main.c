@@ -53,7 +53,7 @@ int main(void) {
 	
 	init_LEDS();  //initializes the leds that are used to light up the cameras
 	 
-	 GPIO_SetBits(GPIOD, GPIO_Pin_0);
+	 GPIO_SetBits(GPIOD, GPIO_Pin_0);  //sets the RS485 for the motor controllers to write mode
 
 	while (1)
 	{  

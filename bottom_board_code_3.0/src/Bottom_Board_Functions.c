@@ -411,16 +411,8 @@ void USART2_IRQHandler(void) {
 				
 				*******************/
 				
-				uint8_t sendData = (laserDataBuff[dataMeasurementCounter] >> 8);
-				USART_puts(LASER_USART	, sendData);
-				
-				sendData = (laserDataBuff[dataMeasurementCounter]);
-				USART_puts(LASER_USART	, sendData);
-				
-				if(laserDataBuff[dataMeasurementCounter] > 2000)
-				{
-					GPIO_SetBits(GPIOD, GPIO_Pin_10); //Blue Led Ons
-				}
+				dataGoingUp[6] = laserDataBuff[dataMeasurementCounter] >> 8;  //The 8 most significant bits of the distance meansurement
+				dataGoingUp[7] = laserDataBuff[dataMeasurementCounter] && 0xFF; //The 8 least significant bits fo the distance measurement
 				
 				dataMeasurementCounter++;
 				
@@ -463,7 +455,7 @@ void UART5_IRQHandler(void) {
 			//RGBLedPwm(255, 255, 255);
 			pollStorage[pollCounter] = received;
 			pollCounter = 1;
-			GPIO_SetBits(GPIOD, GPIO_Pin_13); //red
+			GPIO_SetBits(GPIOD, GPIO_Pin_13); 
 		}
 		else if(pollCounter > 0 && received != START_BYTE)
 		{
@@ -530,7 +522,7 @@ void USART6_IRQHandler(void) {
 				//command if the base station wants actions to run like they normaly do
 				if(COMMAND = NORMAL)
 				{
-					GPIO_ToggleBits(GPIOD, GPIO_Pin_12);  //yellow     //Indication that the micro board is receiving information
+					GPIO_ToggleBits(GPIOD, GPIO_Pin_12); //Indication that the micro board is receiving information
 					convertTBtoBB(storage);  //Converts the data from the top board into motor controller commands that we can use
 					
 					
@@ -548,6 +540,18 @@ void USART6_IRQHandler(void) {
 					
 					//Set camera leds
 					//cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
+					
+					//sets the claw to the correct position
+					if(SERVO1_STATE)
+					{
+						//setServo1Angle(ON_ANGLE);
+						//setServo2Angle(ON_ANGLE);	
+					}
+					else
+					{
+						//setServo1Angle(OFF_ANGLE);
+						//setServo2Angle(OFF_ANGLE);	
+					}
 					
 					
 					//sets the camera muxes
@@ -1226,7 +1230,7 @@ void init_muxes(void)
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
   /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10 | GPIO_Pin_0;  //initiates pin 0 for RS485 write mode
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
