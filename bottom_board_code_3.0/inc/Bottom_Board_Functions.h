@@ -241,8 +241,8 @@ uint16_t ADC3ConvertedValue[NUM_DMA_ADC3_CONVERSIONS];  //array to store the ADC
 #define RGB_AF						GPIO_AF_TIM4
 
 /***  Camera Muxes  ***/
-#define MUX1						storage[10] & (1 << 0)
-#define MUX2						storage[10] & (1 << 1)
+#define MUX1						storage[10] & (1 << 7)
+#define MUX2						storage[10] & (1 << 6)
 
 /*** General PWM Information ***/
 

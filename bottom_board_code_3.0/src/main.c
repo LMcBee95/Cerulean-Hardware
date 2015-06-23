@@ -70,8 +70,8 @@ int main(void) {
 		*/
 		
 		Delay(0xfffff);
-		GPIO_SetBits(GPIOF, GPIO_Pin_0);
-		GPIO_SetBits(GPIOF, GPIO_Pin_1);
+		//GPIO_SetBits(GPIOF, GPIO_Pin_0);
+		//GPIO_SetBits(GPIOF, GPIO_Pin_1);
 		
 		//servo integration test code
 		//moves the two servos from 0 degrees to 100 degrees
