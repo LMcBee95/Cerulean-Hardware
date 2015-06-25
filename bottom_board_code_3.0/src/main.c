@@ -30,7 +30,6 @@ int main(void) {
 	setServo1Angle(ON_ANGLE);
 	setServo2Angle(180 - ON_ANGLE);	
 	
-	initialize_servo_timer();
 	init_USART1(LASER_BAUD);  		//initializes USART1 baud rate
 
 	init_USART2(LASER_BAUD);		// initialize USART2 baud rate
