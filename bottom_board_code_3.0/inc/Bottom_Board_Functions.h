@@ -113,11 +113,11 @@ extern int laserIsOn; //Variable that indicates that the laser is on
 #define MINSERVO 					0.9
 #define MAXSERVOANGLE 			180.0
 
-#define SERVO_OPEN				storage[10] & (1 << 5)
-#define SERVO_CLOSE				storage[10] & (1 << 4)
+#define SERVO_CLOSED				storage[10] & (1 << 5)
+//#define SERVO_CLOSE				storage[10] & (1 << 4)
 
-#define ON_ANGLE					45
-#define OFF_ANGLE					0
+#define ON_ANGLE					0
+#define OFF_ANGLE					50
 
 #define SERVO1_START				180
 #define SERVO2_START				0

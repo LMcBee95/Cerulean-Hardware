@@ -555,15 +555,17 @@ void USART6_IRQHandler(void) {
 					cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
 					
 					//sets the claw to the correct position
-					if(SERVO_CLOSE)
+					if(SERVO_CLOSED)
 					{
 						setServo1Angle(OFF_ANGLE);
 						setServo2Angle(180 - OFF_ANGLE);	
+						GPIO_SetBits(GPIOD, GPIO_Pin_10);
 					}
-					else if(SERVO_OPEN)
+					else
 					{
 						setServo1Angle(ON_ANGLE);
 						setServo2Angle(180 - ON_ANGLE);	
+						GPIO_ResetBits(GPIOD, GPIO_Pin_10);
 					}
 					
 					if(READ_LASER && !laserIsOn)

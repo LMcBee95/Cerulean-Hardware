@@ -26,6 +26,10 @@ int main(void) {
 	init_RGB_led_timers(100000, 1);
 	
 	initialize_servo_timer();
+	
+	setServo1Angle(ON_ANGLE);
+	setServo2Angle(180 - ON_ANGLE);	
+	
 	initialize_servo_timer();
 	init_USART1(LASER_BAUD);  		//initializes USART1 baud rate
 
