@@ -79,7 +79,7 @@ int main(void) {
 			sendLaserCommand(START_COMMAND);
 		}
 		
-		setServo1Angle(45);	
+		//setServo1Angle(45);	
 		
 		/* Trying to remove serial communication from interrupt
 		if(sendUpTrigger)
