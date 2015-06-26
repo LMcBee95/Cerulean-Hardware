@@ -448,6 +448,7 @@ void USART2_IRQHandler(void) {
 				dataGoingUp[7] = newLaserData && 0xFF; //The 8 least significant bits fo the distance measurement
 				
 				newLaserData = 0;
+				keepReading = 0;
 			}
 			else
 			{
