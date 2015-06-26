@@ -440,6 +440,10 @@ void USART2_IRQHandler(void) {
 				
 				*******************/
 				
+				newLaserData  = newLaserData / 1000;
+				
+				dataGoingUp[6] = newLaserData >> 24;
+				dataGoingUp[5] = newLaserData >> 16;
 				dataGoingUp[6] = newLaserData >> 8;  //The 8 most significant bits of the distance meansurement
 				dataGoingUp[7] = newLaserData && 0xFF; //The 8 least significant bits fo the distance measurement
 				
