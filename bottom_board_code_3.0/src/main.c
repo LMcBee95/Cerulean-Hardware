@@ -83,6 +83,11 @@ int main(void) {
 		{
 			sendLaserCommand(START_COMMAND);
 		}
+		
+		if(!laserIsOn)
+		{
+			sendLaserCommand(TURN_LASER_OFF_COMMAND);
+		}
 
 
 		
