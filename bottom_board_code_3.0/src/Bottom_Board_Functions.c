@@ -13,7 +13,7 @@ uint8_t motor[8][7];	 //A multidimensional array to store all of the motor comma
 uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
 uint8_t storage[PACKET_SIZE];  //stores the message that is sent from the top board
 uint8_t pollStorage[MOTOR_PACKET_SIZE];
-uint8_t dataGoingUp[SENT_PACKET_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //Storage for the data that is going to be sent up to the base-station
+uint8_t dataGoingUp[SENT_PACKET_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //Storage for the data that is going to be sent up to the base-station
 
 uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
 uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
@@ -413,16 +413,14 @@ void USART2_IRQHandler(void) {
 		if(previousValue == '4' && twoPreviousValue == '6' && threePreviousValue == '0' && fourPreviousValue == '0' && fivePreviousValue == '0' && sixPreviousValue == '*')
 		{
 			keepReading = 1;
-			GPIO_SetBits(GPIOD, GPIO_Pin_11);
 		}
 		
 		if (keepReading)
 		{
-			GPIO_SetBits(GPIOD, GPIO_Pin_11);
 			
 			if(currentValue == '#')
 			{
-
+				GPIO_ToggleBits(GPIOD, GPIO_Pin_11);
 				/*******************
 				
 				The data for the laser measurement tool is stored within an array called
@@ -442,10 +440,10 @@ void USART2_IRQHandler(void) {
 				
 				newLaserData  = newLaserData / 1000;
 				
-				dataGoingUp[6] = newLaserData >> 24;
-				dataGoingUp[5] = newLaserData >> 16;
-				dataGoingUp[6] = newLaserData >> 8;  //The 8 most significant bits of the distance meansurement
-				dataGoingUp[7] = newLaserData && 0xFF; //The 8 least significant bits fo the distance measurement
+				dataGoingUp[7] = newLaserData >> 24;
+				dataGoingUp[8] = newLaserData >> 16;
+				dataGoingUp[9] = newLaserData >> 8;  //The 8 most significant bits of the distance meansurement
+				dataGoingUp[10] = newLaserData && 0xFF; //The 8 least significant bits fo the distance measurement
 				
 				newLaserData = 0;
 				keepReading = 0;
@@ -626,9 +624,12 @@ void USART6_IRQHandler(void) {
 					if(READ_VOLTAGES || 1)
 					{
 						
-						dataGoingUp[1] = ADC3ConvertedValue[VSEN1];
-						dataGoingUp[2] = ADC3ConvertedValue[VSEN2];
-						dataGoingUp[3] = ADC3ConvertedValue[VSEN3];
+						dataGoingUp[1] = ADC3ConvertedValue[VSEN1] >> 8;
+						dataGoingUp[2] = ADC3ConvertedValue[VSEN1] & 0xff;
+						dataGoingUp[3] = ADC3ConvertedValue[VSEN2] >> 8;
+						dataGoingUp[4] = ADC3ConvertedValue[VSEN2] & 0xff;
+						dataGoingUp[5] = ADC3ConvertedValue[VSEN3] >> 8;
+						dataGoingUp[6] = ADC3ConvertedValue[VSEN3] & 0xff;
 						
 						/*
 						if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)

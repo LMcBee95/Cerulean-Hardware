@@ -26,7 +26,7 @@
 
 /***  Serial Communication ***/
 #define PACKET_SIZE 				20
-#define SENT_PACKET_SIZE			11
+#define SENT_PACKET_SIZE			13
 #define MOTOR_PACKET_SIZE			7
 #define NUMBER_OF_MOTORS			8
 #define TOP_BOTTOM_BAUD 			115200
