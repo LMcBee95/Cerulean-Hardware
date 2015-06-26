@@ -624,7 +624,7 @@ void USART6_IRQHandler(void) {
 
 					
 					//reads the voltage sensors and outputs the which voltages are high
-					if(READ_VOLTAGES)
+					if(READ_VOLTAGES || 1)
 					{
 						if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)
 							dataGoingUp[MISC_BYTE] |= (1 << V1);
