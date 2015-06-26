@@ -347,7 +347,7 @@ void TIM5_IRQHandler(void)
 	if(time % 500 == 0)
 	{
 		//dataGoingUp[2] = ADC1ConvertedValue[VOLT_48_CURRENT] & 0xff;
-		turnFootPwm(0, 0);
+		//turnFootPwm(0, 0);
 		
 		//sendDataUp();
 		
