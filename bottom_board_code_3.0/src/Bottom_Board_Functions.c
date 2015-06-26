@@ -626,6 +626,12 @@ void USART6_IRQHandler(void) {
 					//reads the voltage sensors and outputs the which voltages are high
 					if(READ_VOLTAGES || 1)
 					{
+						
+						dataGoingUp[1] = ADC3ConvertedValue[VSEN1] >> 4;
+						dataGoingUp[2] = ADC3ConvertedValue[VSEN2] >> 4;
+						dataGoingUp[3] = ADC3ConvertedValue[VSEN3] >> 4;
+						
+						/*
 						if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)
 							dataGoingUp[1] = 255;
 						else
@@ -640,6 +646,7 @@ void USART6_IRQHandler(void) {
 							dataGoingUp[3] = 255;
 						else
 							dataGoingUp[3] = 0;
+						*/
 					}
 					
 					/*** End doing stuff with the info from the top board ***/
