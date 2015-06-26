@@ -13,7 +13,7 @@ uint8_t motor[8][7];	 //A multidimensional array to store all of the motor comma
 uint8_t poll[7]; 		 //An array to store the packet that will poll the motors
 uint8_t storage[PACKET_SIZE];  //stores the message that is sent from the top board
 uint8_t pollStorage[MOTOR_PACKET_SIZE];
-uint8_t dataGoingUp[SENT_PACKET_SIZE] = {1, 2, 3, 124, 5, 6, 7, 8, 9, 10, 11}; //Storage for the data that is going to be sent up to the base-station
+uint8_t dataGoingUp[SENT_PACKET_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //Storage for the data that is going to be sent up to the base-station
 
 uint8_t pollReceived[7]; //An array used to store the packet received from the motors after they are polled
 uint8_t reset[7];		 //An array to send a reset command if one of the motors has a fault
