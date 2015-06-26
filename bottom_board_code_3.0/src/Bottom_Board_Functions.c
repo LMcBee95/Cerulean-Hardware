@@ -561,7 +561,7 @@ void USART6_IRQHandler(void) {
 					//gets the angles sent from the top board and converts them into stepper commands
 					setSteppers();
 					
-					 /*uint8_t horzDir = byte>>7&0x01;          //Horizontal direction
+					/*uint8_t horzDir = byte>>7&0x01;          //Horizontal direction
 					uint8_t vertDir = (byte>>3)&0x01;   //Vertical direction
 					vertSteps += (byte>>4)&0x07; //Horizontal steps
 					horrSteps += byte & 0x07;    //Vertical steps*/
