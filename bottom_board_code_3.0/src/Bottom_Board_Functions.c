@@ -585,11 +585,13 @@ void USART6_IRQHandler(void) {
 					if(READ_LASER && !laserIsOn)
 					{
 						sendLaserCommand(START_COMMAND);
+						GPIO_SetBits(GPIOD, GPIO_Pin_10);
 					}
 					
 					if(!READ_LASER && laserIsOn)
 					{
 						sendLaserCommand(TURN_LASER_OFF_COMMAND);
+						GPIO_ResetBits(GPIOD, GPIO_Pin_10);
 					}
 					
 					
