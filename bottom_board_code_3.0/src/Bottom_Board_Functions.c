@@ -589,7 +589,7 @@ void USART6_IRQHandler(void) {
 					
 					if(!READ_LASER && laserIsOn)
 					{
-						sendLasersendLaserCommand(TURN_LASER_OFF_COMMAND);
+						sendLaserCommand(TURN_LASER_OFF_COMMAND);
 					}
 					
 					
