@@ -391,7 +391,6 @@ void USART2_IRQHandler(void) {
     //Check if interrupt was because data is received
     if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
 	{
-		GPIO_SetBits(GPIOD, GPIO_Pin_11);
 		
 		uint8_t received = USART_ReceiveData(USART2);
 		
@@ -404,6 +403,8 @@ void USART2_IRQHandler(void) {
 		{
 			tempLaserData[laserSerialCounter] = currentValue;
 			laserSerialCounter++;
+			
+			GPIO_SetBits(GPIOD, GPIO_Pin_11);
 		}
 		else if (previousValue == ',' && (twoPreviousValue >= '0' && twoPreviousValue <= '9'))
 		{
