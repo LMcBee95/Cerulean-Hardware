@@ -53,8 +53,7 @@ int main(void) {
 	
 	init_muxes();  //initializes the camera muxes
 	
-	GPIO_SetBits(USART6_ENABLE_PORT, USART6_ENABLE_PIN);  //sets the rs485 on the bottom board to read the response from polling the motors
-	GPIO_SetBits(USART6_DISABLE_PORT, USART6_DISABLE_PIN);
+	GPIO_SetBits(GPIOD, GPIO_Pin_0);
 
 	Delay(0xFFF); //Delays to give the read/write pin time to initialize
 	

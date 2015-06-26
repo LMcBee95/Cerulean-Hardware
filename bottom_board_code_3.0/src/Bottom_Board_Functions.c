@@ -438,12 +438,12 @@ void USART2_IRQHandler(void) {
 				
 				*******************/
 				
-				newLaserData  = newLaserData / 1000;
+				//newLaserData  = newLaserData / 1000;
 				
 				dataGoingUp[7] = newLaserData >> 24;
 				dataGoingUp[8] = newLaserData >> 16;
 				dataGoingUp[9] = newLaserData >> 8;  //The 8 most significant bits of the distance meansurement
-				dataGoingUp[10] = newLaserData && 0xFF; //The 8 least significant bits fo the distance measurement
+				dataGoingUp[10] = newLaserData & 0xFF; //The 8 least significant bits fo the distance measurement
 				
 				newLaserData = 0;
 				keepReading = 0;
@@ -1277,7 +1277,7 @@ void init_muxes(void)
   RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 
   /* Configure PD12, PD13, PD14 and PD15 in output pushpull mode */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_10 | GPIO_Pin_0;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
