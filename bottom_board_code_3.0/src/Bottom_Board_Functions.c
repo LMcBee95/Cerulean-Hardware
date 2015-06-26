@@ -31,11 +31,20 @@ Stepper* verticalStepper;    //Structure to store vertical stepper data
 uint8_t tempLaserData[10];  //Stores the decimal values of the length of the measurement.
 uint16_t laserDataBuff[1000];  //Stores the actual value of the length in mm from the target
 
+uint32_t newLaserData = 0;
+
 uint8_t laserSerialCounter = 0;  //Counter that determines where in the tempLaserData to store the next value
 uint8_t dataMeasurementCounter = 0;  //Counter that determines which element of laserDataBuff to store the next value 
+
+uint8_t sixPreviousValue = 0;
+uint8_t fivePreviousValue = 0;
+uint8_t fourPreviousValue = 0;
+uint8_t threePreviousValue = 0;
 uint8_t twoPreviousValue = 0;  //The value from two serial readings ago
 uint8_t previousValue = 0;    //The value from the last serial reading
 uint8_t currentValue = 0;     //The current value from the serial
+
+uint8_t keepReading = 0;
 
 int laserIsOn = 0;
 
@@ -393,21 +402,25 @@ void USART2_IRQHandler(void) {
 	{
 		uint8_t received = USART_ReceiveData(USART2);
 		
+		sixPreviousValue = fivePreviousValue;
+		fivePreviousValue = fourPreviousValue;
+		fourPreviousValue = threePreviousValue;
+		threePreviousValue = twoPreviousValue;
 		twoPreviousValue = previousValue;
 		previousValue = currentValue;
 		currentValue = received;
 		
-		//See if the previous value was a space or a number and if the current value is a number
-		if((previousValue == ' ' || (previousValue >= '0' && previousValue <= '9')) && (currentValue >= '0' && previousValue <= '9'))
+		if(previousValue == '4' && twoPreviousValue == '6' && threePreviousValue == '0' && fourPreviousValue == '0' && fivePreviousValue == '0' && sixPreviousValue == '*')
 		{
-			tempLaserData[laserSerialCounter] = currentValue;
-			laserSerialCounter++;
-			
+			keepReading = 1;
+			GPIO_SetBits(GPIOD, GPIO_Pin_11);
 		}
-		else if (previousValue == ',' && (twoPreviousValue >= '0' && twoPreviousValue <= '9'))
+		
+		if (keepReading)
 		{
 			GPIO_SetBits(GPIOD, GPIO_Pin_11);
-			if(currentValue == 'c')
+			
+			if(currentValue == '#')
 			{
 				for(uint8_t i = 0; i < (laserSerialCounter); i++)
 				{
@@ -438,28 +451,18 @@ void USART2_IRQHandler(void) {
 				
 				*******************/
 				
-				dataGoingUp[6] = laserDataBuff[dataMeasurementCounter] >> 8;  //The 8 most significant bits of the distance meansurement
-				dataGoingUp[7] = laserDataBuff[dataMeasurementCounter] && 0xFF; //The 8 least significant bits fo the distance measurement
+				dataGoingUp[6] = newLaserData >> 8;  //The 8 most significant bits of the distance meansurement
+				dataGoingUp[7] = newLaserData && 0xFF; //The 8 least significant bits fo the distance measurement
 				
-				dataMeasurementCounter++;
-				
-				//Clear tempLaserData
-				for(int i = 0; i < laserSerialCounter; i++)
-				{
-					tempLaserData[i] = 0;
-				}
-				laserSerialCounter = 0;
+				newLaserData = 0;
 			}
 			else
 			{
-				//Clear tempLaserData
-				for(int i = 0; i < laserSerialCounter; i++)
-				{
-					tempLaserData[i] = 0;
-				}
-				laserSerialCounter = 0;
+				newLaserData = (newLaserData * 10) + (currentValue - '0');
 			}
 		}
+		
+		
 		
         //Clear interrupt flag
         USART_ClearITPendingBit(LASER_USART	, USART_IT_RXNE);
