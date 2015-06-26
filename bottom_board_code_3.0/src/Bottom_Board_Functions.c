@@ -340,7 +340,7 @@ void TIM5_IRQHandler(void)
  {
 
 	 
-	 TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
+	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	time++; //Updates the current time that the program has been running
 	
 	if(time % 500 == 0)
