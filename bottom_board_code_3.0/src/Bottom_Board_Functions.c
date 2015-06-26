@@ -627,19 +627,19 @@ void USART6_IRQHandler(void) {
 					if(READ_VOLTAGES || 1)
 					{
 						if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)
-							dataGoingUp[MISC_BYTE] |= (1 << V1);
+							dataGoingUp[1] |= (1 << V1);
 						else
-							dataGoingUp[MISC_BYTE] &= ~(1 << V1);
+							dataGoingUp[1] &= ~(1 << V1);
 						
 						if(ADC3ConvertedValue[VSEN2] < ADC_TO_VOLTS * ON_VOLTAGE)
-							dataGoingUp[MISC_BYTE] |= (1 << V2);
+							dataGoingUp[2] |= (1 << V2);
 						else
-							dataGoingUp[MISC_BYTE] &= ~(1 << V2);
+							dataGoingUp[2] &= ~(1 << V2);
 						
 						if(ADC3ConvertedValue[VSEN3] < ADC_TO_VOLTS * ON_VOLTAGE)
-							dataGoingUp[MISC_BYTE] |= (1 << V3);
+							dataGoingUp[3] |= (1 << V3);
 						else
-							dataGoingUp[MISC_BYTE] &= ~(1 << V3);
+							dataGoingUp[3] &= ~(1 << V3);
 					}
 					
 					/*** End doing stuff with the info from the top board ***/
