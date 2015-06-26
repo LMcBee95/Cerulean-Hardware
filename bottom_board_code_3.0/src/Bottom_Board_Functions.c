@@ -353,8 +353,8 @@ void TIM5_IRQHandler(void)
 		//sendUpTrigger = 1;
 		GPIO_ToggleBits(GPIOD, GPIO_Pin_13);
 	}
-	Stepper_Enable(verticalStepper);
-	Stepper_Enable(horizontalStepper);
+	if(verticalStepper->stepBuffer > 0) Stepper_Enable(verticalStepper);
+	if(horizontalStepper->stepBuffer > 0) Stepper_Enable(horizontalStepper);
 	
 	
 	Stepper_Update(verticalStepper);
@@ -563,8 +563,8 @@ void USART6_IRQHandler(void) {
 					
 					 /*uint8_t horzDir = byte>>7&0x01;          //Horizontal direction
 					uint8_t vertDir = (byte>>3)&0x01;   //Vertical direction
-					uint8_t horzSteps = (byte>>4)&0x07; //Horizontal steps
-					uint8_t vertSteps = byte & 0x07;    //Vertical steps*/
+					vertSteps += (byte>>4)&0x07; //Horizontal steps
+					horrSteps += byte & 0x07;    //Vertical steps*/
 					
 					
 					//Set camera leds
