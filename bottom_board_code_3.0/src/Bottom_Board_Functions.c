@@ -262,7 +262,6 @@ void sendPackets(void){
 ******************************************************************************/ 
 void sendLaserCommand(char* command)
 {
-	GPIO_SetBits(GPIOD, GPIO_Pin_10); //Blue Led Ons
 	
 	uint8_t index = 0;
 	char letter = command[index];
@@ -610,9 +609,6 @@ void USART6_IRQHandler(void) {
 					
 					//Turns the bilge pump either on or off
 					bilgePumpPwm(BILGE_PUMP_VALUE);
-					
-					if(BILGE_PUMP_VALUE) GPIO_SetBits(GPIOD, GPIO_Pin_10);
-					else GPIO_ResetBits(GPIOD, GPIO_Pin_10);
 					
 					//sets the speed of the turning foot motor 
 					if(FOOT_TURNER_VALUE < 128) //Going Forward
