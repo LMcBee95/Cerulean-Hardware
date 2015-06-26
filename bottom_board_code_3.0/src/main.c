@@ -111,7 +111,7 @@ int main(void) {
 		//Bilge pump
 		//turns the bilge pump on
 		
-		/*bilgePumpPwm(1); */
+		/*bilgePumpPwm(0); */
 		
 		
 		//turn foot motor

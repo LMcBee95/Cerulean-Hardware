@@ -353,15 +353,15 @@ void TIM5_IRQHandler(void)
 		//sendUpTrigger = 1;
 		GPIO_ToggleBits(GPIOD, GPIO_Pin_13);
 	}
-	//Stepper_Enable(verticalStepper);
-	//Stepper_Enable(horizontalStepper);
+	Stepper_Enable(verticalStepper);
+	Stepper_Enable(horizontalStepper);
 	
 	
 	Stepper_Update(verticalStepper);
 	Stepper_Update(horizontalStepper);
 	
-	//Stepper_Disable(verticalStepper);
-	//Stepper_Disable(horizontalStepper);
+	Stepper_Disable(verticalStepper);
+	Stepper_Disable(horizontalStepper);
  }
 
 }
@@ -561,7 +561,7 @@ void USART6_IRQHandler(void) {
 					//gets the angles sent from the top board and converts them into stepper commands
 					setSteppers();
 					
-					 /* uint8_t horzDir = byte>>7&0x01;          //Horizontal direction
+					 /*uint8_t horzDir = byte>>7&0x01;          //Horizontal direction
 					uint8_t vertDir = (byte>>3)&0x01;   //Vertical direction
 					uint8_t horzSteps = (byte>>4)&0x07; //Horizontal steps
 					uint8_t vertSteps = byte & 0x07;    //Vertical steps*/
