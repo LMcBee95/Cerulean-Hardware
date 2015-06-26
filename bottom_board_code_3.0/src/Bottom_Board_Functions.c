@@ -391,6 +391,8 @@ void USART2_IRQHandler(void) {
     //Check if interrupt was because data is received
     if (USART_GetITStatus(USART2, USART_IT_RXNE)) 
 	{
+		GPIO_SetBits(GPIOD, GPIO_Pin_11);
+		
 		uint8_t received = USART_ReceiveData(USART2);
 		
 		twoPreviousValue = previousValue;
@@ -435,8 +437,6 @@ void USART2_IRQHandler(void) {
 				USART_puts(LASER_USART	, sendData);
 				
 				*******************/
-				
-				GPIO_SetBits(GPIOD, GPIO_Pin_11);
 				
 				dataGoingUp[6] = laserDataBuff[dataMeasurementCounter] >> 8;  //The 8 most significant bits of the distance meansurement
 				dataGoingUp[7] = laserDataBuff[dataMeasurementCounter] && 0xFF; //The 8 least significant bits fo the distance measurement
