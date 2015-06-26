@@ -73,9 +73,10 @@ int main(void) {
 		if(counter == 15)
 		{
 			sendDataUp();
-			counter++;
+			
 			counter = 0;
 		}
+		counter++;
 		
 		if(laserIsOn)
 		{

@@ -300,7 +300,7 @@ void setSteppers(void)
 	uint8_t  byte = storage[STEPPER_DOWN_BYTE]; //Get surface packet
 	uint8_t angles = Stepper_UseByte(byte, horizontalStepper, verticalStepper); //Move steppers and get angles
   
-	//WriteS angle data to the up packet
+	//Writes angle data to the up packet
 	dataGoingUp[STEPPER_UP_VERT] = Stepper_GetStep(verticalStepper) && 0xFF;      
 	dataGoingUp[STEPPER_UP_HOR] = Stepper_GetStep(horizontalStepper) && 0xFF;
 }
@@ -332,8 +332,9 @@ void TIM5_IRQHandler(void)
 
  if (TIM_GetITStatus(TIM5, TIM_IT_Update) != RESET)
  {
+
 	 
-	TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
+	 TIM_ClearITPendingBit(TIM5, TIM_IT_Update);
 	time++; //Updates the current time that the program has been running
 	
 	if(time % 500 == 0)
@@ -346,11 +347,15 @@ void TIM5_IRQHandler(void)
 		//sendUpTrigger = 1;
 		GPIO_ToggleBits(GPIOD, GPIO_Pin_13);
 	}
-		
+	//Stepper_Enable(verticalStepper);
+	//Stepper_Enable(horizontalStepper);
 	
 	
 	Stepper_Update(verticalStepper);
 	Stepper_Update(horizontalStepper);
+	
+	//Stepper_Disable(verticalStepper);
+	//Stepper_Disable(horizontalStepper);
  }
 
 }
