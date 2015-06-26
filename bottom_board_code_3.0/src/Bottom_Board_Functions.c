@@ -422,17 +422,6 @@ void USART2_IRQHandler(void) {
 			
 			if(currentValue == '#')
 			{
-				for(uint8_t i = 0; i < (laserSerialCounter); i++)
-				{
-					if(i == 0)
-					{
-						laserDataBuff[dataMeasurementCounter] = (tempLaserData[i] - '0');
-					}
-					else
-					{
-						laserDataBuff[dataMeasurementCounter] = (laserDataBuff[dataMeasurementCounter] * 10) + (tempLaserData[i] - '0');
-					}
-				}
 
 				/*******************
 				
@@ -632,9 +621,9 @@ void USART6_IRQHandler(void) {
 					if(READ_VOLTAGES || 1)
 					{
 						
-						dataGoingUp[1] = ADC3ConvertedValue[VSEN1] >> 4;
-						dataGoingUp[2] = ADC3ConvertedValue[VSEN2] >> 4;
-						dataGoingUp[3] = ADC3ConvertedValue[VSEN3] >> 4;
+						dataGoingUp[1] = ADC3ConvertedValue[VSEN1];
+						dataGoingUp[2] = ADC3ConvertedValue[VSEN2];
+						dataGoingUp[3] = ADC3ConvertedValue[VSEN3];
 						
 						/*
 						if(ADC3ConvertedValue[VSEN1] < ADC_TO_VOLTS * ON_VOLTAGE)
