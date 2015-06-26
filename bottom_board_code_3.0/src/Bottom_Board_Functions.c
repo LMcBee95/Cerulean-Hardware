@@ -60,11 +60,13 @@ void bilgePumpPwm(uint8_t bilgePumpOn)
 {
 	if(bilgePumpOn > 0)
 	{
-		TIM3->CCR3 = (GENERAL_PWM_PERIOD) * MAX_BILGE_PUMP_VALUE / 255;
+		TIM10->CCR1 = (GENERAL_PWM_PERIOD) * MAX_BILGE_PUMP_VALUE / 255;
+		TIM11->CCR1 = 0;
 	}
 	else
 	{
-		TIM3->CCR3 = 0;
+		TIM10->CCR1 = 0;
+		TIM11->CCR1 = 0;
 	}
 	
 }
