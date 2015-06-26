@@ -436,6 +436,8 @@ void USART2_IRQHandler(void) {
 				
 				*******************/
 				
+				GPIO_SetBits(GPIOD, GPIO_Pin_11);
+				
 				dataGoingUp[6] = laserDataBuff[dataMeasurementCounter] >> 8;  //The 8 most significant bits of the distance meansurement
 				dataGoingUp[7] = laserDataBuff[dataMeasurementCounter] && 0xFF; //The 8 least significant bits fo the distance measurement
 				
