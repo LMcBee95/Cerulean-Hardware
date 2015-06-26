@@ -307,8 +307,8 @@ void setSteppers(void)
 	uint8_t angles = Stepper_UseByte(byte, horizontalStepper, verticalStepper); //Move steppers and get angles
   
 	//Writes angle data to the up packet
-	dataGoingUp[STEPPER_UP_VERT] = Stepper_GetStep(verticalStepper) && 0xFF;      
-	dataGoingUp[STEPPER_UP_HOR] = Stepper_GetStep(horizontalStepper) && 0xFF;
+	//dataGoingUp[STEPPER_UP_VERT] = Stepper_GetStep(verticalStepper) && 0xFF;      
+	//dataGoingUp[STEPPER_UP_HOR] = Stepper_GetStep(horizontalStepper) && 0xFF;
 }
 
 /******************************************************************************
