@@ -49,6 +49,7 @@ int main(void) {
 	initialize_timer3(100000, 1);  //timer used for the pwm in mulitple different toolss
 	initialize_timer5();  //initializes a timer that will be triggered once a ms
 	
+	bilgePumpPwm(0);
 	
 	init_muxes();  //initializes the camera muxes
 	
@@ -82,40 +83,12 @@ int main(void) {
 		{
 			sendLaserCommand(START_COMMAND);
 		}
-		
-		//setServo1Angle(45);	
-		
-		/* Trying to remove serial communication from interrupt
-		if(sendUpTrigger)
-		{
-			sendDataUp();
-			sendUpTrigger = 0;
-		}
-		*/
+
+
 		
 		Delay(0xfffff);
-		//GPIO_SetBits(GPIOF, GPIO_Pin_0);
-		//GPIO_SetBits(GPIOF, GPIO_Pin_1);
-		
-		//servo integration test code
-		//moves the two servos from 0 degrees to 100 degrees
-		
-		/*Delay(0xfffff);
-		setServo1Angle(0);
-		setServo2Angle(0);
-		
-		Delay(0xfffff);
-		setServo1Angle(100);
-		setServo2Angle(100);*/
-		
-		
-		
-		//LED integratin test code
-		//turns the leds to 2/5 full power
-		
-		/*cameraLedPwm(100, 100, 100, 100, 100);*/
-		
-		
+
+
 		//Voltage detection code
 		//turns on the green led if a voltage is on VSEN1, the yellow led if VSEN2, and the red led if VSEN3
 		

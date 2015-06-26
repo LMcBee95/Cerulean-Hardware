@@ -42,6 +42,12 @@ int laserIsOn = 0;
 /*** Time Function ***/
 uint32_t time = 0;  //Keeps track of the number of ms that the program has been running for (for time update look at TIM5_IRQHandler)
 
+
+
+/** stepper step trackers **/
+uint8_t vertSteps = 0;
+uint8_t horrSteps = 0;
+
 GPIO_InitTypeDef  GPIO_InitStructure;  //this is used by all of the pin initiations, must be included
 
 /******************** Function Definitions ********************/
@@ -555,6 +561,11 @@ void USART6_IRQHandler(void) {
 					//gets the angles sent from the top board and converts them into stepper commands
 					setSteppers();
 					
+					 /* uint8_t horzDir = byte>>7&0x01;          //Horizontal direction
+					uint8_t vertDir = (byte>>3)&0x01;   //Vertical direction
+					uint8_t horzSteps = (byte>>4)&0x07; //Horizontal steps
+					uint8_t vertSteps = byte & 0x07;    //Vertical steps*/
+					
 					
 					//Set camera leds
 					cameraLedPwm(LED1_VALUE, LED2_VALUE, LED3_VALUE, LED4_VALUE, LED5_VALUE);
@@ -564,13 +575,11 @@ void USART6_IRQHandler(void) {
 					{
 						setServo1Angle(OFF_ANGLE);
 						setServo2Angle(180 - OFF_ANGLE);	
-						GPIO_SetBits(GPIOD, GPIO_Pin_10);
 					}
 					else
 					{
 						setServo1Angle(ON_ANGLE);
 						setServo2Angle(180 - ON_ANGLE);	
-						GPIO_ResetBits(GPIOD, GPIO_Pin_10);
 					}
 					
 					if(READ_LASER && !laserIsOn)
@@ -598,6 +607,8 @@ void USART6_IRQHandler(void) {
 					//Turns the bilge pump either on or off
 					bilgePumpPwm(BILGE_PUMP_VALUE);
 					
+					if(BILGE_PUMP_VALUE) GPIO_SetBits(GPIOD, GPIO_Pin_10);
+					else GPIO_ResetBits(GPIOD, GPIO_Pin_10);
 					
 					//sets the speed of the turning foot motor 
 					if(FOOT_TURNER_VALUE < 128) //Going Forward
