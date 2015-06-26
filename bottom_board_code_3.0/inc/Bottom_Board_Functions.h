@@ -184,7 +184,7 @@ extern int laserIsOn; //Variable that indicates that the laser is on
 /*** Voltage Sesnors ***/
 
 #define READ_VOLTAGES				(storage[10] & (1 << 2))
-#define ON_VOLTAGE				1.5
+#define ON_VOLTAGE				2.6
 #define ADC_TO_VOLTS				4096.0 / 3.3
 #define MISC_BYTE					8
 #define V1						0
