@@ -114,17 +114,6 @@ int main(void) {
 		/*bilgePumpPwm(0); */
 		
 		
-		//turn foot motor
-		//spins the motor in one direction, waits a little bit, and then turns the motor in the other direction
-
-		/*turnFootPwm(150, 0);
-		
-		Delay(0xffffff);
-		
-		turnFootPwm(0, 150);
-		
-		Delay(0xffffff)*/
-		
 	
 	}
 	return(0);
