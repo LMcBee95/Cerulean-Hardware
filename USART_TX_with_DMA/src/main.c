@@ -3,9 +3,9 @@
 #include "stm32f4xx_dma.h"
 #include "stm32f4xx_usart.h"
 
-#define PACKET_SIZE 	5
+#define PACKET_SIZE 	241
 
-uint8_t packet[5] = {1, 2, 3, 4, 5};
+uint8_t packet[PACKET_SIZE];
 
 
 void initLed(void);
@@ -14,8 +14,36 @@ void initButton(void);
 void initUSART_DMA(void);
 //void USART_puts(USART_TypeDef* USARTx, uint8_t data);
 
+void USART_puts(USART_TypeDef* USARTx, uint8_t data);
+
+//Tx interrupt--transmission complete
+void DMA2_Stream7_IRQHandler()
+{
+	
+	
+	
+	//Clear the interrupt
+	DMA_ClearITPendingBit(DMA2_Stream7, DMA_FLAG_TCIF7);
+	
+	//Wait for the data to complete sending...
+	/*while( (USART1->SR & USART_FLAG_TC ) == 0  )
+	{
+		GPIO_SetBits(GPIOD, GPIO_Pin_14);
+	}*/
+	
+	//Enable the RX DMA Transfer..
+	//ConfigRxDma(localAnybusPtr);
+}
+
+
 int main(void) {
 
+	for(int i = 0; i < PACKET_SIZE; i++)
+	{
+		packet[i] = i;
+	}
+	
+	
 	initLed();
 	initButton();
 	initUSART_DMA();
@@ -24,15 +52,17 @@ int main(void) {
 	
 	while (1)
 	{  
-
 		if(GPIO_ReadInputDataBit(USER_BUTTON_GPIO_PORT, USER_BUTTON_PIN))
 		{
 			if(buttonPressed == 0)
 			{
-				
+				for(int i = 0; i < 100; i++)
+				{
+					DMA_Cmd(DMA2_Stream7,ENABLE);
+				}
 			}
 			buttonPressed = 1;
-			GPIO_ResetBits(GPIOD, GPIO_Pin_12);
+			GPIO_SetBits(GPIOD, GPIO_Pin_12);
 		}
 		else
 		{
@@ -40,21 +70,14 @@ int main(void) {
 			buttonPressed = 0;
 		}
 		
-	
+		GPIO_SetBits(GPIOD, GPIO_Pin_13);
 	}
 	return(0);
 }
 
-/*void USART_puts(USART_TypeDef* USARTx, uint8_t data)
-{
-		// wait until data register is empty
-		while(!(USARTx->SR & 0x00000040)); 
-		USART_SendData(USARTx, data);
-}*/
 
 void initUSART_DMA(void)
 {
-	DMA_InitTypeDef       DMA_Struct;
 	
 	// Turns on Peripheral Clocks for GPIO and USART functions
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
@@ -84,7 +107,9 @@ void initUSART_DMA(void)
 	USART_Struct.USART_StopBits = USART_StopBits_1;
 	USART_Struct.USART_Parity = USART_Parity_No;
 	USART_Struct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	
 	USART_Struct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
+	
 	USART_Init(USART1, &USART_Struct);
 
 	// Configure the Recieving Interrupt
@@ -93,6 +118,7 @@ void initUSART_DMA(void)
 	// Enables USART1
 	USART_Cmd(USART1, ENABLE);
 
+	
 	// Configure NVIC
 	NVIC_InitTypeDef NVIC_Struct;
 
@@ -105,8 +131,11 @@ void initUSART_DMA(void)
 
 	NVIC_Init(&NVIC_Struct);
 
+	
 	// Configure DMA for USART
-	//DMA_DeInit(DMA2_Stream7);
+	DMA_InitTypeDef       DMA_Struct;
+	
+	DMA_DeInit(DMA2_Stream7);
 
 	DMA_Struct.DMA_Channel = DMA_Channel_4;
 	DMA_Struct.DMA_DIR = DMA_DIR_MemoryToPeripheral;
@@ -125,15 +154,14 @@ void initUSART_DMA(void)
 	USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
 	NVIC_EnableIRQ(USART1_IRQn);
 
-
-	char* pointer = packet;
-	int length = PACKET_SIZE;
-
+	DMA_Struct.DMA_BufferSize = PACKET_SIZE;
+	DMA_Struct.DMA_Memory0BaseAddr = (uint32_t)packet;
+	
+	//char* pointer = packet;
+	//int length = PACKET_SIZE;
 	//DMA_DeInit(DMA2_Stream7);
 
-	DMA_Struct.DMA_BufferSize = length;
-
-	DMA_Struct.DMA_Memory0BaseAddr = (uint32_t)pointer;
+	
 
 	
 	
@@ -159,6 +187,12 @@ void initButton(void)
 	  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	  GPIO_Init(USER_BUTTON_GPIO_PORT, &GPIO_InitStructure);
+}
+void USART_puts(USART_TypeDef* USARTx, uint8_t data){
+		
+		// wait until data register is empty
+		while(!(USARTx->SR & 0x00000040)); 
+		USART_SendData(USARTx, data);
 }
 
 void initLed(void)

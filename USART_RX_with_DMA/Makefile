@@ -5,7 +5,7 @@ BUILDDIR=build
 
 LIBPATH=../Libraries
 
-SRC = main.c system_stm32f4xx.c system_stm32f4xx.c Bottom_Board_Functions.c stepper.c
+SRC = main.c system_stm32f4xx.c system_stm32f4xx.c 
 
 ##Startup File
 STARTUP = lib/startup_stm32f4xx.s
