@@ -1,12 +1,26 @@
 #########################################################################
+
+#Name of the .cpp file that contains the the main function
 PROJ_NAME=main
 
+#Names of folders located in the directory containing the makefile
 BUILDDIR=build
+OBJDIR = object
+CXXDIR = CPP_src
+CDIR = C_src
 
 LIBPATH=../Libraries
 
-SRC =  stm32f4_discovery.c system_stm32f4xx.c
-#main.c
+#C_SRC is the name of the .c files located in the C_src folder
+#C_FILES is the variable that stores the path to each .c file in the C_src folder
+C_SRC =  
+C_FILES = $(C_SRC:%=$(C_DIR)/%) 
+
+
+#CXX_SRC is the name of the .cpp files located in the CPP_src folder
+#CXX_FILES is the variable that stores the path to each .cpp file in the CPP_src folder
+CXX_SRC = main.cpp test.cpp
+CXX_FILES := $(CXX_SRC:%=$(CXXDIR)/%)
 
 ##Startup File
 STARTUP = lib/startup_stm32f4xx.s
@@ -22,8 +36,10 @@ AS=arm-none-eabi-as
 CP=arm-none-eabi-objcopy
 OD=arm-none-eabi-objdump
 
-vpath %.c src
+vpath %.c C_src
 vpath %.c lib
+vpath %.cpp CPP_src 
+vpath %.o object
 
 ##Dependancies and include paths
 
@@ -63,7 +79,8 @@ STM32_USB_DEVICE_SRC = $(LIBPATH)/STM32_USB_Device_Library/Class/hid/src/usbd_hi
 
 
 ##Standard Periph Libraries
-SRC += \
+C_LIB_SRC = stm32f4_discovery.c system_stm32f4xx.c
+C_LIB_SRC += \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/misc.c \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_adc.c \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_can.c \
@@ -96,12 +113,15 @@ SRC += \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_usart.c \
   $(LIBPATH)/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_wwdg.c	
 
-OBJ =  startup_stm32f4xx.o   stm32f4xx_fsmc.o  stm32f4xx_usart.o stm32f4_discovery.o   stm32f4xx_gpio.o       stm32f4xx_wwdg.o stm32f4xx_adc.o stm32f4xx_hash_md5.o   system_stm32f4xx.o stm32f4xx_can.o       stm32f4xx_hash.o stm32f4xx_crc.o       stm32f4xx_hash_sha1.o stm32f4xx_cryp_aes.o  stm32f4xx_i2c.o stm32f4xx_cryp_des.o  stm32f4xx_iwdg.o
-#Startup.o
+#C_LIB_OBJ is the variable that stores the path to every precompiled .c library needed for the stm32f40_41xxx MCU
+C_LIB_OBJ =  object/startup_stm32f4xx.o  object/stm32f4xx_fsmc.o  object/stm32f4xx_usart.o object/stm32f4_discovery.o  object/stm32f4xx_gpio.o       object/stm32f4xx_wwdg.o object/stm32f4xx_adc.o object/stm32f4xx_hash_md5.o   object/system_stm32f4xx.o object/stm32f4xx_can.o       object/stm32f4xx_hash.o object/stm32f4xx_crc.o       object/stm32f4xx_hash_sha1.o object/stm32f4xx_cryp_aes.o  object/stm32f4xx_i2c.o object/stm32f4xx_cryp_des.o  object/stm32f4xx_iwdg.o
+C_LIB_OBJ += object/stm32f4xx_cryp.o object/stm32f4xx_pwr.o object/stm32f4xx_cryp_tdes.o  object/stm32f4xx_rcc.o object/stm32f4xx_dac.o object/stm32f4xx_rng.o object/stm32f4xx_dbgmcu.o    object/stm32f4xx_rtc.o object/stm32f4xx_dcmi.o object/stm32f4xx_sdio.o object/stm32f4xx_dma.o object/stm32f4xx_spi.o object/misc.o object/stm32f4xx_exti.o object/stm32f4xx_syscfg.o object/stm32f4xx_flash.o object/stm32f4xx_tim.o
 
-OBJ += stm32f4xx_cryp.o stm32f4xx_pwr.o stm32f4xx_cryp_tdes.o  stm32f4xx_rcc.o stm32f4xx_dac.o stm32f4xx_rng.o stm32f4xx_dbgmcu.o     stm32f4xx_rtc.o stm32f4xx_dcmi.o stm32f4xx_sdio.o stm32f4xx_dma.o stm32f4xx_spi.o misc.o stm32f4xx_exti.o stm32f4xx_syscfg.o stm32f4xx_flash.o stm32f4xx_tim.o
+#CXX_OBJ is the variable name for all of the .cpp object files located in the main dirrectery during the compiling process
+CXX_OBJ:=$(CXX_FILES:$(CXXDIR)/%.cpp=%.o)
 
-
+#C_OBJ is the variable name for all of the .c object files located in the main dirrectery during the compiling process
+C_OBJ:=$(C_FILES:$(C_DIR)/%.c=%.o)
 
 ####################################################################
 
@@ -109,22 +129,34 @@ OBJ += stm32f4xx_cryp.o stm32f4xx_pwr.o stm32f4xx_cryp_tdes.o  stm32f4xx_rcc.o s
 
 all: proj
 
+#Uploads a .bin file to a stm32f4 discovery board
 burn:
 	st-flash write $(BUILDDIR)/$(PROJ_NAME).bin 0x8000000
 
+dfu:
+	dfu-util -a 0 --dfuse-address 0x08000000 -D $(BUILDDIR)/$(PROJ_NAME).bin
+
 proj: $(PROJ_NAME).elf
 
-$(PROJ_NAME).elf: $(SRC) $(STARTUP)
+$(PROJ_NAME).elf: $(CXX_FILES)
 	
-	$(CC) $(CFLAGS) $^ -lm -lc -lnosys $(PROJ_NAME).o
-	#$(CC) $(CFLAGS) $^ -lm -lc -lnosys -o $(BUILDDIR)/$@
+	#$(CC) $(CFLAGS) $(C_LIB_SRC) -lm -lc -lnosysmake 
 	
-	$(CXX)  $(CXXFLAGS) src/main.cpp test.cpp test.o
+	#This compiles C_SRC files if you ever need to
+	#Uncomment this if you want to compile your own .c files in the C_src folder
+	#$(CC) $(CFLAGS) $(C_FILES) -lm -lc -lnosysmake 
 	
-	$(CXX) test.o $(PROJ_NAME).o $(OBJ) $(MCFLAGS) -Wl,-T,lib/stm32_flash.ld --specs=nosys.specs  -o $(BUILDDIR)/$@
+	#Creates the object files from the .cpp files
+	$(CXX)  $(CXXFLAGS) $(CXX_FILES)
+	
+	#Links all of the object files together using the g++ compiler
+	$(CXX) $(CXX_OBJ) $(C_OBJ) $(C_LIB_OBJ) $(MCFLAGS) -Wl,-T,lib/stm32_flash.ld --specs=nosys.specs  -o $(BUILDDIR)/$@
 	$(CP) -O binary $(BUILDDIR)/$(PROJ_NAME).elf $(BUILDDIR)/$(PROJ_NAME).bin
 	
+	#Removes all of the object files from within the directory that the makefile is located
+	rm -f *.o
 
+#Removes unnecesary files from the folders
 clean:
-	#rm -f Startup.lst  $(BUILDDIR)/$(PROJ_NAME)  $(BUILDDIR)/$(PROJ_NAME).lst $(BUILDDIR)/$(OBJ) $(AUTOGEN)  $(BUILDDIR)/$(PROJ_NAME).out $(BUILDDIR)/$(PROJ_NAME).map \
-	 #$(BUILDDIR)/$(PROJ_NAME).dmp  $(BUILDDIR)/$(PROJ_NAME).elf $(BUILDDIR)/$(PROJ_NAME).bin
+	rm -f Startup.lst  $(BUILDDIR)/$(PROJ_NAME)  $(BUILDDIR)/$(PROJ_NAME).lst $(AUTOGEN)  $(BUILDDIR)/$(PROJ_NAME).out $(BUILDDIR)/$(PROJ_NAME).map \
+	$(BUILDDIR)/$(PROJ_NAME).dmp  $(BUILDDIR)/$(PROJ_NAME).elf $(BUILDDIR)/$(PROJ_NAME).bin

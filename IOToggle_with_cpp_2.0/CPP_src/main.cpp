@@ -63,14 +63,14 @@ int main(void)
 
   while (1)
   {
-    
+     
     
     myLeds.greenOn();
 	  
 	/* Insert delay */
     Delay(0x3FFFFF);
     
-    myLeds.blueOn();
+   /// myLeds.blueOn();
 	  
     /* Insert delay */
     Delay(0x3FFFFF);
