@@ -19,7 +19,7 @@ C_FILES = $(C_SRC:%=$(C_DIR)/%)
 
 #CXX_SRC is the name of the .cpp files located in the CPP_src folder
 #CXX_FILES is the variable that stores the path to each .cpp file in the CPP_src folder
-CXX_SRC = main.cpp test.cpp
+CXX_SRC = main.cpp led.cpp gpio.cpp
 CXX_FILES := $(CXX_SRC:%=$(CXXDIR)/%)
 
 ##Startup File
