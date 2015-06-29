@@ -20,7 +20,7 @@ int main(void)
 gpio greenLed(GPIOD, GPIO_Pin_12);
 gpio orangeLed(GPIOD, GPIO_Pin_13);
 gpio redLed(GPIOD, GPIO_Pin_14);
-gpio blueLed(GPIOD, GPIO_Pin_15);
+gpio blueLed(GPIOD, GPIO_Pin_15); 
 	
 
   while (1)
