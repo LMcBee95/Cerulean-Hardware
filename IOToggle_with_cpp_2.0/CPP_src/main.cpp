@@ -32,7 +32,7 @@ gpio blueLed(GPIOD, GPIO_Pin_15);
 	/* Insert delay */
 	Delay(0x3FFFFF);
     
-	orangeLed.on();
+	//orangeLed.on();
 	  
 	/* Insert delay */
 	Delay(0x3FFFFF);
@@ -42,7 +42,7 @@ gpio blueLed(GPIOD, GPIO_Pin_15);
 	/* Insert delay */
 	Delay(0x3FFFFF);
     
-	blueLed.on();
+	//blueLed.on();
 	  
 	/* Insert delay */
 	Delay(0x7FFFFF);
