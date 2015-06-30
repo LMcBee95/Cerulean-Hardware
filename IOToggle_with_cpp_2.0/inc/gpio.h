@@ -9,8 +9,9 @@ class gpio
 	public:
 		
 		/*
-		* Function: on
+		* Function: constructor
 		* Usage: gpio pin(Pin Bank, Pin Number);
+		* Where pin is the name of an instance of gpio
 		* ----------------------
 		* Creates a gpio class and initializes the pin based on the inputed parameters.
 		*/
