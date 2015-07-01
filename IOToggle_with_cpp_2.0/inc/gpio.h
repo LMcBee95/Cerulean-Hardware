@@ -13,7 +13,7 @@ class gpio
 		* Usage: gpio pin(Pin Bank, Pin Number);
 		* Where pin is the name of an instance of gpio
 		* ----------------------
-		* Creates a gpio class and initializes the pin based on the inputed parameters.
+		* Creates an instance of the gpio class.
 		*/
 
 		gpio(GPIO_TypeDef* bank, uint16_t pinNum);
