@@ -6,20 +6,9 @@
 #include "gpio.h"
 #include "servo.h"
 
-/*** Setting Servo Angle ***/
 
-#define SERVO_PERIOD				26250 * 2  //this users clock 2 for timer 9; clock 2 is 2 times faster than clock 1
-#define MAXSERVO 					2.4
-#define MINSERVO 					0.9
-#define MAXSERVOANGLE 				180.0
-#define SERVO_1_CCR					TIM9->CCR1
 
 void Delay(__IO uint32_t nCount);
-
-void setServo1Angle(uint8_t angle)
-{ 	
-	SERVO_1_CCR = (((SERVO_PERIOD + 1) / 20) * ((MAXSERVO - MINSERVO) * angle / MAXSERVOANGLE + MINSERVO ));
-}
 
 int main(void)
 {
@@ -30,11 +19,11 @@ led myLeds;
 
 	
 gpio greenLed(GPIOD, GPIO_Pin_12);
-//gpio orangeLed(GPIOD, GPIO_Pin_13);
-//gpio redLed(GPIOD, GPIO_Pin_14);
+gpio orangeLed(GPIOD, GPIO_Pin_13);
+gpio redLed(GPIOD, GPIO_Pin_14);
 gpio blueLed(GPIOD, GPIO_Pin_15); 
 	
-	servo myServo(GPIOE, GPIO_Pin_5, TIM9, 1);
+	servo myServo(GPIOA, GPIO_Pin_0, TIM2, 1);
 
   while (1)
   {

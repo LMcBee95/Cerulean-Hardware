@@ -1,21 +1,5 @@
 #include "servo.h"
 
-/*** Servo 1 Init ***/
-
-#define SERVO_1_TIMER_CLOCK			RCC_APB2Periph_TIM9
-#define SERVO_TIMER_PIN_AF			GPIO_AF_TIM9
-#define SERVO_TIMER					TIM9
-#define SERVO_1_CLOCK_BANK			RCC_AHB1Periph_GPIOE
-#define SERVO_BANK   				GPIOE
-#define SERVO_1_PIN					GPIO_Pin_5
-#define SERVO_1_PIN_SOURCE			GPIO_PinSource5
-#define SERVO_1_CCR					TIM9->CCR1
-
-/*** Servo 2 Init ***/
-
-#define	SERVO_2_PIN 				GPIO_Pin_6
-#define SERVO_2_PIN_SOURCE			GPIO_PinSource6
-#define SERVO_2_CCR					TIM9->CCR2
 
 servo::servo(GPIO_TypeDef* bank, uint16_t pin, TIM_TypeDef* timer, uint8_t controlRegister)
 {
@@ -63,6 +47,7 @@ uint16_t servo::getPinSource(uint16_t pin)
 {
 	if(pin == GPIO_Pin_0)
 	{
+		GPIO_SetBits(GPIOD, GPIO_Pin_15);
 		return GPIO_PinSource0;
 	}
 	else if(pin == GPIO_Pin_1)
@@ -130,6 +115,25 @@ uint16_t servo::getPinSource(uint16_t pin)
 void servo::setAngle(uint8_t angle)
 {
 	//TODO: Fix it so that the CCRx changes depending upon what control register the pin is on
+	
+	if(controlRegisterNum == 1)
+	{
+		timerNum->CCR1 = (((servoPeriod + 1) / 20) * ((maxPulse - minPulse) * angle / maxAngle + minPulse));
+	}
+	else if(controlRegisterNum == 2)
+	{
+		timerNum->CCR2 = (((servoPeriod + 1) / 20) * ((maxPulse - minPulse) * angle / maxAngle + minPulse));
+	}
+	else if(controlRegisterNum == 3)
+	{
+		timerNum->CCR3 = (((servoPeriod + 1) / 20) * ((maxPulse - minPulse) * angle / maxAngle + minPulse));
+	}
+	else
+	{
+		timerNum->CCR4 = (((servoPeriod + 1) / 20) * ((maxPulse - minPulse) * angle / maxAngle + minPulse));
+	}
+		
+	currentAngle = angle;
 	
 	timerNum->CCR1 = (((servoPeriod + 1) / 20) * ((maxPulse - minPulse) * angle / maxAngle + minPulse));
 	currentAngle = angle;
@@ -281,8 +285,6 @@ void servo::setControlRegister(uint8_t registerNum, TIM_TypeDef* timer)
 	{
 		TIM_OC1Init(timer, &TIM_OCInitStructure);
 		TIM_OC1PreloadConfig(timer, TIM_OCPreload_Enable);
-		GPIO_SetBits(GPIOD, GPIO_Pin_15);
-		
 	}
 	else if(registerNum == 2)
 	{
