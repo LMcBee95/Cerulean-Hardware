@@ -23,7 +23,7 @@ gpio orangeLed(GPIOD, GPIO_Pin_13);
 gpio redLed(GPIOD, GPIO_Pin_14);
 gpio blueLed(GPIOD, GPIO_Pin_15); 
 	
-	servo myServo(GPIOA, GPIO_Pin_0, TIM2, 1);
+	servo myServo(GPIOA, GPIO_Pin_7, TIM14, 1);
 
   while (1)
   {
@@ -33,15 +33,15 @@ gpio blueLed(GPIOD, GPIO_Pin_15);
 	greenLed.on();
 	  
 	
-	Delay(0x2FFFFFF);
+	Delay(0x1FFFFFF);
     
-	myServo.setAngle(170);
+	myServo.setAngle(90);
 	//setServo1Angle(120);
 	
 	greenLed.off();
 	
 	/* Insert delay */
-	Delay(0x2FFFFFF);
+	Delay(0x1FFFFFF);
   }
 }
 

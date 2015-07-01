@@ -42,7 +42,7 @@ class servo
 		
 		const static uint8_t frequency = 50; //The frequency of the pwm signal in Hz (20ms pwm length)
 		const static uint8_t prescaler = 64; //The amount that the chosen timer is prescaled compared to the main cpu
-		const static uint16_t servoPeriod = 26250 * 2;
+		uint16_t servoPeriod;
 		
 		
 		/* private functions */
@@ -53,7 +53,9 @@ class servo
 	
 		void timerToClock(TIM_TypeDef* timer);  //sets teh correct clock for a certain timer''
 	
-		void setControlRegister(uint8_t, TIM_TypeDef* timer);
+		void setControlRegister(uint8_t, TIM_TypeDef* timer);  //initializes the control register that puts the timer into pwm mode
+		
+		void timerFactor(TIM_TypeDef* timer);  //gets the correct time factor that the pwm pulse length is mulitplied by
 };
 
 #endif
