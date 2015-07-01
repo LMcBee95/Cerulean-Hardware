@@ -3,21 +3,13 @@
 
 servo::servo(GPIO_TypeDef* bank, uint16_t pin, TIM_TypeDef* timer, uint8_t controlRegister)
 {
-	
-<<<<<<< HEAD
+
 	timerNum = timer; //Saves the value of the timer inputted by the user
 	controlRegisterNum = controlRegister; //Saves the value of the control register number inputted by the user
-=======
 	timerFactor(timer);  //gets the correct pulse length for the timer
-	
-	timerNum = timer;
-	controlRegisterNum = controlRegister;
->>>>>>> origin/master
-	
 	
 	timerToClock(timer); //Initiates the clock for the given timer
 	bankToClock(bank); //Initiates the clock for a given bank
-
 	
 	GPIO_InitTypeDef GPIO_InitStructure;  //structure used by stm in initializing pins. 
 	
@@ -192,11 +184,7 @@ void servo::setAngle(uint8_t angle)
 	{
 		timerNum->CCR4 = (((servoPeriod + 1) / 20) * ((maxPulse - minPulse) * angle / maxAngle + minPulse));
 	}
-<<<<<<< HEAD
 	
-=======
-		
->>>>>>> origin/master
 	currentAngle = angle;
 }
 
