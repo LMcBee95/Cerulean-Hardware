@@ -4,8 +4,16 @@
 servo::servo(GPIO_TypeDef* bank, uint16_t pin, TIM_TypeDef* timer, uint8_t controlRegister)
 {
 	
+<<<<<<< HEAD
 	timerNum = timer; //Saves the value of the timer inputted by the user
 	controlRegisterNum = controlRegister; //Saves the value of the control register number inputted by the user
+=======
+	timerFactor(timer);  //gets the correct pulse length for the timer
+	
+	timerNum = timer;
+	controlRegisterNum = controlRegister;
+>>>>>>> origin/master
+	
 	
 	timerToClock(timer); //Initiates the clock for the given timer
 	bankToClock(bank); //Initiates the clock for a given bank
@@ -43,11 +51,63 @@ servo::servo(GPIO_TypeDef* bank, uint16_t pin, TIM_TypeDef* timer, uint8_t contr
 	TIM_Cmd(timer, ENABLE); //Enable the timer given
 }
 
+void servo::timerFactor(TIM_TypeDef* timer)
+{
+	
+	if(timer == TIM1)
+	{
+		servoPeriod = 26250 * 2;
+	}
+	else if(timer == TIM2)
+	{
+		servoPeriod = 26250;
+	}
+	else if(timer == TIM3)
+	{
+		servoPeriod = 26250;
+	}
+	else if(timer == TIM4)
+	{
+		servoPeriod = 26250;
+	}
+	else if(timer == TIM5)
+	{
+		servoPeriod = 26250;
+	}
+	else if(timer == TIM8)
+	{
+		servoPeriod = 26250 * 2;
+	}
+	else if(timer == TIM9)
+	{
+		servoPeriod = 26250 * 2;
+	}
+	else if(timer == TIM10)
+	{
+		servoPeriod = 26250 * 2;
+	}
+	else if(timer == TIM11)
+	{
+		servoPeriod = 26250 * 2;
+	}
+	else if(timer == TIM12)
+	{
+		servoPeriod = 26250;
+	}
+	else if(timer == TIM13)
+	{
+		servoPeriod = 26250;
+	}
+	else if(timer == TIM14)
+	{
+		servoPeriod = 26250;
+	}
+}
+
 uint16_t servo::getPinSource(uint16_t pin)
 {
 	if(pin == GPIO_Pin_0)
 	{
-		GPIO_SetBits(GPIOD, GPIO_Pin_15);
 		return GPIO_PinSource0;
 	}
 	else if(pin == GPIO_Pin_1)
@@ -132,7 +192,11 @@ void servo::setAngle(uint8_t angle)
 	{
 		timerNum->CCR4 = (((servoPeriod + 1) / 20) * ((maxPulse - minPulse) * angle / maxAngle + minPulse));
 	}
+<<<<<<< HEAD
 	
+=======
+		
+>>>>>>> origin/master
 	currentAngle = angle;
 }
 
