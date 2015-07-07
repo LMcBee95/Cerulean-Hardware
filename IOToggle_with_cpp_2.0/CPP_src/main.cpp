@@ -5,43 +5,45 @@
 #include "led.h"
 #include "gpio.h"
 #include "servo.h"
-
+#include "serial.h"
 
 
 void Delay(__IO uint32_t nCount);
 
+void USART_puts(USART_TypeDef* USARTx, uint8_t data){
+		
+		// wait until data register is empty
+		while(!(USARTx->SR & 0x00000040)); 
+		USART_SendData(USARTx, data);
+}
+
 int main(void)
 {
-
 	
-led myLeds;
+gpio green(GPIOD, GPIO_Pin_12);
+gpio orange(GPIOD, GPIO_Pin_13);
+gpio red(GPIOD, GPIO_Pin_14);
+gpio blue(GPIOD, GPIO_Pin_15);
 
+#define PACKETSIZE 4
 
-	
-gpio greenLed(GPIOD, GPIO_Pin_12);
-gpio orangeLed(GPIOD, GPIO_Pin_13);
-gpio redLed(GPIOD, GPIO_Pin_14);
-gpio blueLed(GPIOD, GPIO_Pin_15); 
-	
-	servo myServo(GPIOA, GPIO_Pin_7, TIM14, 1);
+uint8_t stuff[PACKETSIZE] = {1, 2, 3, 4};
+
+serial mySerial(GPIOD, GPIO_Pin_5, GPIOD, GPIO_Pin_6, USART2, 9600);
 
   while (1)
   {
-     
-    myServo.setAngle(0);
+	green.on();
+
+	mySerial.write(stuff, PACKETSIZE);
 	
-	greenLed.on();
-	  
+	Delay(0xcfffff);
 	
-	Delay(0x1FFFFFF);
+	//mySerial.write();
+	green.off();
+	
+	Delay(0xcfffff);
     
-	myServo.setAngle(90);
-	//setServo1Angle(120);
-	
-	greenLed.off();
-	
-	/* Insert delay */
-	Delay(0x1FFFFFF);
   }
 }
 
@@ -56,27 +58,3 @@ void Delay(__IO uint32_t nCount)
   {
   }
 }
-
-#ifdef  USE_FULL_ASSERT
-
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t* file, uint32_t line)
-{ 
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-
-  /* Infinite loop */
-  while (1)
-  {
-  }
-}
-#endif
-
-
-/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

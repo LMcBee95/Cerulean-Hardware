@@ -23,9 +23,7 @@ class led
 	void oragneOff();
 	
 	private:
-		
-	
-	
+
 };
 
 #endif
