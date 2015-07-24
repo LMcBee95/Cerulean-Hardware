@@ -1,11 +1,14 @@
 
 
 #include "stm32f4_discovery.h"
-#include "stm32f4xx_conf.h" // again, added because ST didn't put it here ?
+#include "stm32f4xx_conf.h"
+
+/* C++ libraries */
 #include "led.h"
 #include "gpio.h"
 #include "servo.h"
-
+#include "pwm.h"
+#include "adc.h"
 
 
 void Delay(__IO uint32_t nCount);
@@ -14,28 +17,33 @@ int main(void)
 {
 
 	
-led myLeds;
+//ed myLeds;
 
 
 	
 gpio greenLed(GPIOD, GPIO_Pin_12);
-gpio orangeLed(GPIOD, GPIO_Pin_13);
-gpio redLed(GPIOD, GPIO_Pin_14);
-gpio blueLed(GPIOD, GPIO_Pin_15); 
+//gpio orangeLed(GPIOD, GPIO_Pin_13);
+//gpio redLed(GPIOD, GPIO_Pin_14);
+//gpio blueLed(GPIOD, GPIO_Pin_15); 
 	
-	servo myServo(GPIOA, GPIO_Pin_7, TIM14, 1);
+	//servo myServo(GPIOD, GPIO_Pin_15, TIM4, 1);
+	pwm myPwm(GPIOA, GPIO_Pin_7, TIM14, 1);
 
   while (1)
   {
      
-    myServo.setAngle(0);
-	
-	greenLed.on();
+    //myServo.setAngle(0);
+	  
 	  
 	
+	greenLed.on();
+	myPwm.set(255);
+	
 	Delay(0x1FFFFFF);
+	  
+	  myPwm.set(20);
     
-	myServo.setAngle(90);
+	//myServo.setAngle(90);
 	//setServo1Angle(120);
 	
 	greenLed.off();

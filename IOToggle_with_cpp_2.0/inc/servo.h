@@ -32,7 +32,7 @@ class servo
 		
 		/*
 		* Function: constructor
-		* Usage: servo myServo(Pin Bank, Pin Number, Timer Number, Control Register Number);
+		* Usage: servo myServo(GPIOA , GPIO_Pin_0, TIM2, 1);
 		* Where myServo is the name of an instance of servo
 		* ----------------------
 		* Creates an instance of the servo class.
