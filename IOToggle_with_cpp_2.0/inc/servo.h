@@ -120,7 +120,7 @@ class servo
 		
 		void bankToClock(GPIO_TypeDef* bank); //sets the correct clock for a certain bank
 	
-		void timerToClock(TIM_TypeDef* timer);  //sets teh correct clock for a certain timer''
+		void timerToClock(TIM_TypeDef* timer);  //sets the correct clock for a certain timer''
 	
 		void setControlRegister(uint8_t controlRegister, TIM_TypeDef* timer);  //initializes the control register that puts the timer into pwm mode
 		
