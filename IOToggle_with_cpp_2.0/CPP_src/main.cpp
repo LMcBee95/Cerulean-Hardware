@@ -10,6 +10,7 @@
 #include "pwm.h"
 #include "adc.h"
 #include "serial.h"
+#include "usartDma.h"
 
 void Delay(__IO uint32_t nCount);
 
@@ -32,15 +33,22 @@ int main(void)
 	#define PACKETSIZE 4
 
 
-	uint8_t stuff[PACKETSIZE] = {1, 2, 3, 4};
+	uint8_t stuff[PACKETSIZE] = {5, 2, 3, 6};
 
-	serial mySerial(GPIOD, GPIO_Pin_5, GPIOD, GPIO_Pin_6, USART2, 9600);
+	serial mySerial(GPIOC, GPIO_Pin_11, GPIOC, GPIO_Pin_10, UART4, 9600);
+	
+	usartDma myDma(UART4);
+	myDma.initTx(3, DMA1_Stream4, DMA_Channel_4);
+	
+	myDma.insert(0, 0);
+	myDma.insert(1, 1);
+	myDma.insert(2, 2);
 
   while (1)
   {
 	green.on();
 
-	mySerial.write(stuff, PACKETSIZE);
+	myDma.write();
 	
 	Delay(0xcfffff);
 	
