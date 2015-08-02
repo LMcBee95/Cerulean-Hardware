@@ -35,14 +35,14 @@ class usartDma
 	
 	/*
 	* Function: sends the data stored in the buffer
-	* Usage: myDma.write();
+	* Usage: myDma.send();
 	* 
 	* ----------------------
 	* Sends out the data stored in the buffer. Warning, it writing deinitializes the stream, and 
 	* any other peripherals initialized on the DMA stream will be deinitialized.
 	*/
 	
-	void write(void);
+	void send(void);
 	
 	/*
 	* Function: inserts data into the buffer at a specific location

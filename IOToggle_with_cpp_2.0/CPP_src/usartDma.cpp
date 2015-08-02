@@ -42,7 +42,7 @@ void usartDma::initTx(uint8_t bufferSize, DMA_Stream_TypeDef* usedStream, uint32
 	DMA_Cmd(TxStream, ENABLE);
 }
 
-void usartDma::write(void)
+void usartDma::send(void)
 {
 	DMA_DeInit(TxStream);
 	DMA_Init(TxStream, &DMA_TX_InitStructure);

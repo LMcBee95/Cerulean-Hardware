@@ -64,7 +64,6 @@ void serial::USART_puts(USART_TypeDef* USARTx, uint8_t data){
 		// wait until data register is empty
 		while(!(USARTx->SR & 0x00000040)); 
 		USART_SendData(USARTx, data);
-		GPIO_SetBits(GPIOD, GPIO_Pin_15);
 }
 
 void serial::write(uint8_t* packet, uint8_t size)
