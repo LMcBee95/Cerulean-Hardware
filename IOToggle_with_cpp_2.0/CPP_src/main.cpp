@@ -36,17 +36,17 @@ int main(void)
 	
 	
 	adc readings;
-	readings.addAdcPin(ADC2, GPIOC, GPIO_Pin_0);
-	readings.addAdcPin(ADC2, GPIOC, GPIO_Pin_1);
+	readings.addAdcPin(ADC2, GPIOC, GPIO_Pin_0, "swag");
+	readings.addAdcPin(ADC2, GPIOC, GPIO_Pin_1, "woohoo");
 	readings.startAdc2(DMA2_Stream2 ,DMA_Channel_1);
 	
 
   while (1)
   {
-	message[0] = readings.get(2, 0) >> 4;
+	message[0] = readings.get("swag") >> 8;
 	info.write(message, sizeof(message)); 
 	  
-	message[0] = readings.get(2, 1) >> 4;
+	message[0] = readings.get("woohoo") >> 8;
 	info.write(message, sizeof(message)); 
 	  
 	green.on();

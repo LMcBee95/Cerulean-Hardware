@@ -110,7 +110,7 @@ void adc::startAdc3(DMA_Stream_TypeDef* DMA_Stream, uint32_t DmaChannel)
 	ADC_SoftwareStartConv(ADC3);
 }
 
-void adc::addAdcPin(ADC_TypeDef* ADCx, GPIO_TypeDef* bank, uint16_t pinNum)
+void adc::addAdcPin(ADC_TypeDef* ADCx, GPIO_TypeDef* bank, uint16_t pinNum, const char* name)
 {
 	
 	//structures used in the initialization of each type
@@ -126,21 +126,45 @@ void adc::addAdcPin(ADC_TypeDef* ADCx, GPIO_TypeDef* bank, uint16_t pinNum)
 	uint8_t position = 0;  //variable used to tell what order to read in the adc pins
 	
 	if(ADCx == ADC1)
+	{
 		position = pinPriotity[0]++;
+		nameList[nameListPosition].name = name;  //stores the name and value into the list of names
+		nameList[nameListPosition].adcUsed = 0;
+		nameList[nameListPosition++].numPosition = position - 1;
+	}
 	else if(ADCx == ADC2)
+	{
 		position = pinPriotity[1]++;
+		nameList[nameListPosition].name = name;
+		nameList[nameListPosition].adcUsed = 1;
+		nameList[nameListPosition++].numPosition = position - 1;
+	}
 	else if(ADCx == ADC3)
+	{
 		position = pinPriotity[2]++;
+		nameList[nameListPosition].name = name;
+		nameList[nameListPosition].adcUsed = 2;
+		nameList[nameListPosition++].numPosition = position - 1;
+	}
 	
 	//Adds the pin to the ADC
 	ADC_RegularChannelConfig(ADCx, getChannel(bank, pinNum),  position, ADC_SampleTime_144Cycles);
 	
 }
 
-uint16_t adc::get(uint8_t AdcUsed, uint8_t position)
-{
-	return data[AdcUsed - 1][position];
+uint16_t adc::get(const char* name)
+{	
+	for(int i = 0; i < nameListPosition; i++)
+	{
+		if(!strcmp(nameList[i].name, name))
+		{
+			return data[nameList[i].adcUsed][nameList[i].numPosition];
+		}
+	}
+	
+	return 1;  //returns 1 if the word could not be found
 }
+
 
 uint8_t adc::getChannel(GPIO_TypeDef* bank, uint16_t pinNum)
 {
