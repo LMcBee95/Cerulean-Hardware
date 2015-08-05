@@ -1,6 +1,5 @@
 
 
-#include "stm32f4_discovery.h"
 #include "stm32f4xx_conf.h"
 
 /* C++ libraries */
@@ -12,60 +11,21 @@
 #include "serial.h"
 #include "usartDma.h"
 
-void Delay(__IO uint32_t nCount);
-
-void USART_puts(USART_TypeDef* USARTx, uint8_t data){
-		
-		// wait until data register is empty
-		while(!(USARTx->SR & 0x00000040)); 
-		USART_SendData(USARTx, data);
-}
+gpio test(GPIOA, GPIO_Pin_14);
+gpio another(GPIOA, GPIO_Pin_13);
 
 int main(void)
 {
 	
-	gpio green(GPIOD, GPIO_Pin_12);
-	gpio orange(GPIOD, GPIO_Pin_13);
-	gpio red(GPIOD, GPIO_Pin_14);
-	gpio blue(GPIOD, GPIO_Pin_15);
-	
-	serial info(GPIOA, GPIO_Pin_1, GPIOA, GPIO_Pin_0, UART4, 9600);
-	
-	
-	uint8_t message[1] = {1};
-	
-	
-	adc readings;
-	readings.addAdcPin(ADC2, GPIOC, GPIO_Pin_0, "swag");
-	readings.addAdcPin(ADC2, GPIOC, GPIO_Pin_1, "woohoo");
-	readings.startAdc2(DMA2_Stream2 ,DMA_Channel_1);
 	
 
   while (1)
   {
-	message[0] = readings.get("swag") >> 8;
-	info.write(message, sizeof(message)); 
-	  
-	message[0] = readings.get("woohoo") >> 8;
-	info.write(message, sizeof(message)); 
-	  
-	green.on();
-
-	
-	Delay(0xcffff);
-	
-
-	green.off();
-	
-	Delay(0xcffff);
+	test.on();
+	another.off();
     
   }
 }
 
 
-void Delay(__IO uint32_t nCount)
-{
-  while(nCount--)
-  {
-  }
-}
+

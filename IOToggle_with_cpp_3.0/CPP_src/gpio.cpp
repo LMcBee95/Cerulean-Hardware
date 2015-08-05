@@ -1,5 +1,4 @@
 #include "gpio.h"
-#include "servo.h"
 
 
 gpio::gpio(GPIO_TypeDef* inputedBank, uint16_t pinNum)

@@ -51,8 +51,7 @@ serial::serial(GPIO_TypeDef* bankPinTx, uint16_t pinTx, GPIO_TypeDef* bankPinRx,
 	{
 		USART_ITConfig(USARTx, USART_IT_RXNE, ENABLE); // Enables Serial Interrupt when data is received
 	}
-	
-	USART_puts(USARTx, 'a');
+
 }
 
 uint8_t serial::read()
@@ -65,12 +64,11 @@ void serial::USART_puts(USART_TypeDef* USARTx, uint8_t data){
 		// wait until data register is empty
 		while(!(USARTx->SR & 0x00000040)); 
 		USART_SendData(USARTx, data);
-		GPIO_SetBits(GPIOD, GPIO_Pin_15);
 }
 
 void serial::write(uint8_t* packet, uint8_t size)
 {
-	for(int i = 0; i < size - 1; i++)
+	for(int i = 0; i < size; i++)
 	{
 		USART_puts(thisUsart, packet[i]);
 	}

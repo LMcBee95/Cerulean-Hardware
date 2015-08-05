@@ -144,7 +144,7 @@ proj: $(CXX_OBJ) $(C_OBJ) misc.o $(PROJ_NAME).elf
 #Creates a new .elf file if any files in the CXX or C source code folders change
 $(PROJ_NAME).elf: $(CXX_FILES) $(C_FILES)
 	
-	@#Links all of the object files together using the g++ compiler
+	#Links all of the object files together using the g++ compiler
 	@$(CXX) $(CXX_USED_OBJ) $(C_USED_OBJ) $(C_LIB_USED_OBJ) $(MCFLAGS) -Wl,-T,lib/stm32_flash.ld --specs=nosys.specs  -o $(BUILDDIR)/$@
 	#All files linked
 	@$(CP) -O binary $(BUILDDIR)/$(PROJ_NAME).elf $(BUILDDIR)/$(PROJ_NAME).bin
@@ -152,16 +152,16 @@ $(PROJ_NAME).elf: $(CXX_FILES) $(C_FILES)
 	
 %.o: %.c 
 	#C File
-	$(CC) $(CFLAGS) $< -lm -lc -lnosys -o $(OBJDIR)/$@
+	@$(CC) $(CFLAGS) $< -lm -lc -lnosys -o $(OBJDIR)/$@
 	
 %.o: %.cpp
 	#CPP File
-	@#Creates the object files from the .cpp files
-	$(CXX) $(CXXFLAGS) $< -o $(OBJDIR)/$@
+	#Creates the object files from the .cpp files
+	@$(CXX) $(CXXFLAGS) $< -o $(OBJDIR)/$@
 	
 misc.o: 
-	$(CC) $(CFLAGS) $(C_LIB_SRC) -lm -lc -lnosys
-	mv $(C_LIB_OBJ) ./$(OBJDIR)
+	@$(CC) $(CFLAGS) $(C_LIB_SRC) -lm -lc -lnosys
+	@mv $(C_LIB_OBJ) ./$(OBJDIR)
 	
 clean:
 	rm -f Startup.lst  $(BUILDDIR)/$(PROJ_NAME)  $(BUILDDIR)/$(PROJ_NAME).lst $(AUTOGEN)  $(BUILDDIR)/$(PROJ_NAME).out $(BUILDDIR)/$(PROJ_NAME).map \

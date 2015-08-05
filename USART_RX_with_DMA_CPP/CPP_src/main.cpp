@@ -1,22 +1,17 @@
 // STM32 UART4 DMA RX (Tx PA.0, Rx PA.1) STM32F4 Discovery - sourcer32@gmail.com
  
 #include "stm32f4_discovery.h"
-#include "stm32f4xx_conf.h"
-
-#include "gpio.h"
  
+ #include "interrupt.h"
  
- gpio green(GPIOD, GPIO_Pin_12);
-gpio orange(GPIOD, GPIO_Pin_13);
-gpio red(GPIOD, GPIO_Pin_14);
-gpio blue(GPIOD, GPIO_Pin_15);
-
-void Delay(__IO uint32_t nCount)
+ void Delay(__IO uint32_t nCount)
 {
   while(nCount--)
   {
   }
 }
+ 
+   DMA_InitTypeDef  DMA_InitStructure;
  
 /**************************************************************************************/
  
@@ -82,23 +77,23 @@ void UART4_Configuration(void)
  
 /**************************************************************************************/
  
-uint8_t Buffer[4] = {0};
+//uint8_t Buffer[1]; 
  
 void DMA_Configuration(void)
 {
-  DMA_InitTypeDef  DMA_InitStructure;
  
+  DMA_DeInit(DMA1_Stream2);
  
   DMA_InitStructure.DMA_Channel = DMA_Channel_4;
   DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory; // Receive
   DMA_InitStructure.DMA_Memory0BaseAddr = (uint32_t)Buffer;
-  DMA_InitStructure.DMA_BufferSize = 4;
+  DMA_InitStructure.DMA_BufferSize = (uint16_t)sizeof(Buffer);
   DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&UART4->DR;
   DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
   DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
   DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
   DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-  DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+  DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
   DMA_InitStructure.DMA_Priority = DMA_Priority_High;
   DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Enable;
   DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_Full;
@@ -111,8 +106,7 @@ void DMA_Configuration(void)
   USART_DMACmd(UART4, USART_DMAReq_Rx, ENABLE);
  
   /* Enable DMA Stream Half Transfer and Transfer Complete interrupt */
-  //DMA_ITConfig(DMA1_Stream2, DMA_IT_TC, ENABLE);
-  //DMA_ITConfig(DMA1_Stream2, DMA_IT_HT, ENABLE);
+  DMA_ITConfig(DMA1_Stream2, DMA_IT_TC, ENABLE);
  
   /* Enable the DMA RX Stream */
   DMA_Cmd(DMA1_Stream2, ENABLE);
@@ -120,18 +114,7 @@ void DMA_Configuration(void)
  
 /**************************************************************************************/
  
-void DMA1_Stream2_IRQHandler(void)
-{
-	green.on();
 
-	if (DMA_GetITStatus(DMA1_Stream2, DMA_IT_TCIF1))
-	{
-		// ----------
-	
-		DMA_ClearITPendingBit(DMA1_Stream2, DMA_IT_TCIF1);
-		Delay(0xfff);
-	}
-}
  
 /**************************************************************************************/
  
@@ -152,14 +135,11 @@ void NVIC_Configuration(void)
  
 /**************************************************************************************/
  
-
-
-
 int main(void)
 {
-	blue.on();
+	//passArray(Buffer);
 	
-RCC_Configuration();
+    RCC_Configuration();
  
   NVIC_Configuration();
  
@@ -169,27 +149,8 @@ RCC_Configuration();
  
   DMA_Configuration();
  
-
-	
-	red.on();
+  while(USART_GetFlagStatus(UART4, USART_FLAG_TXE) == RESET); // Wait for Empty
+  USART_SendData(UART4, 1);
  
-  while(1)
-  {
-	/*while(USART_GetFlagStatus(UART4, USART_FLAG_TXE) == RESET); // Wait for Empty
-	USART_SendData(UART4, Buffer[0]);
-	  while(USART_GetFlagStatus(UART4, USART_FLAG_TXE) == RESET); // Wait for Empty
-	USART_SendData(UART4, Buffer[1]);
-	  while(USART_GetFlagStatus(UART4, USART_FLAG_TXE) == RESET); // Wait for Empty
-	USART_SendData(UART4, Buffer[2]);
-	  while(USART_GetFlagStatus(UART4, USART_FLAG_TXE) == RESET); // Wait for Empty
-	USART_SendData(UART4, Buffer[3]);*/
-	  
-	 // Delay(0xfffff3);
-	  
-	if(Buffer[0] == 1 && Buffer[1] == 2 && Buffer[2] == 3 && Buffer[3] == 4 )
-		blue.on();
-	else
-		blue.off();
-  }
-	
+  while(1); // Don't want to exit
 }

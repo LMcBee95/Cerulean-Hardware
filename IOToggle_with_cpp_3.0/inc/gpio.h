@@ -1,8 +1,7 @@
 #ifndef __GPIO_H
 #define __GPIO_H
 
-#include "stm32f4_discovery.h"
-#include "stm32f4xx_conf.h" // again, added because ST didn't put it here ?
+#include "stm32f4xx_conf.h"  //includes all of the peripheral libraries
 
 class gpio
 {

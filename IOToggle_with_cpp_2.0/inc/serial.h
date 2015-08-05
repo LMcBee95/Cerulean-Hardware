@@ -1,7 +1,6 @@
 #ifndef __SERIAL_H
 #define __SERIAL_H
 
-#include "stm32f4_discovery.h"
 #include "stm32f4xx_conf.h"
 
 class serial
