@@ -11,7 +11,7 @@
  *
  *	-----------------------------------------------------------------------------------------
  *	|	A0  TIM2, TIM5	|	B0	TIM3	|	C6	TIM3, TIM8	|	E5	TIM9	|	H6	TIM12	|
- *     |	A1	TIM2, TIM5	|	B1	TIM3	|	C7	TIM3, TIM8	|	E6	TIM9	|	H9	TIM12	|
+ *   	|	A1	TIM2, TIM5	|	B1	TIM3	|	C7	TIM3, TIM8	|	E6	TIM9	|	H9	TIM12	|
  *	|	A2	TIM2, TIM5	|	B3	TIM2	|	C8	TIM3, TIM8	|	E9	TIM1	|	H10	TIM5	|
  *	|	A3	TIM2, TIM5	|	B4	TIM3	|	C9	TIM3, TIM8	|	E10	TIM1	|	H11	TIM5	|
  *	|	A5	TIM2		|	B5 	TIM3	|					|	E13	TIM1	|	H12 TIM5	|

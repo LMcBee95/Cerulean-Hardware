@@ -1,2 +1,0 @@
-This file is here to make sure that when this folder is uploaded to
-Github that it will not remove it.

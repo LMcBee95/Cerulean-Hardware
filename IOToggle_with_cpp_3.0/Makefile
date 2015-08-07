@@ -152,15 +152,15 @@ $(PROJ_NAME).elf: $(CXX_FILES) $(C_FILES)
 	
 %.o: %.c 
 	#C File
-	@$(CC) $(CFLAGS) $< -lm -lc -lnosys -o $(OBJDIR)/$@
+	$(CC) $(CFLAGS) $< -lm -lc -lnosys -o $(OBJDIR)/$@
 	
 %.o: %.cpp
 	#CPP File
 	#Creates the object files from the .cpp files
-	@$(CXX) $(CXXFLAGS) $< -o $(OBJDIR)/$@
+	$(CXX) $(CXXFLAGS) $< -o $(OBJDIR)/$@
 	
 misc.o: 
-	@$(CC) $(CFLAGS) $(C_LIB_SRC) -lm -lc -lnosys
+	$(CC) $(CFLAGS) $(C_LIB_SRC) -lm -lc -lnosys
 	@mv $(C_LIB_OBJ) ./$(OBJDIR)
 	
 clean:
